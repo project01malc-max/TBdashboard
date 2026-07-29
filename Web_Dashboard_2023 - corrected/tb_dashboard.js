@@ -583,6 +583,7 @@
     }
 
     // ============================================
+    // ============================================
     // 3. HIV Screening Rate
     // ============================================
     dom.kpiHivScreening.textContent = calcRate(data.block4.tested_hiv, data.block1.total.total);
@@ -643,13 +644,14 @@
     }
 
     // ============================================
-    // 9. B+ Confirmed Cases
     // ============================================
-    dom.kpiBPlusConfirmed.textContent = data.block3.pos_gtot.toLocaleString();
+    // 9. B+ Confirmed Cases (% of Presumptive)
+    // ============================================
+    dom.kpiBPlusConfirmed.textContent = calcRate(data.block3.pos_gtot, data.block3.presumptive);
     if (showBreakdown) {
-      if ($('#kpi-bplus-south')) $('#kpi-bplus-south').textContent = s.block3.pos_gtot.toLocaleString();
-      if ($('#kpi-bplus-north')) $('#kpi-bplus-north').textContent = n.block3.pos_gtot.toLocaleString();
-      if ($('#kpi-bplus-sub')) $('#kpi-bplus-sub').textContent = t.block3.pos_gtot.toLocaleString();
+      if ($('#kpi-bplus-south')) $('#kpi-bplus-south').textContent = calcRate(s.block3.pos_gtot, s.block3.presumptive);
+      if ($('#kpi-bplus-north')) $('#kpi-bplus-north').textContent = calcRate(n.block3.pos_gtot, n.block3.presumptive);
+      if ($('#kpi-bplus-sub')) $('#kpi-bplus-sub').textContent = calcRate(t.block3.pos_gtot, t.block3.presumptive);
     }
 
     // ============================================
@@ -664,23 +666,25 @@
 
     // ============================================
     // ============================================
-    // 11. Childhood TB Cases (<15 Years)
     // ============================================
+
+    // 11. Childhood TB Cases (<15 Years) - Show count + % of Total Registered (ALWAYS)
+    // ============================================
+
+
     const childTotal = getChildTb(data.block2);
     const totalRegistered = data.block1.total.total;
-    const childPct = (showBreakdown && totalRegistered > 0) ?
-      ((childTotal / totalRegistered) * 100).toFixed(1) + '%' : '';
+    const childPct = (totalRegistered > 0) ?
+      ((childTotal / totalRegistered) * 100).toFixed(1) + '%' : '0.0%';
 
     if ($('#kpi-childhood-tb')) {
-      if (showBreakdown && childPct) {
-        $('#kpi-childhood-tb').textContent = childTotal.toLocaleString() + ' (' + childPct + ')';
-      } else {
-        $('#kpi-childhood-tb').textContent = childTotal.toLocaleString();
-      }
+      $('#kpi-childhood-tb').textContent = childTotal.toLocaleString() + ' (' + childPct + ')';
     }
     if ($('#kpi-child-male')) $('#kpi-child-male').textContent = getMaleChild(data.block2).toLocaleString();
     if ($('#kpi-child-female')) $('#kpi-child-female').textContent = getFemaleChild(data.block2).toLocaleString();
     if ($('#kpi-child-sub')) $('#kpi-child-sub').textContent = childTotal.toLocaleString();
+
+
 
     // Render Data Tables
     renderTableBlock1(data.block1);
@@ -1065,6 +1069,8 @@
     });
   }
 
+
+
   function renderCategoriesChart(b1) {
     destroyChart('categories');
     const ctx = document.getElementById('chart-categories');
@@ -1077,6 +1083,12 @@
     const relapseCases = rowKeys.map(k => b1[k].relapse);
     const ukCases = rowKeys.map(k => b1[k].uk);
     const prevTx = rowKeys.map(k => b1[k].fail + b1[k].lost + b1[k].other);
+
+    // Get Presumptive count from Block 3 for percentage calculation
+    // We need to access the global data - we'll get it from the current state
+    const blocks = getBlocks();
+    const data = blocks[state.activeQuarter];
+    const presumptive = data ? data.block3.presumptive : 0;
 
     state.charts['categories'] = new Chart(ctx, {
       type: 'bar',
@@ -1093,7 +1105,20 @@
         ...chartDefaults,
         plugins: {
           ...chartDefaults.plugins,
-          datalabels: { ...chartDefaults.plugins.datalabels, anchor: 'center', align: 'center' }
+          datalabels: { ...chartDefaults.plugins.datalabels, anchor: 'center', align: 'center' },
+          tooltip: {
+            ...chartDefaults.plugins.tooltip,
+            callbacks: {
+              label: function (context) {
+                const label = context.dataset.label || '';
+                const value = context.raw;
+                const categoryTotal = context.dataset.data.reduce((a, b) => a + b, 0);
+                const pctOfCategory = categoryTotal > 0 ? ((value / categoryTotal) * 100).toFixed(1) : 0;
+                const pctOfPresumptive = presumptive > 0 ? ((value / presumptive) * 100).toFixed(1) : 0;
+                return `${label}: ${value.toLocaleString()} (${pctOfCategory}% of category, ${pctOfPresumptive}% of Presumptive)`;
+              }
+            }
+          }
         },
         scales: {
           x: { ...chartDefaults.scales.x, stacked: true },
@@ -1102,6 +1127,8 @@
       }
     });
   }
+
+
 
   function renderCascadeChart(b3) {
     destroyChart('cascade');
