@@ -586,12 +586,29 @@
       font-weight: 700;
     }
 
-    .kpi-breakdown-item.south .kpi-breakdown-year { color: #22d3ee; }
-    .kpi-breakdown-item.south .kpi-breakdown-val  { color: #22d3ee; }
-    .kpi-breakdown-item.north .kpi-breakdown-year { color: #f9a8d4; }
-    .kpi-breakdown-item.north .kpi-breakdown-val  { color: #f9a8d4; }
-    .kpi-breakdown-item.total .kpi-breakdown-year { color: #f59e0b; }
-    .kpi-breakdown-item.total .kpi-breakdown-val  { color: #f59e0b; }
+    .kpi-breakdown-item.south .kpi-breakdown-year {
+      color: #22d3ee;
+    }
+
+    .kpi-breakdown-item.south .kpi-breakdown-val {
+      color: #22d3ee;
+    }
+
+    .kpi-breakdown-item.north .kpi-breakdown-year {
+      color: #f9a8d4;
+    }
+
+    .kpi-breakdown-item.north .kpi-breakdown-val {
+      color: #f9a8d4;
+    }
+
+    .kpi-breakdown-item.total .kpi-breakdown-year {
+      color: #f59e0b;
+    }
+
+    .kpi-breakdown-item.total .kpi-breakdown-val {
+      color: #f59e0b;
+    }
 
 
     /* ===== Charts Grid ===== */
@@ -874,13 +891,11 @@
         <!-- Top Bar -->
         <div class="top-bar" id="overview">
           <div class="top-bar-left">
-            <h2 id="facility-title">TB Care Facility (BMU): MANGHOPIR</h2>
-            <p id="data-summary">District: Central | Year: 2023</p>
+            <h2 id="facility-title">TB Care Facility (BMU): KMC Leprosy Hospital</h2>
+            <p id="data-summary">District: West | Year: 2025</p>
           </div>
           <div class="top-bar-actions">
             <!-- Quarter Dropdown Filter -->
-            <!-- Update the quarter dropdown in the HTML (around line 230-240) -->
-            <!-- Update the quarter dropdown in the HTML (around line 230-240) -->
             <div class="quarter-selector-group">
               <label for="quarter-select">Select Quarter:</label>
               <select id="quarter-select" class="quarter-selector">
@@ -905,9 +920,12 @@
             <div class="kpi-value" id="kpi-total-registered">—</div>
             <div class="kpi-label">Total TB Cases Registered</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span class="kpi-breakdown-val" id="kpi-total-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span class="kpi-breakdown-val" id="kpi-total-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val" id="kpi-total-sub">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-total-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-total-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-total-sub">—</span></div>
             </div>
           </div>
           <div class="kpi-card">
@@ -917,9 +935,12 @@
             <div class="kpi-value" id="kpi-presumptive-rate">—</div>
             <div class="kpi-label">Presumptive TB ID Rate (of OPD)</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span class="kpi-breakdown-val" id="kpi-presumptive-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span class="kpi-breakdown-val" id="kpi-presumptive-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val" id="kpi-presumptive-sub">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-presumptive-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-presumptive-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-presumptive-sub">—</span></div>
             </div>
           </div>
           <div class="kpi-card">
@@ -929,9 +950,12 @@
             <div class="kpi-value" id="kpi-hiv-screening">—</div>
             <div class="kpi-label">HIV Screening Rate</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span class="kpi-breakdown-val" id="kpi-hiv-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span class="kpi-breakdown-val" id="kpi-hiv-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val" id="kpi-hiv-sub">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-hiv-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-hiv-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-hiv-sub">—</span></div>
             </div>
           </div>
           <div class="kpi-card">
@@ -941,9 +965,12 @@
             <div class="kpi-value" id="kpi-wrd-testing">—</div>
             <div class="kpi-label">GeneXpert Testing Rate (Of Registered Case)</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span class="kpi-breakdown-val" id="kpi-wrd-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span class="kpi-breakdown-val" id="kpi-wrd-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val" id="kpi-wrd-sub">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-wrd-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-wrd-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-wrd-sub">—</span></div>
             </div>
           </div>
           <div class="kpi-card">
@@ -953,9 +980,12 @@
             <div class="kpi-value" id="kpi-contact-screened">—</div>
             <div class="kpi-label">HH Contacts Screened</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span class="kpi-breakdown-val" id="kpi-contact-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span class="kpi-breakdown-val" id="kpi-contact-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val" id="kpi-contact-sub">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-sub">—</span></div>
             </div>
           </div>
           <div class="kpi-card">
@@ -965,9 +995,12 @@
             <div class="kpi-value" id="kpi-tpt-initiated">—</div>
             <div class="kpi-label">Contacts Put on TPT</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span class="kpi-breakdown-val" id="kpi-tpt-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span class="kpi-breakdown-val" id="kpi-tpt-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val" id="kpi-tpt-sub">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-tpt-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-tpt-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-tpt-sub">—</span></div>
             </div>
           </div>
           <!-- New Lab Cascade KPI Cards -->
@@ -978,9 +1011,12 @@
             <div class="kpi-value" id="kpi-afb-testing-rate">—</div>
             <div class="kpi-label">AFB Testing Rate (of Presumptive)</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span class="kpi-breakdown-val" id="kpi-afb-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span class="kpi-breakdown-val" id="kpi-afb-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val" id="kpi-afb-sub">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-afb-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-afb-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-afb-sub">—</span></div>
             </div>
           </div>
           <div class="kpi-card">
@@ -990,9 +1026,12 @@
             <div class="kpi-value" id="kpi-xpert-positivity">—</div>
             <div class="kpi-label">GeneXpert Positivity Rate (from Presumptive)</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span class="kpi-breakdown-val" id="kpi-xpos-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span class="kpi-breakdown-val" id="kpi-xpos-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val" id="kpi-xpos-sub">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-xpos-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-xpos-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-xpos-sub">—</span></div>
             </div>
           </div>
           <div class="kpi-card">
@@ -1002,9 +1041,12 @@
             <div class="kpi-value" id="kpi-b-plus-confirmed">—</div>
             <div class="kpi-label">B+ Confirmed Cases</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span class="kpi-breakdown-val" id="kpi-bplus-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span class="kpi-breakdown-val" id="kpi-bplus-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val" id="kpi-bplus-sub">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-bplus-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-bplus-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-bplus-sub">—</span></div>
             </div>
           </div>
           <div class="kpi-card">
@@ -1014,9 +1056,12 @@
             <div class="kpi-value" id="kpi-xpert-testing-rate">—</div>
             <div class="kpi-label">% of Registered Tested Xpert (out of Presumptive)</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span class="kpi-breakdown-val" id="kpi-xr-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span class="kpi-breakdown-val" id="kpi-xr-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val" id="kpi-xr-sub">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-xr-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-xr-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-xr-sub">—</span></div>
             </div>
           </div>
           <div class="kpi-card">
@@ -1026,9 +1071,12 @@
             <div class="kpi-value" id="kpi-childhood-tb">—</div>
             <div class="kpi-label">Childhood TB Cases (&lt;15 Years)</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">♂ Male</span><span class="kpi-breakdown-val" id="kpi-child-male">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">♀ Female</span><span class="kpi-breakdown-val" id="kpi-child-female">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val" id="kpi-child-sub">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">♂ Male</span><span
+                  class="kpi-breakdown-val" id="kpi-child-male">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">♀ Female</span><span
+                  class="kpi-breakdown-val" id="kpi-child-female">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-child-sub">—</span></div>
             </div>
           </div>
         </div>
