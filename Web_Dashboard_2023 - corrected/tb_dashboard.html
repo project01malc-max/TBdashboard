@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="TB-07 Case Registration Dashboard — Monitor quarterly registration, diagnostics, HIV screening, drug sensitivity, and contact tracing." />
+  <title>TB-07 — Case Registration Dashboard</title>
+  <style>
+    /* ===== CSS Variables & Reset ===== */
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111827;
+      --bg-glass: rgba(255, 255, 255, 0.04);
+      --bg-card: rgba(255, 255, 255, 0.03);
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-color: rgba(255, 255, 255, 0.06);
+      --accent-1: #06b6d4;
+      --accent-2: #0891b2;
+      --accent-6: #f43f5e;
+      --gradient-primary: linear-gradient(135deg, #06b6d4, #0891b2);
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 4px 20px rgba(6, 182, 212, 0.15);
+      --space-xs: 6px;
+      --space-sm: 10px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --transition-fast: 0.2s ease;
+      --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ===== Scrollbar ===== */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-secondary);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--accent-1);
+      border-radius: 10px;
+    }
+
+    /* ===== Spinner ===== */
+    .spinner-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 14, 23, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .spinner-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(6, 182, 212, 0.15);
+      border-top-color: var(--accent-1);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ===== Toast ===== */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9998;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 380px;
+      width: 100%;
+    }
+
+    .toast {
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-weight: 500;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast.success {
+      border-left: 4px solid #10b981;
+    }
+
+    .toast.error {
+      border-left: 4px solid #ef4444;
+    }
+
+    .toast.info {
+      border-left: 4px solid var(--accent-1);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(40px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* ===== Mobile Toggle ===== */
+    .mobile-toggle {
+      display: none;
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 100;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      font-size: 1.5rem;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+    }
+
+    @media (max-width: 820px) {
+      .mobile-toggle {
+        display: block;
+      }
+    }
+
+    /* ===== App Layout ===== */
+    .app-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      width: 280px;
+      min-height: 100vh;
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      padding: var(--space-lg) var(--space-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      flex-shrink: 0;
+      transition: transform 0.3s ease;
+      z-index: 50;
+    }
+
+    @media (max-width: 820px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform: translateX(-100%);
+        width: 290px;
+        height: 100vh;
+        border-right: 1px solid var(--border-color);
+        padding-top: 60px;
+      }
+
+      .sidebar.visible {
+        transform: translateX(0);
+      }
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding-bottom: var(--space-md);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar-brand .brand-icon {
+      font-size: 2rem;
+    }
+
+    .sidebar-brand h1 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+
+    .sidebar-brand .brand-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      -webkit-text-fill-color: var(--text-muted);
+    }
+
+    .sidebar-section-title {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: var(--space-sm);
+    }
+
+    /* Upload Zone */
+    .upload-zone {
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      background: var(--bg-glass);
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: var(--accent-1);
+      background: rgba(6, 182, 212, 0.05);
+    }
+
+    .upload-zone .upload-icon {
+      font-size: 1.8rem;
+      margin-bottom: 4px;
+    }
+
+    .upload-zone p {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .upload-zone .upload-formats {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    /* Sheet Tabs */
+    .sheet-tabs {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sheet-tab {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      background: var(--bg-glass);
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+      width: 100%;
+      text-align: left;
+    }
+
+    .sheet-tab:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+    }
+
+    .sheet-tab.active {
+      background: var(--gradient-primary);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .sheet-tab .tab-icon {
+      font-size: 1rem;
+    }
+
+    .sheet-tab .tab-count {
+      margin-left: auto;
+      font-size: 0.65rem;
+      opacity: 0.6;
+    }
+
+    .sheet-tab:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* Navigation */
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: all var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .nav-link:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+    }
+
+    .nav-link.active {
+      background: var(--bg-glass);
+      color: var(--accent-1);
+    }
+
+    /* ===== Main Content ===== */
+    .main-content {
+      flex: 1;
+      padding: var(--space-lg) var(--space-xl);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    @media (max-width: 640px) {
+      .main-content {
+        padding: var(--space-md);
+      }
+    }
+
+    /* ===== Empty State ===== */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 60vh;
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .empty-state .empty-icon {
+      font-size: 4rem;
+      margin-bottom: var(--space-md);
+    }
+
+    .empty-state h3 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: var(--space-sm);
+    }
+
+    .empty-state p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      max-width: 480px;
+    }
+
+    /* ===== Buttons ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: var(--space-sm) var(--space-lg);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      background: var(--bg-glass);
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      font-family: inherit;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .btn-primary {
+      background: var(--gradient-primary);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    /* ===== Top Bar ===== */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+      padding-bottom: var(--space-md);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .top-bar-left h2 {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .top-bar-left p {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .top-bar-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    .quarter-selector-group {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      background: var(--bg-glass);
+      padding: var(--space-xs) var(--space-sm);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+    }
+
+    .quarter-selector-group label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .quarter-selector {
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: var(--space-xs) var(--space-sm);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .quarter-selector option {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    /* ===== KPI Grid ===== */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: var(--space-md);
+      margin-bottom: var(--space-xl);
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+
+    .kpi-card:hover {
+      border-color: rgba(6, 182, 212, 0.2);
+    }
+
+    .kpi-icon {
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+
+    .kpi-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-top: 2px;
+    }
+
+    /* ===== KPI Breakdown (South/North/Total) ===== */
+    .kpi-breakdown {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .kpi-breakdown-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .kpi-breakdown-year {
+      font-size: 0.58rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .kpi-breakdown-val {
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .kpi-breakdown-item.south .kpi-breakdown-year {
+      color: #22d3ee;
+    }
+
+    .kpi-breakdown-item.south .kpi-breakdown-val {
+      color: #22d3ee;
+    }
+
+    .kpi-breakdown-item.north .kpi-breakdown-year {
+      color: #f9a8d4;
+    }
+
+    .kpi-breakdown-item.north .kpi-breakdown-val {
+      color: #f9a8d4;
+    }
+
+    .kpi-breakdown-item.total .kpi-breakdown-year {
+      color: #f59e0b;
+    }
+
+    .kpi-breakdown-item.total .kpi-breakdown-val {
+      color: #f59e0b;
+    }
+
+
+    /* ===== Charts Grid ===== */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-lg);
+    }
+
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+      transition: border-color 0.3s;
+    }
+
+    .chart-card.full-width {
+      grid-column: 1 / -1;
+    }
+
+    .chart-card:hover {
+      border-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .chart-header {
+      margin-bottom: var(--space-md);
+    }
+
+    .chart-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .chart-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .chart-canvas-wrap {
+      position: relative;
+      height: 260px;
+      width: 100%;
+    }
+
+    .chart-canvas-wrap canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ===== Tables ===== */
+    .table-section {
+      margin-top: var(--space-xl);
+    }
+
+    .table-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-md);
+      margin-bottom: var(--space-md);
+    }
+
+    .tb-table-tabs {
+      display: flex;
+      gap: var(--space-xs);
+      flex-wrap: wrap;
+    }
+
+    .tb-table-tab {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: var(--space-sm) var(--space-md);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.78rem;
+      transition: all var(--transition-fast);
+      font-family: inherit;
+    }
+
+    .tb-table-tab:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-primary);
+    }
+
+    .tb-table-tab.active {
+      background: var(--gradient-primary);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      padding: 4px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      min-width: 600px;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: var(--space-sm) var(--space-md);
+      border-bottom: 1px solid var(--border-color);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    .data-table th {
+      background: rgba(255, 255, 255, 0.02);
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .data-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .data-table td {
+      color: var(--text-primary);
+    }
+
+    .tab-section-header {
+      font-weight: 600;
+      color: var(--accent-1);
+      font-size: 0.85rem;
+      margin-bottom: var(--space-sm);
+    }
+
+    .pyramid-wrap {
+      display: flex;
+      gap: var(--space-lg);
+      flex-wrap: wrap;
+    }
+
+    .pyramid-wrap>div {
+      flex: 1;
+      min-width: 260px;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 1024px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .top-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .top-bar-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .quarter-selector-group {
+        justify-content: center;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .data-table {
+        font-size: 0.7rem;
+        min-width: 500px;
+      }
+
+      .data-table th,
+      .data-table td {
+        padding: var(--space-xs) var(--space-sm);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Loading Spinner -->
+  <div id="spinner" class="spinner-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Mobile Sidebar Toggle -->
+  <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle sidebar">☰</button>
+
+  <div class="app-layout">
+
+    <!-- ====== Sidebar ====== -->
+    <aside class="sidebar" id="sidebar">
+
+      <!-- Brand -->
+      <div class="sidebar-brand">
+        <div class="brand-icon">🔬</div>
+        <div>
+          <h1>DASHBOARD ON TB CASES REGISTRATION</h1>
+          <div class="brand-sub">TB-07 Case Tracker</div>
+        </div>
+      </div>
+
+      <!-- Upload -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Data Source</div>
+        <div class="upload-zone" id="upload-zone">
+          <div class="upload-icon">📂</div>
+          <p>Drop TB-07 Excel here<br />or click to browse</p>
+          <div class="upload-formats">.xlsx</div>
+        </div>
+        <input type="file" id="file-input" accept=".xlsx" />
+      </div>
+
+      <!-- Sheet Tabs -->
+      <div class="sidebar-section" id="sheet-section" style="display:none;">
+        <div class="sidebar-section-title">Loaded Sheets</div>
+        <div class="sheet-tabs" id="sheet-tabs"></div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Navigation</div>
+        <nav class="sidebar-nav">
+          <a class="nav-link active" href="#overview" data-section="overview">📊 &nbsp;Overview</a>
+          <a class="nav-link" href="#charts" data-section="charts">📈 &nbsp;Charts & Visuals</a>
+          <a class="nav-link" href="#data-tables" data-section="data-tables">📋 &nbsp;Detailed Tables</a>
+        </nav>
+      </div>
+
+      <!-- Dashboards Switcher -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Dashboards</div>
+        <nav class="sidebar-nav">
+          <a class="nav-link" href="index.html">👥 &nbsp;Patient Registry</a>
+          <a class="nav-link" href="targevsach.html">🎯 &nbsp;Target vs Achieved</a>
+          <a class="nav-link active" href="tb_dashboard.html">🦠 &nbsp;TB Registration</a>
+        </nav>
+      </div>
+
+    </aside>
+
+    <!-- ====== Main Content ====== -->
+    <main class="main-content" id="main-content">
+
+      <!-- Empty State (shown before data load) -->
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon">🦠</div>
+        <h3>TB-07 Cases Registration Dashboard</h3>
+        <p>Upload the <strong>TB-07 All Projects-2023.xlsx</strong> Excel file from the sidebar to analyze quarterly
+          registration, demographics, diagnostics, drug sensitivity, and contact tracing metrics.</p>
+        <br />
+        <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
+          📂 &nbsp;Upload TB-07 Sheet
+        </button>
+      </div>
+
+      <!-- Dashboard (hidden until data loads) -->
+      <div id="dashboard" style="display:none;">
+
+        <!-- Top Bar -->
+        <div class="top-bar" id="overview">
+          <div class="top-bar-left">
+            <h2 id="facility-title">TB Care Facility (BMU): MANGHOPIR</h2>
+            <p id="data-summary">District: Central | Year: 2023</p>
+          </div>
+          <div class="top-bar-actions">
+            <!-- Quarter Dropdown Filter -->
+            <div class="quarter-selector-group">
+              <label for="quarter-select">Select Quarter:</label>
+              <select id="quarter-select" class="quarter-selector">
+                <option value="consolidated" selected>CONSOLIDATED 2023</option>
+                <option value="q1">1st Quarter</option>
+                <option value="q2">2nd Quarter</option>
+                <option value="q3">3rd Quarter</option>
+                <option value="q4">4th Quarter</option>
+              </select>
+            </div>
+            <button class="btn" id="btn-export" title="Export current quarter data as JSON">📥 &nbsp;Export
+              JSON</button>
+          </div>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid" id="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">👥</div>
+            </div>
+            <div class="kpi-value" id="kpi-total-registered">—</div>
+            <div class="kpi-label">Total TB Cases Registered</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-total-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-total-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-total-sub">—</span></div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🔎</div>
+            </div>
+            <div class="kpi-value" id="kpi-presumptive-rate">—</div>
+            <div class="kpi-label">Presumptive TB ID Rate (of OPD)</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-presumptive-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-presumptive-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-presumptive-sub">—</span></div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🎗️</div>
+            </div>
+            <div class="kpi-value" id="kpi-hiv-screening">—</div>
+            <div class="kpi-label">HIV Screening Rate</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-hiv-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-hiv-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-hiv-sub">—</span></div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🧬</div>
+            </div>
+            <div class="kpi-value" id="kpi-wrd-testing">—</div>
+            <div class="kpi-label">GeneXpert Testing Rate (Of Registered Case)</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-wrd-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-wrd-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-wrd-sub">—</span></div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">👨‍👩‍👧‍👦</div>
+            </div>
+            <div class="kpi-value" id="kpi-contact-screened">—</div>
+            <div class="kpi-label">HH Contacts Screened</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-sub">—</span></div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🛡️</div>
+            </div>
+            <div class="kpi-value" id="kpi-tpt-initiated">—</div>
+            <div class="kpi-label">Contacts Put on TPT</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-tpt-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-tpt-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-tpt-sub">—</span></div>
+            </div>
+          </div>
+          <!-- New Lab Cascade KPI Cards -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🔬</div>
+            </div>
+            <div class="kpi-value" id="kpi-afb-testing-rate">—</div>
+            <div class="kpi-label">AFB Testing Rate (of Presumptive)</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-afb-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-afb-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-afb-sub">—</span></div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🧪</div>
+            </div>
+            <div class="kpi-value" id="kpi-xpert-positivity">—</div>
+            <div class="kpi-label">GeneXpert Positivity Rate (from Presumptive)</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-xpos-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-xpos-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-xpos-sub">—</span></div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">📊</div>
+            </div>
+            <div class="kpi-value" id="kpi-b-plus-confirmed">—</div>
+            <div class="kpi-label">B+ Confirmed Cases</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-bplus-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-bplus-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-bplus-sub">—</span></div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🧫</div>
+            </div>
+            <div class="kpi-value" id="kpi-xpert-testing-rate">—</div>
+            <div class="kpi-label">% of Registered Tested Xpert (out of Presumptive)</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-xr-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-xr-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-xr-sub">—</span></div>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">👶</div>
+            </div>
+            <div class="kpi-value" id="kpi-childhood-tb">—</div>
+            <div class="kpi-label">Childhood TB Cases (&lt;15 Years)</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">♂ Male</span><span
+                  class="kpi-breakdown-val" id="kpi-child-male">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">♀ Female</span><span
+                  class="kpi-breakdown-val" id="kpi-child-female">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-child-sub">—</span></div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Charts Section -->
+        <div class="charts-grid" id="charts" style="margin-top: var(--space-xl);">
+
+          <!-- Demographics Age & Gender Pyramid -->
+          <div class="chart-card full-width">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Block 2: Age Group & Gender Demographics (N+R+UK Cases)</div>
+                <div class="chart-subtitle">Comparison of Male vs Female patient distribution across age categories
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap" style="height: 350px;">
+              <canvas id="chart-demographics"></canvas>
+            </div>
+          </div>
+
+          <!-- Clinical Categories & Case Types -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Block 1: Case Registration Categories</div>
+                <div class="chart-subtitle">Breakdown of Pulmonary and Extra-Pulmonary cases by registration type</div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="chart-categories"></canvas>
+            </div>
+          </div>
+
+          <!-- Diagnostics Cascade -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Block 3: Diagnostic Laboratory Funnel</div>
+                <div class="chart-subtitle">Path from OPD consultations to confirmed bacteriologically positive (B+)
+                  cases</div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="chart-cascade"></canvas>
+            </div>
+          </div>
+
+          <!-- Diagnostics Cascade Pie -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Block 3: OPD to Presumptive Proportion</div>
+                <div class="chart-subtitle">Proportion of Presumptive Identified vs Other New OPD Visits</div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="chart-opd-presumptive"></canvas>
+            </div>
+          </div>
+
+          <!-- DST Resistance Profiling -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Block 5: Drug Sensitivity Testing (DST) Results</div>
+                <div class="chart-subtitle">Tested vs Resistant cases for Rifampicin, Isoniazid, and Fluoroquinolone
+                </div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="chart-dst"></canvas>
+            </div>
+          </div>
+
+          <!-- TB/HIV Activities -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Block 4: TB/HIV Activities</div>
+                <div class="chart-subtitle">Testing, Co-infection status, and ART/TPT treatment coverage</div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap">
+              <canvas id="chart-tb-hiv"></canvas>
+            </div>
+          </div>
+
+          <!-- Contact Tracing & Prevention -->
+          <div class="chart-card full-width">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Block 6: Household Contact Tracing & Preventive Therapy (TPT)</div>
+                <div class="chart-subtitle">Metrics on family contact screening, TB diagnosis, and preventive therapy
+                  enrollment</div>
+              </div>
+            </div>
+            <div class="chart-canvas-wrap" style="height: 320px;">
+              <canvas id="chart-contact-tracing"></canvas>
+            </div>
+          </div>
+
+        </div><!-- /charts-grid -->
+
+        <!-- Detailed Tables Section -->
+        <div class="table-section" id="data-tables" style="margin-top: var(--space-xl);">
+          <div class="table-toolbar" style="flex-direction: column; align-items: flex-start; gap: var(--space-md);">
+            <div>
+              <div class="chart-title">📋 Raw Report Tables</div>
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;">View exact data counts matching
+                standard TB-07 reporting forms</p>
+            </div>
+            <!-- Block Selection Tabs -->
+            <div class="tb-table-tabs">
+              <button class="tb-table-tab active" data-block="1">Block 1: Case Registration</button>
+              <button class="tb-table-tab" data-block="2">Block 2: Age & Gender</button>
+              <button class="tb-table-tab" data-block="3">Block 3 & 4: Lab & HIV</button>
+              <button class="tb-table-tab" data-block="5">Block 5: DST Profile</button>
+              <button class="tb-table-tab" data-block="6">Block 6: Contacts & TPT</button>
+            </div>
+          </div>
+
+          <!-- Block 1 Table -->
+          <div class="table-wrap tb-table-content" id="table-block-1">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Clinical Classification (All Registered Cases)</th>
+                  <th style="text-align: right;">New (N)</th>
+                  <th style="text-align: right;">Relapse (R)</th>
+                  <th style="text-align: right;">History Unknown (UK)</th>
+                  <th style="text-align: right; background: rgba(255,255,255,0.02)">Subtotal (N+R+UK)</th>
+                  <th style="text-align: right;">Prev Tx: Failure</th>
+                  <th style="text-align: right;">Prev Tx: Lost Follow-up</th>
+                  <th style="text-align: right;">Prev Tx: Others</th>
+                  <th style="text-align: right; background: rgba(6,182,212,0.1); font-weight: bold;">Grand Total</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-block-1"></tbody>
+            </table>
+          </div>
+
+          <!-- Block 2 Table -->
+          <div class="table-wrap tb-table-content" id="table-block-2" style="display: none;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th rowspan="2" style="vertical-align: middle;">Classification (New, Relapse, UK Cases)</th>
+                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">0-4 yrs</th>
+                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">5-14 yrs
+                  </th>
+                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">15-24 yrs
+                  </th>
+                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">25-34 yrs
+                  </th>
+                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">35-44 yrs
+                  </th>
+                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">45-54 yrs
+                  </th>
+                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">55-64 yrs
+                  </th>
+                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">65+ yrs</th>
+                  <th colspan="2"
+                    style="text-align: center; border-bottom: 1px solid var(--border-color); background: rgba(255,255,255,0.02)">
+                    Subtotal</th>
+                  <th rowspan="2"
+                    style="text-align: right; vertical-align: middle; background: rgba(6,182,212,0.1); font-weight: bold;">
+                    Grand Total</th>
+                </tr>
+                <tr>
+                  <th style="text-align: right;">M</th>
+                  <th style="text-align: right;">F</th>
+                  <th style="text-align: right;">M</th>
+                  <th style="text-align: right;">F</th>
+                  <th style="text-align: right;">M</th>
+                  <th style="text-align: right;">F</th>
+                  <th style="text-align: right;">M</th>
+                  <th style="text-align: right;">F</th>
+                  <th style="text-align: right;">M</th>
+                  <th style="text-align: right;">F</th>
+                  <th style="text-align: right;">M</th>
+                  <th style="text-align: right;">F</th>
+                  <th style="text-align: right;">M</th>
+                  <th style="text-align: right;">F</th>
+                  <th style="text-align: right;">M</th>
+                  <th style="text-align: right;">F</th>
+                  <th style="text-align: right;">M</th>
+                  <th style="text-align: right;">F</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-block-2"></tbody>
+            </table>
+          </div>
+
+          <!-- Block 3 & 4 Table -->
+          <div class="table-wrap tb-table-content" id="table-block-3" style="display: none;">
+            <div class="pyramid-wrap" style="height: auto; align-items: flex-start;">
+              <div style="flex: 1; min-width: 45%;">
+                <div class="tab-section-header">Block 3: Laboratory Diagnosis & GeneXpert</div>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Indicator Metric</th>
+                      <th style="text-align: right; width: 150px;">Count Value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-block-3"></tbody>
+                </table>
+              </div>
+              <div style="flex: 1; min-width: 45%;">
+                <div class="tab-section-header">Block 4: TB/HIV Interventions & TPT</div>
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Indicator Metric</th>
+                      <th style="text-align: right; width: 150px;">Count Value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbody-block-4"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Block 5 Table -->
+          <div class="table-wrap tb-table-content" id="table-block-5" style="display: none;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th rowspan="2" style="vertical-align: middle;">Drug Resistance Profile (B+ Cases)</th>
+                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">Rifampicin
+                    (RIF)</th>
+                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">Isoniazid
+                    (INH)</th>
+                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">
+                    Fluoroquinolone (FLQ)</th>
+                </tr>
+                <tr>
+                  <th style="text-align: right;">Tested Result</th>
+                  <th style="text-align: right;">Resistant</th>
+                  <th style="text-align: right;">Tested Result</th>
+                  <th style="text-align: right;">Resistant</th>
+                  <th style="text-align: right;">Tested Result</th>
+                  <th style="text-align: right;">Resistant</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-block-5"></tbody>
+            </table>
+          </div>
+
+          <!-- Block 6 Table -->
+          <div class="table-wrap tb-table-content" id="table-block-6" style="display: none;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>HH Contact Screening Indicators (B+ Cases)</th>
+                  <th style="text-align: right; width: 180px;">Age &le; 5 yrs</th>
+                  <th style="text-align: right; width: 180px;">Age &gt; 5 yrs</th>
+                  <th style="text-align: right; width: 180px; background: rgba(6,182,212,0.1); font-weight: bold;">
+                    Combined Total</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-block-6"></tbody>
+            </table>
+          </div>
+
+        </div><!-- /table-section -->
+
+      </div><!-- /dashboard -->
+
+    </main>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js">
+  </script>
+  <script src="tb_dashboard.js">
+  </script>
+
+</body>
+
+</html>
