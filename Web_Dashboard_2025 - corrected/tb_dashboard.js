@@ -542,7 +542,7 @@
     }
 
     // ============================================
-    // 2. Presumptive Rate (% of OPD)
+    // 2. Presumptive Rate
     // ============================================
     dom.kpiPresumptiveRate.textContent = calcRate(data.block3.presumptive, data.block3.opd);
     if (showBreakdown) {
@@ -552,17 +552,17 @@
     }
 
     // ============================================
-    // 3. HIV Screening Rate (% of Presumptive) - UPDATED
+    // 3. HIV Screening Rate
     // ============================================
-    dom.kpiHivScreening.textContent = calcRate(data.block4.tested_hiv, data.block3.presumptive);
+    dom.kpiHivScreening.textContent = calcRate(data.block4.tested_hiv, data.block1.total.total);
     if (showBreakdown) {
-      if ($('#kpi-hiv-south')) $('#kpi-hiv-south').textContent = calcRate(s.block4.tested_hiv, s.block3.presumptive);
-      if ($('#kpi-hiv-north')) $('#kpi-hiv-north').textContent = calcRate(n.block4.tested_hiv, n.block3.presumptive);
-      if ($('#kpi-hiv-sub')) $('#kpi-hiv-sub').textContent = calcRate(t.block4.tested_hiv, t.block3.presumptive);
+      if ($('#kpi-hiv-south')) $('#kpi-hiv-south').textContent = calcRate(s.block4.tested_hiv, s.block1.total.total);
+      if ($('#kpi-hiv-north')) $('#kpi-hiv-north').textContent = calcRate(n.block4.tested_hiv, n.block1.total.total);
+      if ($('#kpi-hiv-sub')) $('#kpi-hiv-sub').textContent = calcRate(t.block4.tested_hiv, t.block1.total.total);
     }
 
     // ============================================
-    // 4. GeneXpert Testing Rate (WRD) (% of N+R+UK)
+    // 4. GeneXpert Testing Rate (WRD)
     // ============================================
     dom.kpiWrdTesting.textContent = calcRate(data.block3.tested_gene_xpert, getNrk(data.block1));
     if (showBreakdown) {
@@ -572,7 +572,7 @@
     }
 
     // ============================================
-    // 5. HH Contacts Screened (Absolute count)
+    // 5. HH Contacts Screened
     // ============================================
     dom.kpiContactScreened.textContent = getContact(data.block6).toLocaleString();
     if (showBreakdown) {
@@ -582,7 +582,7 @@
     }
 
     // ============================================
-    // 6. Contacts Put on TPT (Absolute count)
+    // 6. Contacts Put on TPT
     // ============================================
     dom.kpiTptInitiated.textContent = getTpt(data.block6).toLocaleString();
     if (showBreakdown) {
@@ -592,7 +592,7 @@
     }
 
     // ============================================
-    // 7. AFB Testing Rate (% of Presumptive)
+    // 7. AFB Testing Rate
     // ============================================
     dom.kpiAfbTestingRate.textContent = calcRate(data.block3.tested_afb, data.block3.presumptive);
     if (showBreakdown) {
@@ -602,7 +602,7 @@
     }
 
     // ============================================
-    // 8. Xpert Positivity Rate (% of Presumptive)
+    // 8. Xpert Positivity Rate
     // ============================================
     dom.kpiXpertPositivity.textContent = calcRate(data.block3.pos_xpert, data.block3.presumptive);
     if (showBreakdown) {
@@ -612,17 +612,17 @@
     }
 
     // ============================================
-    // 9. B+ Confirmed Cases (% of Presumptive) - UPDATED
+    // 9. B+ Confirmed Cases
     // ============================================
-    dom.kpiBPlusConfirmed.textContent = calcRate(data.block3.pos_gtot, data.block3.presumptive);
+    dom.kpiBPlusConfirmed.textContent = data.block3.pos_gtot.toLocaleString();
     if (showBreakdown) {
-      if ($('#kpi-bplus-south')) $('#kpi-bplus-south').textContent = calcRate(s.block3.pos_gtot, s.block3.presumptive);
-      if ($('#kpi-bplus-north')) $('#kpi-bplus-north').textContent = calcRate(n.block3.pos_gtot, n.block3.presumptive);
-      if ($('#kpi-bplus-sub')) $('#kpi-bplus-sub').textContent = calcRate(t.block3.pos_gtot, t.block3.presumptive);
+      if ($('#kpi-bplus-south')) $('#kpi-bplus-south').textContent = s.block3.pos_gtot.toLocaleString();
+      if ($('#kpi-bplus-north')) $('#kpi-bplus-north').textContent = n.block3.pos_gtot.toLocaleString();
+      if ($('#kpi-bplus-sub')) $('#kpi-bplus-sub').textContent = t.block3.pos_gtot.toLocaleString();
     }
 
     // ============================================
-    // 10. Registered Tested Xpert Rate (% of Presumptive)
+    // 10. Registered Tested Xpert Rate
     // ============================================
     dom.kpiXpertTestingRate.textContent = calcRate(data.block3.tested_gene_xpert, data.block3.presumptive);
     if (showBreakdown) {
@@ -632,15 +632,19 @@
     }
 
     // ============================================
-    // 11. Childhood TB Cases (<15 Years) - Show count + % of Total Registered (ALWAYS)
+    // 11. Childhood TB Cases (<15 Years) WITH PERCENTAGE
     // ============================================
     const childTotal = getChildTb(data.block2);
     const totalRegistered = data.block1.total.total;
-    const childPct = (totalRegistered > 0) ?
-      ((childTotal / totalRegistered) * 100).toFixed(1) + '%' : '0.0%';
+    const childPct = (showBreakdown && totalRegistered > 0) ?
+      ((childTotal / totalRegistered) * 100).toFixed(1) + '%' : '';
 
     if ($('#kpi-childhood-tb')) {
-      $('#kpi-childhood-tb').textContent = childTotal.toLocaleString() + ' (' + childPct + ')';
+      if (showBreakdown && childPct) {
+        $('#kpi-childhood-tb').textContent = childTotal.toLocaleString() + ' (' + childPct + ')';
+      } else {
+        $('#kpi-childhood-tb').textContent = childTotal.toLocaleString();
+      }
     }
     if ($('#kpi-child-male')) $('#kpi-child-male').textContent = getMaleChild(data.block2).toLocaleString();
     if ($('#kpi-child-female')) $('#kpi-child-female').textContent = getFemaleChild(data.block2).toLocaleString();
@@ -1030,10 +1034,6 @@
     });
   }
 
-
-
-
-
   function renderCategoriesChart(b1) {
     destroyChart('categories');
     const ctx = document.getElementById('chart-categories');
@@ -1046,11 +1046,6 @@
     const relapseCases = rowKeys.map(k => b1[k].relapse);
     const ukCases = rowKeys.map(k => b1[k].uk);
     const prevTx = rowKeys.map(k => b1[k].fail + b1[k].lost + b1[k].other);
-
-    // Get Presumptive count from Block 3 for percentage calculation
-    const blocks = getBlocks();
-    const data = blocks[state.activeQuarter];
-    const presumptive = data ? data.block3.presumptive : 0;
 
     state.charts['categories'] = new Chart(ctx, {
       type: 'bar',
@@ -1067,20 +1062,7 @@
         ...chartDefaults,
         plugins: {
           ...chartDefaults.plugins,
-          datalabels: { ...chartDefaults.plugins.datalabels, anchor: 'center', align: 'center' },
-          tooltip: {
-            ...chartDefaults.plugins.tooltip,
-            callbacks: {
-              label: function (context) {
-                const label = context.dataset.label || '';
-                const value = context.raw;
-                const categoryTotal = context.dataset.data.reduce((a, b) => a + b, 0);
-                const pctOfCategory = categoryTotal > 0 ? ((value / categoryTotal) * 100).toFixed(1) : 0;
-                const pctOfPresumptive = presumptive > 0 ? ((value / presumptive) * 100).toFixed(1) : 0;
-                return `${label}: ${value.toLocaleString()} (${pctOfCategory}% of category, ${pctOfPresumptive}% of Presumptive)`;
-              }
-            }
-          }
+          datalabels: { ...chartDefaults.plugins.datalabels, anchor: 'center', align: 'center' }
         },
         scales: {
           x: { ...chartDefaults.scales.x, stacked: true },
@@ -1089,9 +1071,6 @@
       }
     });
   }
-
-
-
 
   function renderOpdPieChart(b3) {
     destroyChart('opdPie');
