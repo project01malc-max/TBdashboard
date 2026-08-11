@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TB-07 Trend Analysis Dashboard (2023-2025)</title>
+    <title>TB-07 Trend Analysis Dashboard (2023–2025)</title>
     <style>
         /* ===== CSS Variables & Reset ===== */
         :root {
@@ -29,7 +29,6 @@
             --radius-md: 10px;
             --radius-lg: 16px;
             --shadow-sm: 0 4px 20px rgba(6, 182, 212, 0.15);
-            --shadow-glow: 0 0 30px rgba(6, 182, 212, 0.10);
             --space-xs: 6px;
             --space-sm: 10px;
             --space-md: 16px;
@@ -59,7 +58,6 @@
             line-height: 1.5;
         }
 
-        /* ===== Scrollbar ===== */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -74,7 +72,6 @@
             border-radius: 10px;
         }
 
-        /* ===== Layout ===== */
         .app-layout {
             display: flex;
             min-height: 100vh;
@@ -189,18 +186,23 @@
             color: var(--accent-1);
         }
 
-        /* ===== Main Content ===== */
-        .main-content {
-            flex: 1;
-            padding: var(--space-lg) var(--space-xl);
-            min-width: 0;
-            max-width: 100%;
+        .sidebar-project-link {
+            display: flex;
+            align-items: center;
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            gap: var(--space-sm);
         }
 
-        @media (max-width: 640px) {
-            .main-content {
-                padding: var(--space-md);
-            }
+        .sidebar-project-link:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
         }
 
         /* ===== Mobile Toggle ===== */
@@ -223,6 +225,20 @@
         @media (max-width: 820px) {
             .mobile-toggle {
                 display: block;
+            }
+        }
+
+        /* ===== Main Content ===== */
+        .main-content {
+            flex: 1;
+            padding: var(--space-lg) var(--space-xl);
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        @media (max-width: 640px) {
+            .main-content {
+                padding: var(--space-md);
             }
         }
 
@@ -255,41 +271,37 @@
             flex-wrap: wrap;
         }
 
-        .btn {
+        .status-badge {
             display: inline-flex;
             align-items: center;
-            gap: var(--space-xs);
-            padding: var(--space-sm) var(--space-lg);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-color);
-            background: var(--bg-glass);
-            color: var(--text-primary);
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all var(--transition-fast);
-            font-family: inherit;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
-        .btn:hover {
-            background: rgba(255, 255, 255, 0.06);
+        .status-badge.success {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-5);
         }
 
-        .btn-primary {
-            background: var(--gradient-primary);
-            border-color: transparent;
-            color: #fff;
+        .status-badge.warning {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--accent-4);
         }
 
-        .btn-primary:hover {
-            box-shadow: var(--shadow-sm);
-            transform: translateY(-1px);
+        .status-badge.info {
+            background: rgba(6, 182, 212, 0.12);
+            color: var(--accent-1);
         }
 
         /* ===== KPI Grid ===== */
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: var(--space-md);
             margin-bottom: var(--space-xl);
         }
@@ -298,11 +310,15 @@
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
-            padding: var(--space-md);
+            padding: var(--space-md) var(--space-sm);
             text-align: center;
             transition: border-color 0.3s;
             position: relative;
             overflow: hidden;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .kpi-card::before {
@@ -347,17 +363,33 @@
             background: linear-gradient(135deg, var(--accent-6), var(--accent-4));
         }
 
+        .kpi-card:nth-child(9)::before {
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+        }
+
+        .kpi-card:nth-child(10)::before {
+            background: linear-gradient(135deg, #f59e0b, #ec4899);
+        }
+
+        .kpi-card:nth-child(11)::before {
+            background: linear-gradient(135deg, #10b981, #8b5cf6);
+        }
+
+        .kpi-card:nth-child(12)::before {
+            background: linear-gradient(135deg, #06b6d4, #f43f5e);
+        }
+
         .kpi-card:hover {
             border-color: rgba(6, 182, 212, 0.2);
         }
 
         .kpi-icon {
             font-size: 1.4rem;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .kpi-value {
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 700;
             background: var(--gradient-primary);
             -webkit-background-clip: text;
@@ -388,7 +420,7 @@
         }
 
         .kpi-label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: var(--text-muted);
             font-weight: 500;
             text-transform: uppercase;
@@ -397,10 +429,10 @@
         }
 
         .kpi-trend {
-            font-size: 0.65rem;
+            font-size: 0.6rem;
             font-weight: 600;
             padding: 2px 8px;
-            border-radius: var(--radius-full);
+            border-radius: 12px;
             display: inline-block;
             margin-top: 4px;
         }
@@ -424,8 +456,8 @@
             display: flex;
             justify-content: space-around;
             align-items: center;
-            margin-top: 10px;
-            padding: 6px 4px;
+            margin-top: 8px;
+            padding: 4px 2px;
             background: rgba(0, 0, 0, 0.2);
             border-top: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
@@ -439,14 +471,14 @@
         }
 
         .kpi-breakdown-year {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             color: var(--text-muted);
             font-weight: 600;
             text-transform: uppercase;
         }
 
         .kpi-breakdown-val {
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             font-weight: 600;
             color: var(--text-secondary);
         }
@@ -459,6 +491,32 @@
         .kpi-breakdown-item.total .kpi-breakdown-val {
             color: #f59e0b;
             font-weight: 700;
+        }
+
+        .kpi-category-breakdown {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px 6px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.6rem;
+        }
+
+        .cat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1px 0;
+        }
+
+        .cat-label {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .cat-value {
+            color: var(--text-primary);
+            font-weight: 600;
         }
 
         /* ===== Charts Grid ===== */
@@ -511,7 +569,7 @@
             height: 100% !important;
         }
 
-        /* ===== Gaps & Improvements Section ===== */
+        /* ===== Insights Grid ===== */
         .insights-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -579,7 +637,7 @@
             font-weight: 500;
         }
 
-        /* ===== Summary Section ===== */
+        /* ===== Summary ===== */
         .summary-section {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -628,39 +686,20 @@
             }
         }
 
-        /* ===== Status Badges ===== */
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 2px 10px;
-            border-radius: var(--radius-full);
-            font-size: 0.65rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
+        @media (max-width: 480px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
 
-        .status-badge.critical {
-            background: rgba(244, 63, 94, 0.12);
-            color: var(--accent-6);
-        }
-
-        .status-badge.warning {
-            background: rgba(245, 158, 11, 0.12);
-            color: var(--accent-4);
-        }
-
-        .status-badge.success {
-            background: rgba(16, 185, 129, 0.12);
-            color: var(--accent-5);
+            .kpi-category-breakdown {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Mobile Sidebar Toggle -->
     <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle sidebar">☰</button>
 
     <div class="app-layout">
@@ -680,23 +719,22 @@
                 <nav class="sidebar-nav">
                     <a class="nav-link active" href="#overview" data-section="overview">📊 &nbsp;Overview</a>
                     <a class="nav-link" href="#charts" data-section="charts">📈 &nbsp;Trend Charts</a>
-                    <a class="nav-link" href="#insights" data-section="insights">🔍 &nbsp;Gaps & Improvements</a>
+                    <a class="nav-link" href="#insights" data-section="insights">🔍 &nbsp;Gaps &amp; Improvements</a>
                     <a class="nav-link" href="#summary" data-section="summary">📋 &nbsp;Executive Summary</a>
                 </nav>
             </div>
 
-            <div class="sidebar-section" style="margin-top: 24px;">
-                <div class="sidebar-section-title">Projects</div>
+            <div class="sidebar-section" style="margin-top:24px;">
+                <div class="sidebar-section-title">Yearly Dashboards</div>
                 <nav class="sidebar-nav">
-                    <a class="nav-link" href="Web_Dashboard_2023 - corrected/tb_dashboard.html"
-                        target="_blank">📁&nbsp;TB-07 All Projects-2023</a>
-                    <a class="nav-link" href="Web_Dashboard_2024 - corrected/tb_dashboard.html" target="_blank">📁
-                        &nbsp;TB-07 All Projects-2024</a>
-                    <a class="nav-link" href="Web_Dashboard_2025 - corrected/tb_dashboard.html" target="_blank">📁
-                        &nbsp;TB-07 All Projects-2025</a>
+                    <a class="sidebar-project-link" href="Web_Dashboard_2023 - corrected/tb_dashboard.html"
+                        target="_blank">📁&nbsp;2023 Dashboard</a>
+                    <a class="sidebar-project-link" href="Web_Dashboard_2024 - corrected/tb_dashboard.html"
+                        target="_blank">📁&nbsp;2024 Dashboard</a>
+                    <a class="sidebar-project-link" href="Web_Dashboard_2025 - corrected/tb_dashboard.html"
+                        target="_blank">📁&nbsp;2025 Dashboard</a>
                 </nav>
             </div>
-
         </aside>
 
         <!-- ====== Main Content ====== -->
@@ -711,310 +749,382 @@
                 <div class="top-bar-actions">
                     <span class="status-badge success">Data Loaded</span>
                     <span class="status-badge warning">3 Years</span>
+                    <span class="status-badge info">2023–2025</span>
                 </div>
             </div>
 
-            <!-- KPI Grid -->
+            <!-- ====== KPI Grid ====== -->
             <div class="kpi-grid" id="kpi-grid">
+                <!-- 1: Total Cases -->
                 <div class="kpi-card">
                     <div class="kpi-icon">👥</div>
-                    <div class="kpi-value" id="kpi-total-2025">14,813</div>
+                    <div class="kpi-value" id="kpi-total-2025">—</div>
                     <div class="kpi-label">Total Cases (2025)</div>
-                    <span class="kpi-trend up" id="kpi-total-trend">↗️ +11.0% vs 2024</span>
+                    <span class="kpi-trend up" id="kpi-total-trend">—</span>
                     <div class="kpi-breakdown">
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
-                                class="kpi-breakdown-val" id="kpi-total-2023">12,841</span></div>
+                                class="kpi-breakdown-val" id="kpi-total-2023">—</span></div>
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
-                                class="kpi-breakdown-val" id="kpi-total-2024">13,340</span></div>
+                                class="kpi-breakdown-val" id="kpi-total-2024">—</span></div>
                         <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
-                                class="kpi-breakdown-val" id="kpi-total-2025-sub">14,813</span></div>
+                                class="kpi-breakdown-val" id="kpi-total-2025-sub">—</span></div>
                         <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                                class="kpi-breakdown-val" id="kpi-total-grand">40,994</span></div>
+                                class="kpi-breakdown-val" id="kpi-total-grand">—</span></div>
                     </div>
                 </div>
+
+                <!-- 2: Presumptive Cases -->
                 <div class="kpi-card">
                     <div class="kpi-icon">🔬</div>
-                    <div class="kpi-value" id="kpi-presumptive-2025">65,788</div>
+                    <div class="kpi-value" id="kpi-presumptive-2025">—</div>
                     <div class="kpi-label">Presumptive Cases (2025)</div>
-                    <span class="kpi-trend up" id="kpi-presumptive-trend">↗️ +14.1% vs 2024</span>
+                    <span class="kpi-trend up" id="kpi-presumptive-trend">—</span>
                     <div class="kpi-breakdown">
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
-                                class="kpi-breakdown-val" id="kpi-presumptive-2023">54,725</span></div>
+                                class="kpi-breakdown-val" id="kpi-presumptive-2023">—</span></div>
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
-                                class="kpi-breakdown-val" id="kpi-presumptive-2024">57,679</span></div>
+                                class="kpi-breakdown-val" id="kpi-presumptive-2024">—</span></div>
                         <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
-                                class="kpi-breakdown-val" id="kpi-presumptive-2025-sub">65,788</span></div>
+                                class="kpi-breakdown-val" id="kpi-presumptive-2025-sub">—</span></div>
                         <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                                class="kpi-breakdown-val" id="kpi-presumptive-grand">178,192</span></div>
+                                class="kpi-breakdown-val" id="kpi-presumptive-grand">—</span></div>
                     </div>
                 </div>
+
+                <!-- 3: OPD Attendance -->
                 <div class="kpi-card">
                     <div class="kpi-icon">🏥</div>
-                    <div class="kpi-value" id="kpi-opd-2025">2.91M</div>
+                    <div class="kpi-value" id="kpi-opd-2025">—</div>
                     <div class="kpi-label">OPD Attendance (2025)</div>
-                    <span class="kpi-trend up" id="kpi-opd-trend">🚀 +32.4% vs 2024</span>
+                    <span class="kpi-trend up" id="kpi-opd-trend">—</span>
                     <div class="kpi-breakdown">
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
-                                class="kpi-breakdown-val" id="kpi-opd-2023">2.05M</span></div>
+                                class="kpi-breakdown-val" id="kpi-opd-2023">—</span></div>
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
-                                class="kpi-breakdown-val" id="kpi-opd-2024">2.20M</span></div>
+                                class="kpi-breakdown-val" id="kpi-opd-2024">—</span></div>
                         <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
-                                class="kpi-breakdown-val" id="kpi-opd-2025-sub">2.91M</span></div>
+                                class="kpi-breakdown-val" id="kpi-opd-2025-sub">—</span></div>
                         <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                                class="kpi-breakdown-val" id="kpi-opd-grand">7.16M</span></div>
+                                class="kpi-breakdown-val" id="kpi-opd-grand">—</span></div>
                     </div>
                 </div>
+
+                <!-- 4: B+ Confirmed -->
                 <div class="kpi-card">
                     <div class="kpi-icon">🧪</div>
-                    <div class="kpi-value" id="kpi-bplus-2025">5,317</div>
+                    <div class="kpi-value" id="kpi-bplus-2025">—</div>
                     <div class="kpi-label">B+ Confirmed (2025)</div>
-                    <span class="kpi-trend up" id="kpi-bplus-trend">↗️ +19.9% vs 2024</span>
+                    <span class="kpi-trend up" id="kpi-bplus-trend">—</span>
                     <div class="kpi-breakdown">
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
-                                class="kpi-breakdown-val" id="kpi-bplus-2023">4,910</span></div>
+                                class="kpi-breakdown-val" id="kpi-bplus-2023">—</span></div>
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
-                                class="kpi-breakdown-val" id="kpi-bplus-2024">4,436</span></div>
+                                class="kpi-breakdown-val" id="kpi-bplus-2024">—</span></div>
                         <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
-                                class="kpi-breakdown-val" id="kpi-bplus-2025-sub">5,317</span></div>
+                                class="kpi-breakdown-val" id="kpi-bplus-2025-sub">—</span></div>
                         <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                                class="kpi-breakdown-val" id="kpi-bplus-grand">14,663</span></div>
+                                class="kpi-breakdown-val" id="kpi-bplus-grand">—</span></div>
                     </div>
                 </div>
+
+                <!-- 5: Rifampicin Resistant -->
                 <div class="kpi-card">
                     <div class="kpi-icon">🧬</div>
-                    <div class="kpi-value" id="kpi-rr-tb">19</div>
+                    <div class="kpi-value" id="kpi-rr-2025">—</div>
                     <div class="kpi-label">Rifampicin Resistant (2025)</div>
-                    <span class="kpi-trend warning" id="kpi-rr-trend">⚠️ Active Detection</span>
+                    <span class="kpi-trend flat" id="kpi-rr-trend">—</span>
                     <div class="kpi-breakdown">
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
-                                class="kpi-breakdown-val" id="kpi-rr-2023">17</span></div>
+                                class="kpi-breakdown-val" id="kpi-rr-2023">—</span></div>
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
-                                class="kpi-breakdown-val" id="kpi-rr-2024">12</span></div>
+                                class="kpi-breakdown-val" id="kpi-rr-2024">—</span></div>
                         <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
-                                class="kpi-breakdown-val" id="kpi-rr-2025-sub">19</span></div>
+                                class="kpi-breakdown-val" id="kpi-rr-2025-sub">—</span></div>
                         <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                                class="kpi-breakdown-val" id="kpi-rr-grand">48</span></div>
+                                class="kpi-breakdown-val" id="kpi-rr-grand">—</span></div>
                     </div>
                 </div>
+
+                <!-- 6: HIV Screened -->
                 <div class="kpi-card">
                     <div class="kpi-icon">🎗️</div>
-                    <div class="kpi-value" id="kpi-hiv-screened">2,186</div>
+                    <div class="kpi-value" id="kpi-hiv-2025">—</div>
                     <div class="kpi-label">HIV Screened (2025)</div>
-                    <span class="kpi-trend up" id="kpi-hiv-trend">🚀 +244.3% vs 2024</span>
+                    <span class="kpi-trend up" id="kpi-hiv-trend">—</span>
                     <div class="kpi-breakdown">
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
-                                class="kpi-breakdown-val" id="kpi-hiv-2023">646</span></div>
+                                class="kpi-breakdown-val" id="kpi-hiv-2023">—</span></div>
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
-                                class="kpi-breakdown-val" id="kpi-hiv-2024">635</span></div>
+                                class="kpi-breakdown-val" id="kpi-hiv-2024">—</span></div>
                         <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
-                                class="kpi-breakdown-val" id="kpi-hiv-2025-sub">2,186</span></div>
+                                class="kpi-breakdown-val" id="kpi-hiv-2025-sub">—</span></div>
                         <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                                class="kpi-breakdown-val" id="kpi-hiv-grand">3,467</span></div>
+                                class="kpi-breakdown-val" id="kpi-hiv-grand">—</span></div>
                     </div>
                 </div>
+
+                <!-- 7: Contacts Screened -->
                 <div class="kpi-card">
                     <div class="kpi-icon">👨‍👩‍👧‍👦</div>
-                    <div class="kpi-value" id="kpi-contact-screened">21,486</div>
+                    <div class="kpi-value" id="kpi-contact-2025">—</div>
                     <div class="kpi-label">Contacts Screened (2025)</div>
-                    <span class="kpi-trend up" id="kpi-contact-trend">↗️ High Coverage</span>
+                    <span class="kpi-trend up" id="kpi-contact-trend">—</span>
                     <div class="kpi-breakdown">
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
-                                class="kpi-breakdown-val" id="kpi-contact-2023">17,994</span></div>
+                                class="kpi-breakdown-val" id="kpi-contact-2023">—</span></div>
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
-                                class="kpi-breakdown-val" id="kpi-contact-2024">19,618</span></div>
+                                class="kpi-breakdown-val" id="kpi-contact-2024">—</span></div>
                         <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
-                                class="kpi-breakdown-val" id="kpi-contact-2025-sub">21,486</span></div>
+                                class="kpi-breakdown-val" id="kpi-contact-2025-sub">—</span></div>
                         <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                                class="kpi-breakdown-val" id="kpi-contact-grand">59,098</span></div>
+                                class="kpi-breakdown-val" id="kpi-contact-grand">—</span></div>
                     </div>
                 </div>
+
+                <!-- 8: TPT Initiated -->
                 <div class="kpi-card">
                     <div class="kpi-icon">🛡️</div>
-                    <div class="kpi-value" id="kpi-tpt">2,131</div>
+                    <div class="kpi-value" id="kpi-tpt-2025">—</div>
                     <div class="kpi-label">TPT Initiated (2025)</div>
-                    <span class="kpi-trend up" id="kpi-tpt-trend">🚀 Major Scale-up</span>
+                    <span class="kpi-trend up" id="kpi-tpt-trend">—</span>
                     <div class="kpi-breakdown">
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
-                                class="kpi-breakdown-val" id="kpi-tpt-2023">79</span></div>
+                                class="kpi-breakdown-val" id="kpi-tpt-2023">—</span></div>
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
-                                class="kpi-breakdown-val" id="kpi-tpt-2024">694</span></div>
+                                class="kpi-breakdown-val" id="kpi-tpt-2024">—</span></div>
                         <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
-                                class="kpi-breakdown-val" id="kpi-tpt-2025-sub">2,131</span></div>
+                                class="kpi-breakdown-val" id="kpi-tpt-2025-sub">—</span></div>
                         <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                                class="kpi-breakdown-val" id="kpi-tpt-grand">2,904</span></div>
+                                class="kpi-breakdown-val" id="kpi-tpt-grand">—</span></div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Charts Section -->
-            <div class="charts-grid" id="charts">
+                <!-- 9: Childhood TB -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">👶</div>
+                    <div class="kpi-value" id="kpi-child-2025">—</div>
+                    <div class="kpi-label">Childhood TB (<15 yrs) (2025)</div>
+                            <span class="kpi-trend up" id="kpi-child-trend">—</span>
+                            <div class="kpi-breakdown">
+                                <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
+                                        class="kpi-breakdown-val" id="kpi-child-2023">—</span></div>
+                                <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
+                                        class="kpi-breakdown-val" id="kpi-child-2024">—</span></div>
+                                <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
+                                        class="kpi-breakdown-val" id="kpi-child-2025-sub">—</span></div>
+                                <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                                        class="kpi-breakdown-val" id="kpi-child-grand">—</span></div>
+                            </div>
+                    </div>
 
-                <!-- Case Notification Trend -->
-                <div class="chart-card full-width">
-                    <div class="chart-header">
-                        <div>
+                    <!-- 10: HH Total -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon">🏠</div>
+                        <div class="kpi-value" id="kpi-hh-2025">—</div>
+                        <div class="kpi-label">Total HH of B+PTB (2025)</div>
+                        <span class="kpi-trend up" id="kpi-hh-trend">—</span>
+                        <div class="kpi-breakdown">
+                            <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
+                                    class="kpi-breakdown-val" id="kpi-hh-2023">—</span></div>
+                            <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
+                                    class="kpi-breakdown-val" id="kpi-hh-2024">—</span></div>
+                            <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
+                                    class="kpi-breakdown-val" id="kpi-hh-2025-sub">—</span></div>
+                            <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                                    class="kpi-breakdown-val" id="kpi-hh-grand">—</span></div>
+                        </div>
+                    </div>
+
+                    <!-- 11: Contacts Diagnosed -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon">🩺</div>
+                        <div class="kpi-value" id="kpi-cdiag-2025">—</div>
+                        <div class="kpi-label">HH Contacts Diagnosed (2025)</div>
+                        <span class="kpi-trend down" id="kpi-cdiag-trend">—</span>
+                        <div class="kpi-breakdown">
+                            <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
+                                    class="kpi-breakdown-val" id="kpi-cdiag-2023">—</span></div>
+                            <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
+                                    class="kpi-breakdown-val" id="kpi-cdiag-2024">—</span></div>
+                            <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
+                                    class="kpi-breakdown-val" id="kpi-cdiag-2025-sub">—</span></div>
+                            <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                                    class="kpi-breakdown-val" id="kpi-cdiag-grand">—</span></div>
+                        </div>
+                    </div>
+
+                    <!-- 12: HIV Positive TB Patients -->
+                    <div class="kpi-card">
+                        <div class="kpi-icon">🩸</div>
+                        <div class="kpi-value" id="kpi-hivpos-2025">—</div>
+                        <div class="kpi-label">HIV+ TB Patients (2025)</div>
+                        <span class="kpi-trend up" id="kpi-hivpos-trend">—</span>
+                        <div class="kpi-breakdown">
+                            <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
+                                    class="kpi-breakdown-val" id="kpi-hivpos-2023">—</span></div>
+                            <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
+                                    class="kpi-breakdown-val" id="kpi-hivpos-2024">—</span></div>
+                            <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
+                                    class="kpi-breakdown-val" id="kpi-hivpos-2025-sub">—</span></div>
+                            <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                                    class="kpi-breakdown-val" id="kpi-hivpos-grand">—</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ====== Charts Section ====== -->
+                <div class="charts-grid" id="charts">
+
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
                             <div class="chart-title">📊 Yearly TB Case Notification Trend</div>
                             <div class="chart-subtitle">Total cases registered across all projects (2023–2025)</div>
                         </div>
+                        <div class="chart-canvas-wrap" style="height:280px;">
+                            <canvas id="chart-cases"></canvas>
+                        </div>
                     </div>
-                    <div class="chart-canvas-wrap" style="height: 280px;">
-                        <canvas id="chart-cases"></canvas>
-                    </div>
-                </div>
 
-                <!-- Diagnostic Cascade -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div>
+                    <div class="chart-card">
+                        <div class="chart-header">
                             <div class="chart-title">🔬 Diagnostic Cascade Performance</div>
                             <div class="chart-subtitle">Presumptive vs B+ Confirmed cases</div>
                         </div>
-                    </div>
-                    <div class="chart-canvas-wrap">
-                        <canvas id="chart-diagnostic"></canvas>
-                    </div>
-                </div>
-
-                <!-- Drug Resistance -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div>
-                            <div class="chart-title">🧬 Drug Resistance Trend (DST)</div>
-                            <div class="chart-subtitle">Rifampicin, Isoniazid & Fluoroquinolone resistance</div>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="chart-diagnostic"></canvas>
                         </div>
                     </div>
-                    <div class="chart-canvas-wrap">
-                        <canvas id="chart-dst"></canvas>
-                    </div>
-                </div>
 
-                <!-- HIV Screening -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">🧬 Drug Resistance Trend (DST)</div>
+                            <div class="chart-subtitle">Rifampicin, Isoniazid &amp; Fluoroquinolone resistance</div>
+                        </div>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="chart-dst"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
                             <div class="chart-title">🎗️ HIV Screening among TB Patients</div>
                             <div class="chart-subtitle">TB patients tested for HIV (2023–2025)</div>
                         </div>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="chart-hiv"></canvas>
+                        </div>
                     </div>
-                    <div class="chart-canvas-wrap">
-                        <canvas id="chart-hiv"></canvas>
-                    </div>
-                </div>
 
-                <!-- Contact Tracing -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div>
+                    <div class="chart-card">
+                        <div class="chart-header">
                             <div class="chart-title">👨‍👩‍👧‍👦 Household Contact Tracing</div>
                             <div class="chart-subtitle">Contacts screened and diagnosed with TB</div>
                         </div>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="chart-contact"></canvas>
+                        </div>
                     </div>
-                    <div class="chart-canvas-wrap">
-                        <canvas id="chart-contact"></canvas>
-                    </div>
-                </div>
 
-                <!-- TPT Initiation -->
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <div>
+                    <div class="chart-card">
+                        <div class="chart-header">
                             <div class="chart-title">🛡️ TPT Initiation Trend</div>
                             <div class="chart-subtitle">Household contacts put on preventive therapy</div>
                         </div>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="chart-tpt"></canvas>
+                        </div>
                     </div>
-                    <div class="chart-canvas-wrap">
-                        <canvas id="chart-tpt"></canvas>
+
+                </div>
+
+                <!-- ====== Gaps & Improvements ====== -->
+                <div class="insights-grid" id="insights">
+
+                    <div class="insight-card gap">
+                        <h3>🚨 Major Gaps Identified</h3>
+                        <ul>
+                            <li>
+                                <span class="icon">⚠️</span>
+                                <div><span class="highlight">HIV/TB Treatment Linkage Gap</span><br />In 2025, while 33
+                                    TB patients tested positive for HIV, only 2 were initiated on ART, indicating a
+                                    critical gap in care linkage.</div>
+                            </li>
+                            <li>
+                                <span class="icon">🧬</span>
+                                <div><span class="highlight">Routine DST Screening Coverage</span><br />Only 4,208
+                                    patients out of 14,813 registered cases underwent DST in 2025 (28.4% coverage),
+                                    leaving potential drug resistance undetected.</div>
+                            </li>
+                            <li>
+                                <span class="icon">📉</span>
+                                <div><span class="highlight">Declining Yield in Contact Tracing</span><br />Contact
+                                    screening expanded to 21,486 contacts in 2025, but yield dropped to 946 diagnosed TB
+                                    cases (4.4% yield vs 20.1% in 2023).</div>
+                            </li>
+                        </ul>
                     </div>
+
+                    <div class="insight-card improvement">
+                        <h3>✅ Improvements Observed</h3>
+                        <ul>
+                            <li>
+                                <span class="icon">📈</span>
+                                <div><span class="highlight">Consistent Case Notification Growth</span><br />Total case
+                                    notifications increased from 12,841 (2023) to 13,340 (2024) and 14,813 (2025) — an
+                                    overall +15.4% expansion.</div>
+                            </li>
+                            <li>
+                                <span class="icon">🚀</span>
+                                <div><span class="highlight">Exponential Scale-Up in TPT</span><br />Preventive therapy
+                                    initiation scaled up dramatically from 79 (2023) to 694 (2024) and 2,131 (2025)
+                                    household contacts.</div>
+                            </li>
+                            <li>
+                                <span class="icon">🎗️</span>
+                                <div><span class="highlight">HIV Screening Expansion</span><br />HIV screening among TB
+                                    patients surged by +244.3% in 2025 (2,186 tested vs 635 in 2024).</div>
+                            </li>
+                            <li>
+                                <span class="icon">🔬</span>
+                                <div><span class="highlight">OPD &amp; Presumptive Case Finding</span><br />OPD
+                                    attendance expanded to 2.91 million and presumptive case identification grew to
+                                    65,788 in 2025 (+20.2% vs 2023).</div>
+                            </li>
+                        </ul>
+                    </div>
+
                 </div>
 
-            </div>
-
-            <!-- Gaps & Improvements Section -->
-            <div class="insights-grid" id="insights">
-
-                <!-- Major Gaps -->
-                <div class="insight-card gap">
-                    <h3>🚨 Major Gaps Identified</h3>
-                    <ul>
-                        <li>
-                            <span class="icon">⚠️</span>
-                            <div><span class="highlight">HIV/TB Treatment Linkage Gap</span><br />In 2025, while 33 TB
-                                patients tested positive for HIV, only 2 were initiated on ART, indicating a critical
-                                gap in care linkage.</div>
-                        </li>
-                        <li>
-                            <span class="icon">🧬</span>
-                            <div><span class="highlight">Routine DST Screening Coverage</span><br />Only 4,208 patients
-                                out of 14,813 registered cases underwent DST in 2025 (28.4% coverage), leaving potential
-                                drug resistance undetected.</div>
-                        </li>
-                        <li>
-                            <span class="icon">📉</span>
-                            <div><span class="highlight">Declining Yield in Contact Tracing</span><br />Contact
-                                screening expanded to 21,486 contacts in 2025, but yield dropped to 946 diagnosed TB
-                                cases (4.4% yield vs 20.1% in 2023).</div>
-                        </li>
-                    </ul>
+                <!-- ====== Executive Summary ====== -->
+                <div class="summary-section" id="summary">
+                    <h3>📋 Executive Summary</h3>
+                    <p>
+                        The TB-07 trend analysis demonstrates <strong>sustained program growth from 2023 to
+                            2025</strong>
+                        across all core performance indicators. Consolidated total TB case notifications expanded from
+                        <strong>12,841 cases in 2023</strong> to <strong>13,340 in 2024 (+3.9%)</strong> and reached
+                        <strong>14,813 cases in 2025 (+11.0%)</strong>, reflecting an overall 2-year growth of
+                        <strong>+15.4%</strong>.
+                    </p>
+                    <br />
+                    <p>
+                        Key programmatic achievements include a <strong>dramatic scale-up of TB Preventive Therapy
+                            (TPT)</strong>
+                        from 79 contacts in 2023 to 2,131 in 2025, alongside a <strong>surging HIV screening
+                            rate</strong>
+                        (2,186 tested in 2025). High-priority focus areas going forward include:
+                        <strong>(1)</strong> Strengthening ART initiation for HIV-positive TB patients,
+                        <strong>(2)</strong> Expanding routine DST coverage beyond 28%, and
+                        <strong>(3)</strong> Maintaining high-yield household contact investigation.
+                    </p>
+                    <br />
+                    <p style="color: var(--text-muted); font-size: 0.8rem;">
+                        <strong>Data Source:</strong> All Projects Total sheets (2023, 2024, 2025) from TB-07 quarterly
+                        reports.<br />
+                        <strong>Note:</strong> All values represent consolidated totals across all projects and
+                        quarters.
+                    </p>
                 </div>
-
-                <!-- Improvements -->
-                <div class="insight-card improvement">
-                    <h3>✅ Improvements Observed</h3>
-                    <ul>
-                        <li>
-                            <span class="icon">📈</span>
-                            <div><span class="highlight">Consistent Case Notification Growth</span><br />Total case
-                                notifications increased from 12,841 (2023) to 13,340 (2024) and 14,813 (2025) — a
-                                overall +15.4% expansion.</div>
-                        </li>
-                        <li>
-                            <span class="icon">🚀</span>
-                            <div><span class="highlight">Exponential Scale-Up in TPT</span><br />Preventive therapy
-                                initiation scaled up dramatically from 79 (2023) to 694 (2024) and 2,131 (2025)
-                                household contacts.</div>
-                        </li>
-                        <li>
-                            <span class="icon">🎗️</span>
-                            <div><span class="highlight">HIV Screening Expansion</span><br />HIV screening among TB
-                                patients surged by +244.3% in 2025 (2,186 tested vs 635 in 2024).</div>
-                        </li>
-                        <li>
-                            <span class="icon">🔬</span>
-                            <div><span class="highlight">OPD & Presumptive Case Finding</span><br />OPD attendance
-                                expanded to 2.91 million and presumptive case identification grew to 65,788 in 2025
-                                (+20.2% vs 2023).</div>
-                        </li>
-                    </ul>
-                </div>
-
-            </div>
-
-            <!-- Executive Summary -->
-            <div class="summary-section" id="summary">
-                <h3>📋 Executive Summary</h3>
-                <p>
-                    The TB-07 trend analysis demonstrates <strong>sustained program growth from 2023 to 2025</strong>
-                    across all core performance indicators. Consolidated total TB case notifications expanded from
-                    <strong>12,841 cases in 2023</strong> to <strong>13,340 in 2024 (+3.9%)</strong> and reached
-                    <strong>14,813 cases in 2025 (+11.0%)</strong>, reflecting an overall 2-year growth of
-                    <strong>+15.4%</strong>.
-                </p>
-                <br />
-                <p>
-                    Key programmatic achievements include a <strong>dramatic scale-up of TB Preventive Therapy
-                        (TPT)</strong> from 79 contacts in 2023 to 2,131 in 2025, alongside a <strong>surging HIV
-                        screening rate</strong> (2,186 tested in 2025). High-priority focus areas going forward include:
-                    <strong>(1)</strong> Strengthening ART initiation for HIV-positive TB patients, <strong>(2)</strong>
-                    Expanding routine DST coverage beyond 28%, and <strong>(3)</strong> Maintaining high-yield household
-                    contact investigation.
-                </p>
-                <br />
-                <p style="color: var(--text-muted); font-size: 0.8rem;">
-                    <strong>Data Source:</strong> All Projects Total sheets (2023, 2024, 2025) from TB-07 quarterly
-                    reports.<br />
-                    <strong>Note:</strong> All values represent consolidated totals across all projects and quarters.
-                </p>
-            </div>
 
         </main>
 
@@ -1023,9 +1133,9 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js">
     </script>
-
     <!-- Dashboard JavaScript -->
-    <script src="trend_dashboard.js"></script>
+    <script src="trend_dashboard.js">
+    </script>
 
 </body>
 
