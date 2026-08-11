@@ -1,7 +1,6 @@
 /* ============================================
    TB-07 Case Registration Dashboard Logic
-   Application Logic, Excel Parsing, Chart.js
-   UPDATED FOR 2024 DATA FORMAT
+   Full version – all cards restored, Card #12 shows HIV tested + positive
    ============================================ */
 
 (function () {
@@ -45,17 +44,77 @@
     quarterSelect: $('#quarter-select'),
     facilityTitle: $('#facility-title'),
 
-    kpiTotalRegistered: $('#kpi-total-registered'),
+    // Card 1
+    kpiTotalOpd: $('#kpi-total-opd'),
+    kpiOpdSouth: $('#kpi-opd-south'),
+    kpiOpdNorth: $('#kpi-opd-north'),
+    kpiOpdSub: $('#kpi-opd-sub'),
+
+    // Card 2
     kpiPresumptiveRate: $('#kpi-presumptive-rate'),
-    kpiHivScreening: $('#kpi-hiv-screening'),
-    kpiWrdTesting: $('#kpi-wrd-testing'),
-    kpiXpertTestingRate: $('#kpi-xpert-testing-rate'),
-    kpiContactScreened: $('#kpi-contact-screened'),
-    kpiTptInitiated: $('#kpi-tpt-initiated'),
-    kpiAfbTestingRate: $('#kpi-afb-testing-rate'),
-    kpiXpertPositivity: $('#kpi-xpert-positivity'),
+    kpiPresumptiveSouth: $('#kpi-presumptive-south'),
+    kpiPresumptiveNorth: $('#kpi-presumptive-north'),
+    kpiPresumptiveSub: $('#kpi-presumptive-sub'),
+
+    // Card 3
+    kpiAfbPositive: $('#kpi-afb-positive'),
+    kpiAfbPosSouth: $('#kpi-afb-pos-south'),
+    kpiAfbPosNorth: $('#kpi-afb-pos-north'),
+    kpiAfbPosSub: $('#kpi-afb-pos-sub'),
+
+    // Card 4
+    kpiXpertPositive: $('#kpi-xpert-positive'),
+    kpiXpertPosSouth: $('#kpi-xpert-pos-south'),
+    kpiXpertPosNorth: $('#kpi-xpert-pos-north'),
+    kpiXpertPosSub: $('#kpi-xpert-pos-sub'),
+
+    // Card 5
+    kpiTotalRegistered: $('#kpi-total-registered'),
+    kpiRegPulmBcf: $('#kpi-reg-pulm-bcf'),
+    kpiRegPulmCd: $('#kpi-reg-pulm-cd'),
+    kpiRegEpBcf: $('#kpi-reg-ep-bcf'),
+    kpiRegEpCd: $('#kpi-reg-ep-cd'),
+
+    // Card 6
     kpiBPlusConfirmed: $('#kpi-b-plus-confirmed'),
 
+    // Card 7
+    kpiHhTotal: $('#kpi-hh-total'),
+    kpiHhSouth: $('#kpi-hh-south'),
+    kpiHhNorth: $('#kpi-hh-north'),
+    kpiHhSub: $('#kpi-hh-sub'),
+
+    // Card 8
+    kpiContactScreened: $('#kpi-contact-screened'),
+    kpiContactSouth: $('#kpi-contact-south'),
+    kpiContactNorth: $('#kpi-contact-north'),
+    kpiContactSub: $('#kpi-contact-sub'),
+
+    // Card 9
+    kpiContactDiagnosed: $('#kpi-contact-diagnosed'),
+    kpiContactDiagnosedSouth: $('#kpi-contact-diagnosed-south'),
+    kpiContactDiagnosedNorth: $('#kpi-contact-diagnosed-north'),
+    kpiContactDiagnosedSub: $('#kpi-contact-diagnosed-sub'),
+
+    // Card 10
+    kpiChildTb: $('#kpi-childhood-tb'),
+    kpiChildSouth: $('#kpi-child-south'),
+    kpiChildNorth: $('#kpi-child-north'),
+    kpiChildSub: $('#kpi-child-sub'),
+
+    // Card 11
+    kpiTptInitiated: $('#kpi-tpt-initiated'),
+    kpiTptSouth: $('#kpi-tpt-south'),
+    kpiTptNorth: $('#kpi-tpt-north'),
+    kpiTptSub: $('#kpi-tpt-sub'),
+
+    // Card 12 – HIV (now shows tested & positive)
+    kpiHivScreening: $('#kpi-hiv-screening'),
+    kpiHivSouth: $('#kpi-hiv-south'),
+    kpiHivNorth: $('#kpi-hiv-north'),
+    kpiHivSub: $('#kpi-hiv-sub'),
+
+    // Table bodies
     tbodyBlock1: $('#tbody-block-1'),
     tbodyBlock2: $('#tbody-block-2'),
     tbodyBlock3: $('#tbody-block-3'),
@@ -81,7 +140,7 @@
   }
 
   /* ────────────────────────────────────────────
-     Epidemiological Data Parser - 2024 Format
+     Parser – with correct HIV row detection
      ──────────────────────────────────────────── */
   const blockOffsets = {
     q1: 0,
@@ -98,33 +157,101 @@
   }
 
   function findRowOffset(rows, startIdx, searchStr, maxOffset = 50) {
+    const lowerSearch = searchStr.toLowerCase();
     for (let i = 0; i <= maxOffset; i++) {
       const row = rows[startIdx + i] || [];
       for (let c = 0; c < row.length; c++) {
-        const v = (row[c] || '').toString();
-        if (v.includes(searchStr)) return i;
+        const v = (row[c] || '').toString().toLowerCase();
+        if (v.includes(lowerSearch)) return i;
       }
     }
     return -1;
   }
 
+  /* ────────────────────────────────────────────
+     Column-shift tolerant helpers
+     The source workbook's column layout has shifted between report years
+     (extra blank/merged columns get inserted by whoever maintains the sheet).
+     Rather than hard-coding cell indices, we read the *values* present in a
+     row/range in left-to-right order (ignoring blanks) and, where the layout
+     itself changed (not just shifted), we locate columns by matching the
+     header text instead of a fixed index.
+     ──────────────────────────────────────────── */
+
+  // Returns every non-blank numeric value in a row (or a slice of one),
+  // in column order. Text cells are ignored, so this stays correct even
+  // when extra blank columns are inserted between the real data columns.
+  function numericValues(row, fromCol, toCol) {
+    const out = [];
+    if (!row) return out;
+    const start = fromCol || 0;
+    const end = (toCol === undefined || toCol === null) ? row.length : toCol;
+    for (let c = start; c < end && c < row.length; c++) {
+      const v = row[c];
+      if (v !== undefined && v !== null && v !== '') {
+        const n = parseFloat(v);
+        if (!isNaN(n)) out.push(n);
+      }
+    }
+    return out;
+  }
+
+  // Safe positional read out of a numericValues() array.
+  function nv(nums, i) {
+    return (nums && nums.length > i) ? nums[i] : 0;
+  }
+
+  // Finds the column index of the first cell whose text contains every
+  // string in `includes` (case-insensitive) and none of `excludes`.
+  function findColByText(row, includes, excludes, fromCol) {
+    if (!row) return -1;
+    const start = fromCol || 0;
+    for (let c = start; c < row.length; c++) {
+      const v = (row[c] || '').toString().toLowerCase();
+      if (!v) continue;
+      if (includes.every(s => v.includes(s)) && !(excludes || []).some(s => v.includes(s))) {
+        return c;
+      }
+    }
+    return -1;
+  }
+
+  // Finds the first non-blank cell after the cell containing `labelSubstr`.
+  function valueAfterLabel(row, labelSubstr) {
+    if (!row) return null;
+    const idx = findColByText(row, [labelSubstr]);
+    if (idx < 0) return null;
+    for (let i = idx + 1; i < row.length; i++) {
+      const v = row[i];
+      if (v !== undefined && v !== null && v !== '') return v.toString().trim();
+    }
+    return null;
+  }
+
   function parseBlock(rows, startIdx) {
     if (startIdx >= rows.length) return null;
 
-    // Find the header row containing 'Patients registered during'
     let headerOffset = findRowOffset(rows, startIdx, 'Patients registered during', 5);
     if (headerOffset < 0) headerOffset = 2;
 
     const headerRow = rows[startIdx + headerOffset] || [];
-    const bmu = headerRow[4] || 'KMC Leprosy Hospital';
-    const district = (headerRow[9] || 'West').replace(/:/g, '').trim();
-    const period = headerRow[24] || 'Quarter';
-    const year = (headerRow[27] || '2024').toString().replace('of Year', '').trim();
+    const bmu = headerRow[4] || 'MANGHOPIR';
+    let district = valueAfterLabel(headerRow, 'district');
+    if (!district || district.includes(':')) {
+      // District value wasn't filled in on this sheet — fall back to the
+      // facility's catchment/town label instead.
+      const fallback = valueAfterLabel(headerRow, 'central');
+      district = (fallback && !fallback.includes(':')) ? fallback : (district || 'Central');
+    }
+    district = district.replace(/:/g, '').trim();
+    const periodCell = (headerRow.find(c => (c || '').toString().toLowerCase().includes('quarter')));
+    const period = periodCell || 'Quarter';
+    const yearCell = headerRow.find(c => (c || '').toString().toLowerCase().includes('of year'));
+    const year = (yearCell || '2024').toString().replace(/of year/i, '').trim();
 
-    // --- Block 1: Case Registration Categories ---
+    // Block 1
     const b1LabelOffset = findRowOffset(rows, startIdx, 'Block 1:', 12);
     const b1DataStart = b1LabelOffset >= 0 ? b1LabelOffset + 3 : headerOffset + 7;
-
     const b1_raw = {
       pulm_b_cf: rows[startIdx + b1DataStart] || [],
       pulm_cd: rows[startIdx + b1DataStart + 1] || [],
@@ -132,19 +259,19 @@
       ep_cd: rows[startIdx + b1DataStart + 3] || [],
       total: rows[startIdx + b1DataStart + 4] || []
     };
-
-    // 2024 column mapping for Block 1:
-    const parseB1Row = (rawRow) => ({
-      new: parseCell(rawRow[10]),
-      relapse: parseCell(rawRow[12]),
-      uk: parseCell(rawRow[14]),
-      subtotal: parseCell(rawRow[17]),
-      fail: parseCell(rawRow[20]),
-      lost: parseCell(rawRow[23]),
-      other: parseCell(rawRow[25]),
-      total: parseCell(rawRow[27])
-    });
-
+    const parseB1Row = (rawRow) => {
+      const n = numericValues(rawRow);
+      return {
+        new: nv(n, 0),
+        relapse: nv(n, 1),
+        uk: nv(n, 2),
+        subtotal: nv(n, 3),
+        fail: nv(n, 4),
+        lost: nv(n, 5),
+        other: nv(n, 6),
+        total: nv(n, 7)
+      };
+    };
     const block1 = {
       pulm_b_cf: parseB1Row(b1_raw.pulm_b_cf),
       pulm_cd: parseB1Row(b1_raw.pulm_cd),
@@ -153,10 +280,9 @@
       total: parseB1Row(b1_raw.total)
     };
 
-    // --- Block 2: Age Group & Gender ---
+    // Block 2
     const b2LabelOffset = findRowOffset(rows, startIdx, 'Block 2:', 20);
     const b2DataStart = b2LabelOffset >= 0 ? b2LabelOffset + 3 : b1DataStart + 9;
-
     const b2_raw = {
       pulm_b_cf: rows[startIdx + b2DataStart] || [],
       pulm_cd: rows[startIdx + b2DataStart + 1] || [],
@@ -164,29 +290,33 @@
       ep_cd: rows[startIdx + b2DataStart + 3] || [],
       total: rows[startIdx + b2DataStart + 4] || []
     };
-
-    const parseB2Row = (rawRow) => ({
-      m_0_4: parseCell(rawRow[10]),
-      f_0_4: parseCell(rawRow[11]),
-      m_5_14: parseCell(rawRow[12]),
-      f_5_14: parseCell(rawRow[13]),
-      m_15_24: parseCell(rawRow[14]),
-      f_15_24: parseCell(rawRow[15]),
-      m_25_34: parseCell(rawRow[16]),
-      f_25_34: parseCell(rawRow[17]),
-      m_35_44: parseCell(rawRow[18]),
-      f_35_44: parseCell(rawRow[19]),
-      m_45_54: parseCell(rawRow[20]),
-      f_45_54: parseCell(rawRow[21]),
-      m_55_64: parseCell(rawRow[22]),
-      f_55_64: parseCell(rawRow[23]),
-      m_65: parseCell(rawRow[24]),
-      f_65: parseCell(rawRow[25]),
-      m_total: parseCell(rawRow[26]),
-      f_total: parseCell(rawRow[27]),
-      grand_total: parseCell(rawRow[26]) + parseCell(rawRow[27])
-    });
-
+    const parseB2Row = (rawRow) => {
+      // Some years add a trailing "Grand Total" column after Total M/Total F.
+      // We only need the first 18 age/gender values, so any extra trailing
+      // column is simply ignored.
+      const n = numericValues(rawRow).slice(0, 18);
+      return {
+        m_0_4: nv(n, 0),
+        f_0_4: nv(n, 1),
+        m_5_14: nv(n, 2),
+        f_5_14: nv(n, 3),
+        m_15_24: nv(n, 4),
+        f_15_24: nv(n, 5),
+        m_25_34: nv(n, 6),
+        f_25_34: nv(n, 7),
+        m_35_44: nv(n, 8),
+        f_35_44: nv(n, 9),
+        m_45_54: nv(n, 10),
+        f_45_54: nv(n, 11),
+        m_55_64: nv(n, 12),
+        f_55_64: nv(n, 13),
+        m_65: nv(n, 14),
+        f_65: nv(n, 15),
+        m_total: nv(n, 16),
+        f_total: nv(n, 17),
+        grand_total: nv(n, 16) + nv(n, 17)
+      };
+    };
     const block2 = {
       pulm_b_cf: parseB2Row(b2_raw.pulm_b_cf),
       pulm_cd: parseB2Row(b2_raw.pulm_cd),
@@ -195,66 +325,133 @@
       total: parseB2Row(b2_raw.total)
     };
 
-    // --- Block 3: Lab Diagnosis ---
+    // Block 3
+    // The testing/positivity sub-columns here have been reordered (and a new
+    // combined "AFB+Xpert tested" column added) across report years, so we
+    // locate every field by its header text rather than a fixed position.
     const b3LabelOffset = findRowOffset(rows, startIdx, 'Block 3:', 30);
     const b3DataOffset = b3LabelOffset >= 0 ? b3LabelOffset + 3 : b2DataStart + 7;
     const b3_row = rows[startIdx + b3DataOffset] || [];
+    const b3CategoryRow = b3LabelOffset >= 0 ? (rows[startIdx + b3LabelOffset + 1] || []) : [];
+    const b3SubRow = b3LabelOffset >= 0 ? (rows[startIdx + b3LabelOffset + 2] || []) : [];
+
+    const opdCol = findColByText(b3CategoryRow, ['new opd']);
+    const presumptiveCol = findColByText(b3CategoryRow, ['presumptive'], ['community']);
+    const commReferralsCol = findColByText(b3CategoryRow, ['community']);
+    const testedStartCol = findColByText(b3CategoryRow, ['using']);
+    const positiveStartCol = findColByText(b3CategoryRow, ['reported']);
+    const bPlusCol = findColByText(b3CategoryRow, ['registered'], ['gene xpert']);
+    const geneXpertCol = findColByText(b3CategoryRow, ['gene xpert']);
+
+    // Boundaries of the "tested using" sub-columns vs the "reported positive" sub-columns
+    const testedEndCol = positiveStartCol >= 0 ? positiveStartCol : (bPlusCol >= 0 ? bPlusCol : b3_row.length);
+    const positiveEndCol = bPlusCol >= 0 ? bPlusCol : (geneXpertCol >= 0 ? geneXpertCol : b3_row.length);
+
+    const testedAfbCol = findColByText(b3SubRow, ['afb'], ['+', '&'], testedStartCol >= 0 ? testedStartCol : 0);
+    const testedComboCol = findColByText(b3SubRow, ['&'], [], testedStartCol >= 0 ? testedStartCol : 0);
+    const testedXpertCol = findColByText(b3SubRow, ['xp'], ['&', '+'],
+      (testedAfbCol >= 0 ? testedAfbCol + 1 : (testedStartCol >= 0 ? testedStartCol : 0)));
+
+    const posAfbCol = findColByText(b3SubRow, ['afb'], ['+'], testedEndCol >= 0 ? testedEndCol : 0);
+    const posComboCol = findColByText(b3SubRow, ['+'], [], testedEndCol >= 0 ? testedEndCol : 0);
+    const posXpertCol = findColByText(b3SubRow, ['xp'], ['+'],
+      (posAfbCol >= 0 ? posAfbCol + 1 : (testedEndCol >= 0 ? testedEndCol : 0)));
+    const posGtotCol = findColByText(b3SubRow, ['g.tot'], [], testedEndCol >= 0 ? testedEndCol : 0);
+
+    const getCell = (col) => (col >= 0 ? parseCell(b3_row[col]) : 0);
 
     const block3 = {
-      opd: parseCell(b3_row[0]),
-      presumptive: parseCell(b3_row[1]),
-      comm_referrals: parseCell(b3_row[2]),
-      tested_afb: parseCell(b3_row[3]),
-      tested_xpert: parseCell(b3_row[4]),
-      pos_afb: parseCell(b3_row[5]),
-      pos_xpert: parseCell(b3_row[6]),
-      afb_xpert_combo: parseCell(b3_row[7]),
-      pos_gtot: parseCell(b3_row[8]),
-      registered_b_plus: parseCell(b3_row[9]),
-      tested_gene_xpert: parseCell(b3_row[10]),
+      opd: opdCol >= 0 ? getCell(opdCol) : parseCell(b3_row[0]),
+      presumptive: getCell(presumptiveCol),
+      comm_referrals: getCell(commReferralsCol),
+      tested_afb: getCell(testedAfbCol),
+      tested_afb_xpert_combo: getCell(testedComboCol), // new field in some report years; 0 if not present
+      tested_xpert: getCell(testedXpertCol),
+      pos_afb: getCell(posAfbCol),
+      pos_xpert: getCell(posXpertCol),
+      afb_xpert_combo: getCell(posComboCol),
+      pos_gtot: getCell(posGtotCol),
+      registered_b_plus: getCell(bPlusCol),
+      tested_gene_xpert: getCell(geneXpertCol),
     };
+    void positiveEndCol; // reserved for future sub-fields, not currently needed
 
-    // --- Block 4: HIV Activities & TPT ---
-    const hiv_data_row = rows[startIdx + b3DataOffset - 1] || [];
-    const hiv_h_row = rows[startIdx + b3DataOffset + 1] || [];
-    const tpt_6h = rows[startIdx + b3DataOffset + 2] || [];
-    const tpt_3hr = rows[startIdx + b3DataOffset + 3] || [];
-    const tpt_3hp = rows[startIdx + b3DataOffset + 4] || [];
+    // ★★★ HIV: Block 4 parsing based on Excel structure ★★★
+    const b4LabelOffset = findRowOffset(rows, startIdx, 'Block 4', 40);
+    let b4Base = startIdx + (b4LabelOffset >= 0 ? b4LabelOffset : 35);
+
+    // Subheading 1: "No. of TB patients tested for HIV"
+    let sub1Offset = findRowOffset(rows, b4Base, 'tested for HIV', 8);
+    if (sub1Offset < 0) sub1Offset = 1;
+    const hiv_row_idx = b4Base + sub1Offset + 1; // Value Row 1 (contains 646)
+    const hiv_row = rows[hiv_row_idx] || [];
+
+    // Subheading 2: "HIV patient tested for TB"
+    let sub2Offset = findRowOffset(rows, hiv_row_idx, 'tested for TB', 5);
+    let hivTb_row_idx = hiv_row_idx + 2; // Value Row 2 (contains 5)
+    if (sub2Offset >= 0) {
+      hivTb_row_idx = hiv_row_idx + sub2Offset + 1;
+    }
+    const hivTbRow = rows[hivTb_row_idx] || [];
+
+    const getNumAtIdx = (row, numIndex, fallbackCol) => {
+      if (!row || !row.length) return 0;
+      let nums = [];
+      for (let c = 0; c < row.length; c++) {
+        const val = row[c];
+        if (val !== undefined && val !== null && val !== '') {
+          const parsed = parseFloat(val);
+          if (!isNaN(parsed)) {
+            nums.push(parsed);
+          }
+        }
+      }
+      if (nums.length > numIndex) return nums[numIndex];
+      return parseCell(row[fallbackCol]);
+    };
 
     const block4 = {
-      tested_hiv: parseCell(hiv_data_row[13]),
-      pos_hiv: parseCell(hiv_data_row[16]),
-      art: parseCell(hiv_data_row[19]),
-      hiv_tested_tb: parseCell(hiv_h_row[13]),
-      hiv_pos_tb: parseCell(hiv_h_row[16]),
-      tb_tx: parseCell(hiv_h_row[19]),
-
-      tpt_6h_0_4: parseCell(tpt_6h[24]),
-      tpt_6h_5_14: parseCell(tpt_6h[26]),
-      tpt_6h_15: parseCell(tpt_6h[27]),
-
-      tpt_3hr_0_4: parseCell(tpt_3hr[24]),
-      tpt_3hr_5_14: parseCell(tpt_3hr[26]),
-      tpt_3hr_15: parseCell(tpt_3hr[27]),
-
-      tpt_3hp_0_4: parseCell(tpt_3hp[24]),
-      tpt_3hp_5_14: parseCell(tpt_3hp[26]),
-      tpt_3hp_15: parseCell(tpt_3hp[27]),
+      tested_hiv: getNumAtIdx(hiv_row, 0, 12),     // 646
+      pos_hiv: getNumAtIdx(hiv_row, 1, 14),        // 0
+      art: getNumAtIdx(hiv_row, 2, 16),            // 0
+      hiv_tested_tb: getNumAtIdx(hivTbRow, 0, 12),  // 5
+      hiv_pos_tb: getNumAtIdx(hivTbRow, 1, 14),     // 0
+      tb_tx: getNumAtIdx(hivTbRow, 2, 16),          // 0
+      ...(() => {
+        const tptRow = (r) => numericValues(rows[r] || []);
+        const t6h = tptRow(hivTb_row_idx + 1);
+        const t3hr = tptRow(hivTb_row_idx + 2);
+        const t3hp = tptRow(hivTb_row_idx + 3);
+        return {
+          tpt_6h_0_4: nv(t6h, 0), tpt_6h_5_14: nv(t6h, 1), tpt_6h_15: nv(t6h, 2),
+          tpt_3hr_0_4: nv(t3hr, 0), tpt_3hr_5_14: nv(t3hr, 1), tpt_3hr_15: nv(t3hr, 2),
+          tpt_3hp_0_4: nv(t3hp, 0), tpt_3hp_5_14: nv(t3hp, 1), tpt_3hp_15: nv(t3hp, 2),
+        };
+      })(),
     };
 
-    // --- Block 5: DST Resistance Result ---
+    // Blocks 5 & 6 sit side-by-side on the SAME rows (Block 5 on the left
+    // columns, Block 6 on the right columns), so we first find where Block 6
+    // begins on that shared label row and use it as the column boundary.
     const b5LabelOffset = findRowOffset(rows, startIdx, 'Block 5', 40);
     const b5DataStart = b5LabelOffset >= 0 ? b5LabelOffset + 3 : b3DataOffset + 9;
+    const b56LabelRow = b5LabelOffset >= 0 ? (rows[startIdx + b5LabelOffset] || []) : [];
+    const b5HeaderRow = b5LabelOffset >= 0 ? (rows[startIdx + b5LabelOffset + 1] || []) : [];
+    const b6StartCol = findColByText(b56LabelRow, ['block 6']);
+    const rifStartCol = findColByText(b5HeaderRow, ['rifampicin']);
 
-    const parseB5Row = (rawRow) => ({
-      rif_test: parseCell(rawRow[6]),
-      rif_res: parseCell(rawRow[7]),
-      inh_test: parseCell(rawRow[8]),
-      inh_res: parseCell(rawRow[9]),
-      flq_test: parseCell(rawRow[10]),
-      flq_res: parseCell(rawRow[11])
-    });
-
+    // Block 5
+    const parseB5Row = (rawRow) => {
+      const n = numericValues(rawRow, rifStartCol >= 0 ? rifStartCol : 0, b6StartCol >= 0 ? b6StartCol : undefined);
+      return {
+        rif_test: nv(n, 0),
+        rif_res: nv(n, 1),
+        inh_test: nv(n, 2),
+        inh_res: nv(n, 3),
+        flq_test: nv(n, 4),
+        flq_res: nv(n, 5)
+      };
+    };
     const block5 = {
       new_uk: parseB5Row(rows[startIdx + b5DataStart] || []),
       relapse: parseB5Row(rows[startIdx + b5DataStart + 1] || []),
@@ -262,97 +459,147 @@
       total: parseB5Row(rows[startIdx + b5DataStart + 3] || [])
     };
 
-    // --- Block 6: Contact Tracing & TPT ---
-    const ct_val_row = rows[startIdx + b5DataStart] || [];
-    const ct_reg_3hr = rows[startIdx + b5DataStart + 1] || [];
-    const ct_reg_3hp = rows[startIdx + b5DataStart + 2] || [];
+    // Block 6 (columns from b6StartCol onward, on the same rows as Block 5)
+    const b6DataStart = b5DataStart; // same rows as Block 5's data rows
+    const b6Col = b6StartCol >= 0 ? b6StartCol : 0;
+    const ct_val_row = rows[startIdx + b6DataStart] || [];       // "6H" row — also carries HH/screened/diagnosed totals
+    const ct_reg_3hr = rows[startIdx + b6DataStart + 1] || [];   // "3HR" row
+    const ct_reg_3hp = rows[startIdx + b6DataStart + 2] || [];   // "3HP" row
+
+    const mainVals = numericValues(ct_val_row, b6Col);   // [hhLt5, hhGt5, scrLt5, scrGt5, posLt5, posGt5, tpt0_4, tpt5_14, tpt15, imm0_4, imm5_14, imm15]
+    const hrVals = numericValues(ct_reg_3hr, b6Col);      // [tpt0_4, tpt5_14, tpt15, imm0_4, imm5_14, imm15]
+    const hpVals = numericValues(ct_reg_3hp, b6Col);      // [tpt0_4, tpt5_14, tpt15, imm0_4, imm5_14, imm15]
 
     const block6 = {
-      hh_total_lt5: parseCell(ct_val_row[13]),
-      hh_total_gt5: parseCell(ct_val_row[14]),
-      screened_lt5: parseCell(ct_val_row[15]),
-      screened_gt5: parseCell(ct_val_row[16]),
-      pos_lt5: parseCell(ct_val_row[17]),
-      pos_gt5: parseCell(ct_val_row[18]),
-
-      contacts_tpt_6h: [parseCell(ct_val_row[23]), parseCell(ct_val_row[24]), parseCell(ct_val_row[25])],
-      contacts_tpt_3hr: [parseCell(ct_reg_3hr[23]), parseCell(ct_reg_3hr[24]), parseCell(ct_reg_3hr[25])],
-      contacts_tpt_3hp: [parseCell(ct_reg_3hp[23]), parseCell(ct_reg_3hp[24]), parseCell(ct_reg_3hp[25])],
-
-      immuno_tpt_6h: [parseCell(ct_val_row[26]), parseCell(ct_val_row[27]), parseCell(ct_val_row[28])],
-      immuno_tpt_3hr: [parseCell(ct_reg_3hr[26]), parseCell(ct_reg_3hr[27]), parseCell(ct_reg_3hr[28])],
-      immuno_tpt_3hp: [parseCell(ct_reg_3hp[26]), parseCell(ct_reg_3hp[27]), parseCell(ct_reg_3hp[28])],
+      hh_total_lt5: nv(mainVals, 0),
+      hh_total_gt5: nv(mainVals, 1),
+      screened_lt5: nv(mainVals, 2),
+      screened_gt5: nv(mainVals, 3),
+      pos_lt5: nv(mainVals, 4),
+      pos_gt5: nv(mainVals, 5),
+      contacts_tpt_6h: [nv(mainVals, 6), nv(mainVals, 7), nv(mainVals, 8)],
+      contacts_tpt_3hr: [nv(hrVals, 0), nv(hrVals, 1), nv(hrVals, 2)],
+      contacts_tpt_3hp: [nv(hpVals, 0), nv(hpVals, 1), nv(hpVals, 2)],
+      immuno_tpt_6h: [nv(mainVals, 9), nv(mainVals, 10), nv(mainVals, 11)],
+      immuno_tpt_3hr: [nv(hrVals, 3), nv(hrVals, 4), nv(hrVals, 5)],
+      immuno_tpt_3hp: [nv(hpVals, 3), nv(hpVals, 4), nv(hpVals, 5)],
     };
 
     return { bmu, district, period, year, block1, block2, block3, block4, block5, block6 };
   }
 
   /* ────────────────────────────────────────────
-     Data Loading & Parsing Orchestrator
+     Data Loading
      ──────────────────────────────────────────── */
   function parseWorkbook(wb) {
     const ws = wb.Sheets['MPR'];
     if (!ws) {
-      toast('Sheet named "MPR" not found in the uploaded workbook.', 'error');
+      toast('Sheet named "MPR" not found.', 'error');
       return false;
     }
-
     const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
     state.rawData = rows;
-
     Object.keys(blockOffsets).forEach(qKey => {
       state.blocks[qKey] = parseBlock(rows, blockOffsets[qKey]);
     });
 
-    if (!state.blocks.consolidated) {
-      toast('Failed to parse MPR report data.', 'error');
-      return false;
-    }
-
-    const sheetMap = {
-      'KARACHI': 'karachiBlocks',
-      'SINDH': 'sindhBlocks',
-      'GILGIT BALTISTAN': 'gbBlocks',
-      'AZAD KHASHMIR': 'akBlocks',
-      'KHYBER PAKHTUNKHWA': 'kpkBlocks',
+    // Sheet name spelling/punctuation has varied between report years
+    // (e.g. "GILGIT -BALTISTAN" vs "GILGIT BALTISTAN", "KPK" vs
+    // "KHYBER PAKHTUNKHWA"), so each region accepts a list of aliases.
+    const sheetAliases = {
+      karachiBlocks: ['KARACHI'],
+      sindhBlocks: ['SINDH'],
+      gbBlocks: ['GILGIT -BALTISTAN', 'GILGIT BALTISTAN', 'GILGIT-BALTISTAN'],
+      akBlocks: ['AZAD - KASHMIR', 'AZAD KHASHMIR', 'AZAD KASHMIR', 'AZAD-KASHMIR'],
+      kpkBlocks: ['KPK', 'KHYBER PAKHTUNKHWA'],
     };
-
-    Object.keys(sheetMap).forEach(sheetName => {
-      const wsSheet = wb.Sheets[sheetName];
+    const findSheetName = (aliases) => wb.SheetNames.find(
+      n => aliases.some(a => n.trim().toUpperCase() === a.toUpperCase())
+    );
+    Object.keys(sheetAliases).forEach(stateKey => {
+      const name = findSheetName(sheetAliases[stateKey]);
+      const wsSheet = name ? wb.Sheets[name] : null;
       if (wsSheet) {
-        const sheetRows = XLSX.utils.sheet_to_json(wsSheet, { header: 1, defval: '' });
-        const targetKey = sheetMap[sheetName];
+        const rowsSheet = XLSX.utils.sheet_to_json(wsSheet, { header: 1, defval: '' });
+        const target = state[stateKey];
         Object.keys(blockOffsets).forEach(qKey => {
-          state[targetKey][qKey] = parseBlock(sheetRows, blockOffsets[qKey]);
+          target[qKey] = parseBlock(rowsSheet, blockOffsets[qKey]);
         });
-        console.log(`[parseWorkbook] ${sheetName} sheet parsed successfully.`);
+        console.log(`[parseWorkbook] ${name} sheet parsed.`);
       }
     });
 
-    const allProjName = Object.keys(wb.Sheets).find(n => n.startsWith('All Project Total')) || 'All Project Total - 2024';
-    const wsAllProj = wb.Sheets[allProjName];
-    if (wsAllProj) {
-      const rowsAllProj = XLSX.utils.sheet_to_json(wsAllProj, { header: 1, defval: '' });
+    // "All Project Total" sheet name carries the report year in it
+    // (e.g. "All Project Total - 2023" / "All Project Total - 2024"),
+    // so match it by prefix instead of an exact year-specific string.
+    const allProjectSheetName = wb.SheetNames.find(
+      n => n.trim().toUpperCase().startsWith('ALL PROJECT TOTAL')
+    );
+    const allProjectSheet = allProjectSheetName ? wb.Sheets[allProjectSheetName] : null;
+    if (allProjectSheet) {
+      const rowsAllProject = XLSX.utils.sheet_to_json(allProjectSheet, { header: 1, defval: '' });
       Object.keys(blockOffsets).forEach(qKey => {
-        state.allProjectBlocks[qKey] = parseBlock(rowsAllProj, blockOffsets[qKey]);
+        state.allProjectBlocks[qKey] = parseBlock(rowsAllProject, blockOffsets[qKey]);
       });
-      console.log('[parseWorkbook] All Project sheet parsed successfully.');
+      console.log(`[parseWorkbook] ${allProjectSheetName} sheet parsed.`);
+    } else {
+      toast('All Project Total sheet not found – using regional sum.', 'warning');
+      Object.keys(blockOffsets).forEach(qKey => {
+        state.allProjectBlocks[qKey] = getRegionalData(qKey).totalData;
+      });
     }
 
-    toast('Tuberculosis Registry report parsed successfully!', 'success');
+    toast('TB Registry report parsed successfully!', 'success');
     return true;
+  }
+
+  function getRegionalData(qKey) {
+    const q = qKey || state.activeQuarter;
+    const ak = state.akBlocks[q];
+    const gb = state.gbBlocks[q];
+    const kpk = state.kpkBlocks[q];
+    const karachi = state.karachiBlocks[q];
+    const sindh = state.sindhBlocks[q];
+    const mpr = state.blocks[q];
+
+    const northData = sumObjects(ak, sumObjects(gb, kpk));
+    const southData = sumObjects(mpr, sumObjects(karachi, sindh));
+    const totalData = sumObjects(northData, southData);
+
+    return { northData, southData, totalData };
+  }
+
+  function sumObjects(a, b) {
+    if (a === null || a === undefined) return (b !== null && b !== undefined) ? JSON.parse(JSON.stringify(b)) : null;
+    if (b === null || b === undefined) return (a !== null && a !== undefined) ? JSON.parse(JSON.stringify(a)) : null;
+    if (typeof a === 'number' && typeof b === 'number') return a + b;
+    if (Array.isArray(a) && Array.isArray(b)) {
+      const maxLen = Math.max(a.length, b.length);
+      const result = [];
+      for (let i = 0; i < maxLen; i++) {
+        const valA = typeof a[i] === 'number' ? a[i] : 0;
+        const valB = typeof b[i] === 'number' ? b[i] : 0;
+        result.push(valA + valB);
+      }
+      return result;
+    }
+    if (typeof a === 'object' && typeof b === 'object') {
+      const res = {};
+      const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+      keys.forEach(k => { res[k] = sumObjects(a[k], b[k]); });
+      return res;
+    }
+    return a !== undefined ? a : b;
   }
 
   function handleFiles(files) {
     if (!files || files.length === 0) return;
     showSpinner();
-
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target.result);
         const wb = XLSX.read(data, { type: 'array' });
-
         if (parseWorkbook(wb)) {
           state.activeSheet = 'MPR';
           dom.emptyState.style.display = 'none';
@@ -377,17 +624,15 @@
   function buildLoadedSheetsTab() {
     dom.sheetTabs.innerHTML = '';
     dom.sheetSection.style.display = 'block';
-
     const sheets = [
       { id: 'mpr', key: 'MPR', label: 'MPR Report', icon: '🦠', data: state.blocks },
       { id: 'karachi', key: 'KARACHI', label: 'Karachi Report', icon: '🏙️', data: state.karachiBlocks },
       { id: 'sindh', key: 'SINDH', label: 'Sindh Report', icon: '🏜️', data: state.sindhBlocks },
-      { id: 'gb', key: 'GILGIT BALTISTAN', label: 'Gilgit-Baltistan', icon: '🏔️', data: state.gbBlocks },
-      { id: 'ak', key: 'AZAD KHASHMIR', label: 'Azad Kashmir', icon: '🌲', data: state.akBlocks },
-      { id: 'kpk', key: 'KHYBER PAKHTUNKHWA', label: 'KPK Report', icon: '⛰️', data: state.kpkBlocks },
+      { id: 'gb', key: 'GILGIT -BALTISTAN', label: 'Gilgit-Baltistan', icon: '🏔️', data: state.gbBlocks },
+      { id: 'ak', key: 'AZAD - KASHMIR', label: 'Azad Kashmir', icon: '🌲', data: state.akBlocks },
+      { id: 'kpk', key: 'KPK', label: 'KPK Report', icon: '⛰️', data: state.kpkBlocks },
       { id: 'allproj', key: 'ALL_PROJECT', label: 'All Project Total', icon: '🌐', data: state.allProjectBlocks },
     ];
-
     sheets.forEach((sheet, index) => {
       const btn = document.createElement('button');
       btn.id = `sheet-btn-${sheet.id}`;
@@ -400,7 +645,7 @@
       `;
       if (!available) {
         btn.disabled = true;
-        btn.title = `${sheet.key} sheet not found in this workbook`;
+        btn.title = `${sheet.key} sheet not found`;
         btn.style.opacity = '0.45';
         btn.style.cursor = 'not-allowed';
       } else {
@@ -417,50 +662,17 @@
     });
   }
 
-  function sumObjects(a, b) {
-    if (!a) return b ? JSON.parse(JSON.stringify(b)) : null;
-    if (!b) return a ? JSON.parse(JSON.stringify(a)) : null;
-    if (typeof a === 'number' && typeof b === 'number') return a + b;
-    if (Array.isArray(a) && Array.isArray(b)) {
-      return a.map((val, i) => (typeof val === 'number' ? val + (b[i] || 0) : val));
-    }
-    if (typeof a === 'object' && typeof b === 'object') {
-      const res = {};
-      const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
-      keys.forEach(k => { res[k] = sumObjects(a[k], b[k]); });
-      return res;
-    }
-    return a || b;
-  }
-
-  function getRegionalData(qKey) {
-    const q = qKey || state.activeQuarter;
-    const ak = state.akBlocks[q];
-    const gb = state.gbBlocks[q];
-    const kpk = state.kpkBlocks[q];
-    const karachi = state.karachiBlocks[q];
-    const sindh = state.sindhBlocks[q];
-    const mpr = state.blocks[q];
-    const allProj = state.allProjectBlocks[q];
-
-    const northData = sumObjects(ak, sumObjects(gb, kpk));
-    const southData = sumObjects(mpr, sumObjects(karachi, sindh));
-    const totalData = allProj || sumObjects(northData, southData);
-
-    return { northData, southData, totalData };
-  }
-
   /* ────────────────────────────────────────────
-     UI Updates: KPIs, Tables, & Export
+     UI Updates
      ──────────────────────────────────────────── */
   function getBlocks() {
     const map = {
       'MPR': state.blocks,
       'KARACHI': state.karachiBlocks,
       'SINDH': state.sindhBlocks,
-      'GILGIT BALTISTAN': state.gbBlocks,
-      'AZAD KHASHMIR': state.akBlocks,
-      'KHYBER PAKHTUNKHWA': state.kpkBlocks,
+      'GILGIT -BALTISTAN': state.gbBlocks,
+      'AZAD - KASHMIR': state.akBlocks,
+      'KPK': state.kpkBlocks,
       'ALL_PROJECT': state.allProjectBlocks,
     };
     return map[state.activeSheet] || state.blocks;
@@ -471,43 +683,43 @@
       'MPR': '🦠 MPR',
       'KARACHI': '🏙️ KARACHI',
       'SINDH': '🏜️ SINDH',
-      'GILGIT BALTISTAN': '🏔️ GILGIT-BALTISTAN',
-      'AZAD KHASHMIR': '🌲 AZAD KASHMIR',
-      'KHYBER PAKHTUNKHWA': '⛰️ KPK',
+      'GILGIT -BALTISTAN': '🏔️ GILGIT-BALTISTAN',
+      'AZAD - KASHMIR': '🌲 AZAD KASHMIR',
+      'KPK': '⛰️ KPK',
       'ALL_PROJECT': '🌐 ALL PROJECT TOTAL',
     };
     return map[state.activeSheet] || '🦠 MPR';
   }
 
-  /* ────────────────────────────────────────────
-     HELPER: Check if current sheet is "All Project Total"
-     ──────────────────────────────────────────── */
   function isAllProjectSheet() {
     return state.activeSheet === 'ALL_PROJECT';
   }
 
-  /* ────────────────────────────────────────────
-     HELPER: Toggle breakdown visibility
-     ──────────────────────────────────────────── */
   function toggleBreakdownVisibility(show) {
-    const breakdowns = document.querySelectorAll('.kpi-breakdown');
-    breakdowns.forEach(el => {
+    document.querySelectorAll('.kpi-breakdown').forEach(el => {
       el.style.display = show ? 'flex' : 'none';
     });
   }
 
+  /* ────────────────────────────────────────────
+     ★★★ MAIN UPDATE FUNCTION ★★★
+     ──────────────────────────────────────────── */
   function updateDashboardView() {
-    const blocks = getBlocks();
-    const data = blocks[state.activeQuarter];
+    let blocks = getBlocks();
+    let data = blocks[state.activeQuarter];
     if (!data) {
       console.warn('No data for quarter:', state.activeQuarter, 'sheet:', state.activeSheet);
       return;
     }
 
-    const regional = getRegionalData(state.activeQuarter);
-    const n = regional.northData || data;
-    const s = regional.southData || data;
-    const t = regional.totalData || data;
+    let n = data, s = data, t = data;
+
+    if (isAllProjectSheet()) {
+      const regional = getRegionalData(state.activeQuarter);
+      n = regional.northData || data;
+      s = regional.southData || data;
+      // data remains All-Project sheet
+    }
 
     const calcRate = (num, den) => den > 0 ? (num / den * 100).toFixed(1) + '%' : '0.0%';
     const getTpt = (b6) => b6 ? (
@@ -516,150 +728,241 @@
       (b6.contacts_tpt_3hp ? b6.contacts_tpt_3hp.reduce((a, b) => a + b, 0) : 0)
     ) : 0;
     const getContact = (b6) => b6 ? (b6.screened_lt5 + b6.screened_gt5) : 0;
+    const getContactDiagnosed = (b6) => b6 ? (b6.pos_lt5 + b6.pos_gt5) : 0;
     const getMaleChild = (b2) => b2 && b2.total ? (b2.total.m_0_4 + b2.total.m_5_14) : 0;
     const getFemaleChild = (b2) => b2 && b2.total ? (b2.total.f_0_4 + b2.total.f_5_14) : 0;
-    const getChildTb = (b2) => getMaleChild(b2) + getFemaleChild(b2);
-    const getNrk = (b1) => b1.total.new + b1.total.relapse + b1.total.uk;
 
-    // Update Titles
+    // Titles
     const sheetBadge = `<span style="margin-left:10px;padding:2px 10px;background:linear-gradient(135deg,#06b6d4,#0891b2);border-radius:20px;font-size:0.7rem;font-weight:700;letter-spacing:0.05em;vertical-align:middle;">${getSheetLabel()}</span>`;
     dom.facilityTitle.innerHTML = `TB Care Facility (BMU): ${data.bmu}${sheetBadge}`;
     $('#data-summary').textContent = `District: ${data.district} | Year: ${data.year} (${data.period})`;
 
-    // Toggle all breakdown visibility based on current sheet
     const showBreakdown = isAllProjectSheet();
     toggleBreakdownVisibility(showBreakdown);
 
-    // ============================================
-    // 1. Total Registered
-    // ============================================
-    dom.kpiTotalRegistered.textContent = data.block1.total.total.toLocaleString();
+    // ==========================================
+    // Card 1: Total New OPD Consultations
+    // ==========================================
+    dom.kpiTotalOpd.textContent = data.block3.opd.toLocaleString();
     if (showBreakdown) {
-      if ($('#kpi-total-south')) $('#kpi-total-south').textContent = s.block1.total.total.toLocaleString();
-      if ($('#kpi-total-north')) $('#kpi-total-north').textContent = n.block1.total.total.toLocaleString();
-      if ($('#kpi-total-sub')) $('#kpi-total-sub').textContent = t.block1.total.total.toLocaleString();
+      dom.kpiOpdSouth.textContent = s.block3.opd.toLocaleString();
+      dom.kpiOpdNorth.textContent = n.block3.opd.toLocaleString();
+      dom.kpiOpdSub.textContent = (n.block3.opd + s.block3.opd).toLocaleString();
     }
 
-    // ============================================
-    // 2. Presumptive Rate (% of OPD)
-    // ============================================
-    dom.kpiPresumptiveRate.textContent = calcRate(data.block3.presumptive, data.block3.opd);
+    // ==========================================
+    // Card 2: Presumptive TB Cases Identified
+    // ==========================================
+    dom.kpiPresumptiveRate.textContent = `${data.block3.presumptive.toLocaleString()} (${calcRate(data.block3.presumptive, data.block3.opd)})`;
     if (showBreakdown) {
-      if ($('#kpi-presumptive-south')) $('#kpi-presumptive-south').textContent = calcRate(s.block3.presumptive, s.block3.opd);
-      if ($('#kpi-presumptive-north')) $('#kpi-presumptive-north').textContent = calcRate(n.block3.presumptive, n.block3.opd);
-      if ($('#kpi-presumptive-sub')) $('#kpi-presumptive-sub').textContent = calcRate(t.block3.presumptive, t.block3.opd);
+      dom.kpiPresumptiveSouth.textContent = `${s.block3.presumptive.toLocaleString()} (${calcRate(s.block3.presumptive, s.block3.opd)})`;
+      dom.kpiPresumptiveNorth.textContent = `${n.block3.presumptive.toLocaleString()} (${calcRate(n.block3.presumptive, n.block3.opd)})`;
+      dom.kpiPresumptiveSub.textContent = `${(n.block3.presumptive + s.block3.presumptive).toLocaleString()} (${calcRate(n.block3.presumptive + s.block3.presumptive, n.block3.opd + s.block3.opd)})`;
     }
 
-    // ============================================
-    // 3. HIV Screening Rate (% of Presumptive) - UPDATED
-    // ============================================
-    dom.kpiHivScreening.textContent = calcRate(data.block4.tested_hiv, data.block3.presumptive);
+    // ==========================================
+    // Card 3: AFB Positive Cases
+    // ==========================================
+    const afbPos = data.block3.pos_afb;
+    const afbTested = data.block3.tested_afb;
+    dom.kpiAfbPositive.textContent = `${afbPos.toLocaleString()} (${calcRate(afbPos, afbTested)} of AFB tested)`;
     if (showBreakdown) {
-      if ($('#kpi-hiv-south')) $('#kpi-hiv-south').textContent = calcRate(s.block4.tested_hiv, s.block3.presumptive);
-      if ($('#kpi-hiv-north')) $('#kpi-hiv-north').textContent = calcRate(n.block4.tested_hiv, n.block3.presumptive);
-      if ($('#kpi-hiv-sub')) $('#kpi-hiv-sub').textContent = calcRate(t.block4.tested_hiv, t.block3.presumptive);
+      const sAfb = s.block3.pos_afb, sTest = s.block3.tested_afb;
+      dom.kpiAfbPosSouth.textContent = `${sAfb.toLocaleString()} (${calcRate(sAfb, sTest)} of AFB tested)`;
+      const nAfb = n.block3.pos_afb, nTest = n.block3.tested_afb;
+      dom.kpiAfbPosNorth.textContent = `${nAfb.toLocaleString()} (${calcRate(nAfb, nTest)} of AFB tested)`;
+      const tAfb = nAfb + sAfb, tTest = nTest + sTest;
+      dom.kpiAfbPosSub.textContent = `${tAfb.toLocaleString()} (${calcRate(tAfb, tTest)} of AFB tested)`;
     }
 
-    // ============================================
-    // 4. GeneXpert Testing Rate (WRD) (% of N+R+UK)
-    // ============================================
-    dom.kpiWrdTesting.textContent = calcRate(data.block3.tested_gene_xpert, getNrk(data.block1));
+    // ==========================================
+    // Card 4: GeneXpert Positive Cases
+    // ==========================================
+    const xpPos = data.block3.pos_xpert;
+    const xpTested = data.block3.tested_xpert;
+    dom.kpiXpertPositive.textContent = `${xpPos.toLocaleString()} (${calcRate(xpPos, xpTested)} of Xpert tested)`;
     if (showBreakdown) {
-      if ($('#kpi-wrd-south')) $('#kpi-wrd-south').textContent = calcRate(s.block3.tested_gene_xpert, getNrk(s.block1));
-      if ($('#kpi-wrd-north')) $('#kpi-wrd-north').textContent = calcRate(n.block3.tested_gene_xpert, getNrk(n.block1));
-      if ($('#kpi-wrd-sub')) $('#kpi-wrd-sub').textContent = calcRate(t.block3.tested_gene_xpert, getNrk(t.block1));
+      const sXp = s.block3.pos_xpert, sXtest = s.block3.tested_xpert;
+      dom.kpiXpertPosSouth.textContent = `${sXp.toLocaleString()} (${calcRate(sXp, sXtest)} of Xpert tested)`;
+      const nXp = n.block3.pos_xpert, nXtest = n.block3.tested_xpert;
+      dom.kpiXpertPosNorth.textContent = `${nXp.toLocaleString()} (${calcRate(nXp, nXtest)} of Xpert tested)`;
+      const tXp = nXp + sXp, tXtest = nXtest + sXtest;
+      dom.kpiXpertPosSub.textContent = `${tXp.toLocaleString()} (${calcRate(tXp, tXtest)} of Xpert tested)`;
     }
 
-    // ============================================
-    // 5. HH Contacts Screened (Absolute count)
-    // ============================================
-    dom.kpiContactScreened.textContent = getContact(data.block6).toLocaleString();
+    // ==========================================
+    // Card 5: All TB Cases Registered
+    // ==========================================
+    const totalReg = data.block1.total.total;
+    dom.kpiTotalRegistered.textContent = `${totalReg.toLocaleString()} (${calcRate(totalReg, data.block3.presumptive)})`;
+    dom.kpiRegPulmBcf.textContent = data.block1.pulm_b_cf.total.toLocaleString();
+    dom.kpiRegPulmCd.textContent = data.block1.pulm_cd.total.toLocaleString();
+    dom.kpiRegEpBcf.textContent = data.block1.ep_b_cf.total.toLocaleString();
+    dom.kpiRegEpCd.textContent = data.block1.ep_cd.total.toLocaleString();
     if (showBreakdown) {
-      if ($('#kpi-contact-south')) $('#kpi-contact-south').textContent = getContact(s.block6).toLocaleString();
-      if ($('#kpi-contact-north')) $('#kpi-contact-north').textContent = getContact(n.block6).toLocaleString();
-      if ($('#kpi-contact-sub')) $('#kpi-contact-sub').textContent = getContact(t.block6).toLocaleString();
+      const sReg = s.block1.total.total;
+      $('#kpi-total-south').textContent = `${sReg.toLocaleString()} (${calcRate(sReg, s.block3.presumptive)})`;
+      const nReg = n.block1.total.total;
+      $('#kpi-total-north').textContent = `${nReg.toLocaleString()} (${calcRate(nReg, n.block3.presumptive)})`;
+      const tReg = nReg + sReg;
+      $('#kpi-total-sub').textContent = `${tReg.toLocaleString()} (${calcRate(tReg, n.block3.presumptive + s.block3.presumptive)})`;
     }
 
-    // ============================================
-    // 6. Contacts Put on TPT (Absolute count)
-    // ============================================
-    dom.kpiTptInitiated.textContent = getTpt(data.block6).toLocaleString();
+    // ==========================================
+    // Card 6: B+ Confirmed Cases
+    // ==========================================
+    const bPlusTotal = data.block3.pos_gtot;
+    dom.kpiBPlusConfirmed.textContent = `${bPlusTotal.toLocaleString()} (${calcRate(bPlusTotal, totalReg)})`;
     if (showBreakdown) {
-      if ($('#kpi-tpt-south')) $('#kpi-tpt-south').textContent = getTpt(s.block6).toLocaleString();
-      if ($('#kpi-tpt-north')) $('#kpi-tpt-north').textContent = getTpt(n.block6).toLocaleString();
-      if ($('#kpi-tpt-sub')) $('#kpi-tpt-sub').textContent = getTpt(t.block6).toLocaleString();
+      const sBPlus = s.block3.pos_gtot;
+      $('#kpi-bplus-south').textContent = `${sBPlus.toLocaleString()} (${calcRate(sBPlus, s.block1.total.total)})`;
+      const nBPlus = n.block3.pos_gtot;
+      $('#kpi-bplus-north').textContent = `${nBPlus.toLocaleString()} (${calcRate(nBPlus, n.block1.total.total)})`;
+      const tBPlus = nBPlus + sBPlus;
+      $('#kpi-bplus-sub').textContent = `${tBPlus.toLocaleString()} (${calcRate(tBPlus, n.block1.total.total + s.block1.total.total)})`;
     }
 
-    // ============================================
-    // 7. AFB Testing Rate (% of Presumptive)
-    // ============================================
-    dom.kpiAfbTestingRate.textContent = calcRate(data.block3.tested_afb, data.block3.presumptive);
+    // ==========================================
+    // ★ Card 7: Total No. of HH of B+PTB ★
+    // ==========================================
+    const hhTotal = data.block6.hh_total_lt5 + data.block6.hh_total_gt5;
+    dom.kpiHhTotal.textContent = hhTotal.toLocaleString();
     if (showBreakdown) {
-      if ($('#kpi-afb-south')) $('#kpi-afb-south').textContent = calcRate(s.block3.tested_afb, s.block3.presumptive);
-      if ($('#kpi-afb-north')) $('#kpi-afb-north').textContent = calcRate(n.block3.tested_afb, n.block3.presumptive);
-      if ($('#kpi-afb-sub')) $('#kpi-afb-sub').textContent = calcRate(t.block3.tested_afb, t.block3.presumptive);
+      const sHh = s.block6.hh_total_lt5 + s.block6.hh_total_gt5;
+      dom.kpiHhSouth.textContent = sHh.toLocaleString();
+      const nHh = n.block6.hh_total_lt5 + n.block6.hh_total_gt5;
+      dom.kpiHhNorth.textContent = nHh.toLocaleString();
+      dom.kpiHhSub.textContent = (nHh + sHh).toLocaleString();
     }
 
-    // ============================================
-    // 8. Xpert Positivity Rate (% of Presumptive)
-    // ============================================
-    dom.kpiXpertPositivity.textContent = calcRate(data.block3.pos_xpert, data.block3.presumptive);
+    // ==========================================
+    // Card 8: HH Contacts Screened
+    // ==========================================
+    const contactsScreened = getContact(data.block6);
+    dom.kpiContactScreened.textContent = `${contactsScreened.toLocaleString()} (${calcRate(contactsScreened, hhTotal)})`;
     if (showBreakdown) {
-      if ($('#kpi-xpos-south')) $('#kpi-xpos-south').textContent = calcRate(s.block3.pos_xpert, s.block3.presumptive);
-      if ($('#kpi-xpos-north')) $('#kpi-xpos-north').textContent = calcRate(n.block3.pos_xpert, n.block3.presumptive);
-      if ($('#kpi-xpos-sub')) $('#kpi-xpos-sub').textContent = calcRate(t.block3.pos_xpert, t.block3.presumptive);
+      const sHh = s.block6.hh_total_lt5 + s.block6.hh_total_gt5;
+      const sScreen = getContact(s.block6);
+      dom.kpiContactSouth.textContent = `${sScreen.toLocaleString()} (${calcRate(sScreen, sHh)})`;
+
+      const nHh = n.block6.hh_total_lt5 + n.block6.hh_total_gt5;
+      const nScreen = getContact(n.block6);
+      dom.kpiContactNorth.textContent = `${nScreen.toLocaleString()} (${calcRate(nScreen, nHh)})`;
+
+      const tHh = nHh + sHh;
+      const tScreen = nScreen + sScreen;
+      dom.kpiContactSub.textContent = `${tScreen.toLocaleString()} (${calcRate(tScreen, tHh)})`;
     }
 
-    // ============================================
-    // 9. B+ Confirmed Cases (% of Presumptive) - UPDATED
-    // ============================================
-    dom.kpiBPlusConfirmed.textContent = calcRate(data.block3.pos_gtot, data.block3.presumptive);
+    // ==========================================
+    // Card 9: HH Contacts Diagnosed with Active TB
+    // ==========================================
+    const contactsDiagnosed = getContactDiagnosed(data.block6);
+    dom.kpiContactDiagnosed.textContent = `${contactsDiagnosed.toLocaleString()} (${calcRate(contactsDiagnosed, contactsScreened)})`;
     if (showBreakdown) {
-      if ($('#kpi-bplus-south')) $('#kpi-bplus-south').textContent = calcRate(s.block3.pos_gtot, s.block3.presumptive);
-      if ($('#kpi-bplus-north')) $('#kpi-bplus-north').textContent = calcRate(n.block3.pos_gtot, n.block3.presumptive);
-      if ($('#kpi-bplus-sub')) $('#kpi-bplus-sub').textContent = calcRate(t.block3.pos_gtot, t.block3.presumptive);
+      const sDiag = getContactDiagnosed(s.block6);
+      const sScreen = getContact(s.block6);
+      dom.kpiContactDiagnosedSouth.textContent = `${sDiag.toLocaleString()} (${calcRate(sDiag, sScreen)})`;
+      const nDiag = getContactDiagnosed(n.block6);
+      const nScreen = getContact(n.block6);
+      dom.kpiContactDiagnosedNorth.textContent = `${nDiag.toLocaleString()} (${calcRate(nDiag, nScreen)})`;
+      const tDiag = nDiag + sDiag;
+      const tScreen = nScreen + sScreen;
+      dom.kpiContactDiagnosedSub.textContent = `${tDiag.toLocaleString()} (${calcRate(tDiag, tScreen)})`;
     }
 
-    // ============================================
-    // 10. Registered Tested Xpert Rate (% of Presumptive)
-    // ============================================
-    dom.kpiXpertTestingRate.textContent = calcRate(data.block3.tested_gene_xpert, data.block3.presumptive);
+    // ==========================================
+    // Card 10: Childhood TB (<15 Years)
+    // ==========================================
+    const childTotal = getMaleChild(data.block2) + getFemaleChild(data.block2);
+    dom.kpiChildTb.textContent = `${childTotal.toLocaleString()} (${calcRate(childTotal, totalReg)})`;
     if (showBreakdown) {
-      if ($('#kpi-xr-south')) $('#kpi-xr-south').textContent = calcRate(s.block3.tested_gene_xpert, s.block3.presumptive);
-      if ($('#kpi-xr-north')) $('#kpi-xr-north').textContent = calcRate(n.block3.tested_gene_xpert, n.block3.presumptive);
-      if ($('#kpi-xr-sub')) $('#kpi-xr-sub').textContent = calcRate(t.block3.tested_gene_xpert, t.block3.presumptive);
+      const sChild = getMaleChild(s.block2) + getFemaleChild(s.block2);
+      const sReg = s.block1.total.total;
+      const nChild = getMaleChild(n.block2) + getFemaleChild(n.block2);
+      const nReg = n.block1.total.total;
+      const tChild = nChild + sChild;
+      const tReg = nReg + sReg;
+      dom.kpiChildSouth.textContent = `${sChild.toLocaleString()} (${calcRate(sChild, sReg)})`;
+      dom.kpiChildNorth.textContent = `${nChild.toLocaleString()} (${calcRate(nChild, nReg)})`;
+      dom.kpiChildSub.textContent = `${tChild.toLocaleString()} (${calcRate(tChild, tReg)})`;
     }
 
-    // ============================================
-    // 11. Childhood TB Cases (<15 Years) - Show count + % of Total Registered (ALWAYS)
-    // ============================================
-    const childTotal = getChildTb(data.block2);
-    const totalRegistered = data.block1.total.total;
-    const childPct = (totalRegistered > 0) ?
-      ((childTotal / totalRegistered) * 100).toFixed(1) + '%' : '0.0%';
-
-    if ($('#kpi-childhood-tb')) {
-      $('#kpi-childhood-tb').textContent = childTotal.toLocaleString() + ' (' + childPct + ')';
+    // ==========================================
+    // Card 11: Contacts Put on TPT
+    // ==========================================
+    const tptTotal = getTpt(data.block6);
+    dom.kpiTptInitiated.textContent = `${tptTotal.toLocaleString()} (${calcRate(tptTotal, contactsDiagnosed)})`;
+    if (showBreakdown) {
+      const sDiag = getContactDiagnosed(s.block6);
+      const sTpt = getTpt(s.block6);
+      dom.kpiTptSouth.textContent = `${sTpt.toLocaleString()} (${calcRate(sTpt, sDiag)})`;
+      const nDiag = getContactDiagnosed(n.block6);
+      const nTpt = getTpt(n.block6);
+      dom.kpiTptNorth.textContent = `${nTpt.toLocaleString()} (${calcRate(nTpt, nDiag)})`;
+      const tDiag = nDiag + sDiag;
+      const tTpt = nTpt + sTpt;
+      dom.kpiTptSub.textContent = `${tTpt.toLocaleString()} (${calcRate(tTpt, tDiag)})`;
     }
-    if ($('#kpi-child-male')) $('#kpi-child-male').textContent = getMaleChild(data.block2).toLocaleString();
-    if ($('#kpi-child-female')) $('#kpi-child-female').textContent = getFemaleChild(data.block2).toLocaleString();
-    if ($('#kpi-child-sub')) $('#kpi-child-sub').textContent = childTotal.toLocaleString();
 
-    // Render Data Tables
+    // Card 12 – HIV Screening (shows No. of TB patients tested for HIV & HIV patients tested for TB, no %)
+    const hivTested = data.block4.tested_hiv;      // No. of TB patients tested for HIV (646)
+    const hivTestedTb = data.block4.hiv_tested_tb;  // HIV patients tested for TB (5)
+    dom.kpiHivScreening.innerHTML = `
+  <div style="font-size:1rem; line-height:1.5;">
+    <div>${hivTested.toLocaleString()}</div>
+    <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;">No. of TB patients tested for HIV</div>
+    <div>${hivTestedTb.toLocaleString()}</div>
+    <div style="font-size:0.7rem;color:var(--text-secondary);">HIV patients tested for TB</div>
+  </div>
+`;
+
+    if (showBreakdown) {
+      const sTested = s.block4.tested_hiv;
+      const sTestedTb = s.block4.hiv_tested_tb;
+      const nTested = n.block4.tested_hiv;
+      const nTestedTb = n.block4.hiv_tested_tb;
+      const tTested = (isAllProjectSheet() && data.block4.tested_hiv) ? data.block4.tested_hiv : (sTested + nTested);
+      const tTestedTb = (isAllProjectSheet() && data.block4.hiv_tested_tb) ? data.block4.hiv_tested_tb : (sTestedTb + nTestedTb);
+
+      dom.kpiHivSouth.innerHTML = `
+        <div>${sTested.toLocaleString()}</div>
+        <div style="font-size:0.65rem;color:var(--text-muted);">TB tested for HIV</div>
+        <div>${sTestedTb.toLocaleString()}</div>
+        <div style="font-size:0.65rem;color:var(--text-muted);">HIV tested for TB</div>
+      `;
+      dom.kpiHivNorth.innerHTML = `
+        <div>${nTested.toLocaleString()}</div>
+        <div style="font-size:0.65rem;color:var(--text-muted);">TB tested for HIV</div>
+        <div>${nTestedTb.toLocaleString()}</div>
+        <div style="font-size:0.65rem;color:var(--text-muted);">HIV tested for TB</div>
+      `;
+      dom.kpiHivSub.innerHTML = `
+        <div>${tTested.toLocaleString()}</div>
+        <div style="font-size:0.65rem;color:var(--text-muted);">TB tested for HIV</div>
+        <div>${tTestedTb.toLocaleString()}</div>
+        <div style="font-size:0.65rem;color:var(--text-muted);">HIV tested for TB</div>
+      `;
+    }
+
+    // ==========================================
+    // Render Tables
+    // ==========================================
     renderTableBlock1(data.block1);
     renderTableBlock2(data.block2);
     renderTableBlock3_4(data.block3, data.block4);
     renderTableBlock5(data.block5);
     renderTableBlock6(data.block6);
 
-    // Refresh Charts
+    // ==========================================
+    // Render Charts
+    // ==========================================
     renderCharts(data);
   }
 
   /* ────────────────────────────────────────────
      TABLE RENDERERS
      ──────────────────────────────────────────── */
-
   function renderTableBlock1(b1) {
     const rowHTML = (label, dataRow, isTotal = false) => {
       const style = isTotal ? 'style="font-weight: 700; background: rgba(255,255,255,0.02);"' : '';
@@ -670,7 +973,7 @@
           <td style="text-align: right;">${dataRow.new.toLocaleString()}</td>
           <td style="text-align: right;">${dataRow.relapse.toLocaleString()}</td>
           <td style="text-align: right;">${dataRow.uk.toLocaleString()}</td>
-          <td style="text-align: right; font-weight:600; background: rgba(255,255,255,0.01)">${dataRow.subtotal.toLocaleString()}</td>
+          <td style="text-align: right; background: rgba(255,255,255,0.02);">${dataRow.subtotal.toLocaleString()}</td>
           <td style="text-align: right;">${dataRow.fail.toLocaleString()}</td>
           <td style="text-align: right;">${dataRow.lost.toLocaleString()}</td>
           <td style="text-align: right;">${dataRow.other.toLocaleString()}</td>
@@ -678,50 +981,46 @@
         </tr>
       `;
     };
-
     dom.tbodyBlock1.innerHTML = `
-      ${rowHTML('Pulmonary, Bacteriologically Confirmed', b1.pulm_b_cf)}
-      ${rowHTML('Pulmonary, Clinically Diagnosed', b1.pulm_cd)}
-      ${rowHTML('Extra Pulmonary, Bacteriologically Confirmed', b1.ep_b_cf)}
-      ${rowHTML('Extra Pulmonary, Clinically Diagnosed', b1.ep_cd)}
-      ${rowHTML('Total Cases Registered', b1.total, true)}
+      ${rowHTML('Pulmonary: Bacteriologically Confirmed', b1.pulm_b_cf)}
+      ${rowHTML('Pulmonary: Clinically Diagnosed', b1.pulm_cd)}
+      ${rowHTML('Extra-Pulmonary: Bacteriologically Confirmed', b1.ep_b_cf)}
+      ${rowHTML('Extra-Pulmonary: Clinically Diagnosed', b1.ep_cd)}
+      ${rowHTML('Total Registered Cases', b1.total, true)}
     `;
   }
 
   function renderTableBlock2(b2) {
-    const rowHTML = (label, r, isTotal = false) => {
+    const rowHTML = (label, d, isTotal = false) => {
       const style = isTotal ? 'style="font-weight: 700; background: rgba(255,255,255,0.02);"' : '';
-      const finalStyle = 'style="font-weight: 700; background: rgba(6,182,212,0.1);"';
       return `
         <tr ${style}>
           <td style="font-weight: 500;">${label}</td>
-          <td style="text-align: right;">${r.m_0_4}</td><td style="text-align: right;">${r.f_0_4}</td>
-          <td style="text-align: right;">${r.m_5_14}</td><td style="text-align: right;">${r.f_5_14}</td>
-          <td style="text-align: right;">${r.m_15_24}</td><td style="text-align: right;">${r.f_15_24}</td>
-          <td style="text-align: right;">${r.m_25_34}</td><td style="text-align: right;">${r.f_25_34}</td>
-          <td style="text-align: right;">${r.m_35_44}</td><td style="text-align: right;">${r.f_35_44}</td>
-          <td style="text-align: right;">${r.m_45_54}</td><td style="text-align: right;">${r.f_45_54}</td>
-          <td style="text-align: right;">${r.m_55_64}</td><td style="text-align: right;">${r.f_55_64}</td>
-          <td style="text-align: right;">${r.m_65}</td><td style="text-align: right;">${r.f_65}</td>
-          <td style="text-align: right; font-weight: 600; background: rgba(255,255,255,0.01)">${r.m_total}</td>
-          <td style="text-align: right; font-weight: 600; background: rgba(255,255,255,0.01)">${r.f_total}</td>
-          <td style="text-align: right;" ${finalStyle}>${r.grand_total.toLocaleString()}</td>
+          <td style="text-align: right;">${d.m_0_4}</td><td style="text-align: right;">${d.f_0_4}</td>
+          <td style="text-align: right;">${d.m_5_14}</td><td style="text-align: right;">${d.f_5_14}</td>
+          <td style="text-align: right;">${d.m_15_24}</td><td style="text-align: right;">${d.f_15_24}</td>
+          <td style="text-align: right;">${d.m_25_34}</td><td style="text-align: right;">${d.f_25_34}</td>
+          <td style="text-align: right;">${d.m_35_44}</td><td style="text-align: right;">${d.f_35_44}</td>
+          <td style="text-align: right;">${d.m_45_54}</td><td style="text-align: right;">${d.f_45_54}</td>
+          <td style="text-align: right;">${d.m_55_64}</td><td style="text-align: right;">${d.f_55_64}</td>
+          <td style="text-align: right;">${d.m_65}</td><td style="text-align: right;">${d.f_65}</td>
+          <td style="text-align: right; background: rgba(255,255,255,0.02);">${d.m_total}</td>
+          <td style="text-align: right; background: rgba(255,255,255,0.02);">${d.f_total}</td>
+          <td style="text-align: right; background: rgba(6,182,212,0.1); font-weight: bold;">${d.grand_total.toLocaleString()}</td>
         </tr>
       `;
     };
-
     dom.tbodyBlock2.innerHTML = `
-      ${rowHTML('Pulmonary, Bacteriologically Confirmed', b2.pulm_b_cf)}
-      ${rowHTML('Pulmonary, Clinically Diagnosed', b2.pulm_cd)}
-      ${rowHTML('Extra Pulmonary, Bacteriologically Confirmed', b2.ep_b_cf)}
-      ${rowHTML('Extra Pulmonary, Clinically Diagnosed', b2.ep_cd)}
-      ${rowHTML('Total Case Demographics', b2.total, true)}
+      ${rowHTML('Pulmonary: Bacteriologically Confirmed', b2.pulm_b_cf)}
+      ${rowHTML('Pulmonary: Clinically Diagnosed', b2.pulm_cd)}
+      ${rowHTML('Extra-Pulmonary: Bacteriologically Confirmed', b2.ep_b_cf)}
+      ${rowHTML('Extra-Pulmonary: Clinically Diagnosed', b2.ep_cd)}
+      ${rowHTML('Total New, Relapse & UK Cases', b2.total, true)}
     `;
   }
 
   function renderTableBlock3_4(b3, b4) {
     const pct = (num, den) => den > 0 ? ` <span style="color:var(--text-muted);font-size:0.78em;">(${(num / den * 100).toFixed(1)}%)</span>` : '';
-
     dom.tbodyBlock3.innerHTML = `
       <tr style="background:rgba(6,182,212,0.05)">
         <td style="font-weight:600">Total New OPD Consultations</td>
@@ -768,7 +1067,6 @@
         <td style="text-align:right">${b3.tested_gene_xpert.toLocaleString()}</td>
       </tr>
     `;
-
     dom.tbodyBlock4.innerHTML = `
       <tr><td>Registered TB Patients tested for HIV</td><td style="text-align:right;font-weight:600">${b4.tested_hiv.toLocaleString()}</td></tr>
       <tr><td>TB Patients tested positive for HIV</td><td style="text-align:right;font-weight:600;color:var(--accent-6)">${b4.pos_hiv.toLocaleString()}</td></tr>
@@ -784,81 +1082,75 @@
   }
 
   function renderTableBlock5(b5) {
-    const rowHTML = (label, r, isTotal = false) => {
+    const rowHTML = (label, dataRow, isTotal = false) => {
       const style = isTotal ? 'style="font-weight: 700; background: rgba(255,255,255,0.02);"' : '';
       return `
         <tr ${style}>
           <td style="font-weight: 500;">${label}</td>
-          <td style="text-align: right;">${r.rif_test.toLocaleString()}</td>
-          <td style="text-align: right; color: ${r.rif_res > 0 ? 'var(--accent-6)' : 'inherit'}; font-weight: ${r.rif_res > 0 ? '600' : 'normal'}">${r.rif_res.toLocaleString()}</td>
-          <td style="text-align: right;">${r.inh_test.toLocaleString()}</td>
-          <td style="text-align: right; color: ${r.inh_res > 0 ? 'var(--accent-6)' : 'inherit'}; font-weight: ${r.inh_res > 0 ? '600' : 'normal'}">${r.inh_res.toLocaleString()}</td>
-          <td style="text-align: right;">${r.flq_test.toLocaleString()}</td>
-          <td style="text-align: right; color: ${r.flq_res > 0 ? 'var(--accent-6)' : 'inherit'}; font-weight: ${r.flq_res > 0 ? '600' : 'normal'}">${r.flq_res.toLocaleString()}</td>
+          <td style="text-align: right;">${dataRow.rif_test.toLocaleString()}</td>
+          <td style="text-align: right; color: ${dataRow.rif_res > 0 ? 'var(--accent-6)' : 'inherit'}; font-weight: ${dataRow.rif_res > 0 ? 'bold' : 'normal'};">${dataRow.rif_res.toLocaleString()}</td>
+          <td style="text-align: right;">${dataRow.inh_test.toLocaleString()}</td>
+          <td style="text-align: right;">${dataRow.inh_res.toLocaleString()}</td>
+          <td style="text-align: right;">${dataRow.flq_test.toLocaleString()}</td>
+          <td style="text-align: right;">${dataRow.flq_res.toLocaleString()}</td>
         </tr>
       `;
     };
-
     dom.tbodyBlock5.innerHTML = `
-      ${rowHTML('New + History Unknown cases', b5.new_uk)}
-      ${rowHTML('Relapse cases', b5.relapse)}
-      ${rowHTML('Previously Treated cases (excluding relapse)', b5.prev_tx)}
-      ${rowHTML('Total tested and resistant cases', b5.total, true)}
+      ${rowHTML('New & History Unknown B+ Cases', b5.new_uk)}
+      ${rowHTML('Relapse B+ Cases', b5.relapse)}
+      ${rowHTML('Previously Treated (Excl. Relapse)', b5.prev_tx)}
+      ${rowHTML('Total B+ Cases Tested for DST', b5.total, true)}
     `;
   }
 
   function renderTableBlock6(b6) {
-    const rowHTML = (label, valLt5, valGt5, isTpt = false) => {
-      const total = valLt5 + valGt5;
-      const combinedStyle = 'style="font-weight: 700; background: rgba(6,182,212,0.1);"';
+    const rowHTML = (label, lt5, gt5, isTotal = false) => {
+      const style = isTotal ? 'style="font-weight: 600; background: rgba(255,255,255,0.02);"' : '';
+      const totalVal = lt5 + gt5;
       return `
-        <tr>
-          <td style="font-weight: 500; ${isTpt ? 'padding-left: 20px; font-style: italic;' : ''}">${label}</td>
-          <td style="text-align: right;">${valLt5.toLocaleString()}</td>
-          <td style="text-align: right;">${valGt5.toLocaleString()}</td>
-          <td style="text-align: right;" ${combinedStyle}>${total.toLocaleString()}</td>
+        <tr ${style}>
+          <td style="padding-left: ${isTotal ? '12px' : '20px'};">${label}</td>
+          <td style="text-align: right;">${lt5.toLocaleString()}</td>
+          <td style="text-align: right;">${gt5.toLocaleString()}</td>
+          <td style="text-align: right; font-weight: bold; background: rgba(6,182,212,0.06);">${totalVal.toLocaleString()}</td>
         </tr>
       `;
     };
-
-    const tpt6hContactsLt5 = b6.contacts_tpt_6h[0] + b6.contacts_tpt_6h[1];
-    const tpt6hContactsGt5 = b6.contacts_tpt_6h[2];
-    const tpt3hrContactsLt5 = b6.contacts_tpt_3hr[0] + b6.contacts_tpt_3hr[1];
-    const tpt3hrContactsGt5 = b6.contacts_tpt_3hr[2];
-    const tpt3hpContactsLt5 = b6.contacts_tpt_3hp[0] + b6.contacts_tpt_3hp[1];
-    const tpt3hpContactsGt5 = b6.contacts_tpt_3hp[2];
-    const totalContactsLt5 = tpt6hContactsLt5 + tpt3hrContactsLt5 + tpt3hpContactsLt5;
-    const totalContactsGt5 = tpt6hContactsGt5 + tpt3hrContactsGt5 + tpt3hpContactsGt5;
-
-    const tpt6hImmLt5 = b6.immuno_tpt_6h[0] + b6.immuno_tpt_6h[1];
-    const tpt6hImmGt5 = b6.immuno_tpt_6h[2];
-    const tpt3hrImmLt5 = b6.immuno_tpt_3hr[0] + b6.immuno_tpt_3hr[1];
-    const tpt3hrImmGt5 = b6.immuno_tpt_3hr[2];
-    const tpt3hpImmLt5 = b6.immuno_tpt_3hp[0] + b6.immuno_tpt_3hp[1];
-    const tpt3hpImmGt5 = b6.immuno_tpt_3hp[2];
+    const tpt6hLt5 = b6.contacts_tpt_6h[0];
+    const tpt6hGt5 = b6.contacts_tpt_6h[1] + b6.contacts_tpt_6h[2];
+    const tpt3hrLt5 = b6.contacts_tpt_3hr[0];
+    const tpt3hrGt5 = b6.contacts_tpt_3hr[1] + b6.contacts_tpt_3hr[2];
+    const tpt3hpLt5 = b6.contacts_tpt_3hp[0];
+    const tpt3hpGt5 = b6.contacts_tpt_3hp[1] + b6.contacts_tpt_3hp[2];
+    const totalContactsLt5 = tpt6hLt5 + tpt3hrLt5 + tpt3hpLt5;
+    const totalContactsGt5 = tpt6hGt5 + tpt3hrGt5 + tpt3hpGt5;
+    const tpt6hImmLt5 = b6.immuno_tpt_6h[0];
+    const tpt6hImmGt5 = b6.immuno_tpt_6h[1] + b6.immuno_tpt_6h[2];
+    const tpt3hrImmLt5 = b6.immuno_tpt_3hr[0];
+    const tpt3hrImmGt5 = b6.immuno_tpt_3hr[1] + b6.immuno_tpt_3hr[2];
+    const tpt3hpImmLt5 = b6.immuno_tpt_3hp[0];
+    const tpt3hpImmGt5 = b6.immuno_tpt_3hp[1] + b6.immuno_tpt_3hp[2];
     const totalImmLt5 = tpt6hImmLt5 + tpt3hrImmLt5 + tpt3hpImmLt5;
     const totalImmGt5 = tpt6hImmGt5 + tpt3hrImmGt5 + tpt3hpImmGt5;
-
     dom.tbodyBlock6.innerHTML = `
-      ${rowHTML('Total Household Contacts of Confirmed B+ Cases', b6.hh_total_lt5, b6.hh_total_gt5)}
-      ${rowHTML('No. of HH Contacts Screened for TB', b6.screened_lt5, b6.screened_gt5)}
-      ${rowHTML('Among screened contacts, No. diagnosed with Active TB', b6.pos_lt5, b6.pos_gt5)}
-      
-      <tr style="font-weight: 700; background: rgba(255,255,255,0.01)"><td colspan="4">No. of HH Contacts Initiated on TPT (Tuberculosis Preventive Therapy)</td></tr>
-      ${rowHTML('Initiated on Regimen: 6H', tpt6hContactsLt5, tpt6hContactsGt5, true)}
-      ${rowHTML('Initiated on Regimen: 3HR', tpt3hrContactsLt5, tpt3hrContactsGt5, true)}
-      ${rowHTML('Initiated on Regimen: 3HP', tpt3hpContactsLt5, tpt3hpContactsGt5, true)}
-      <tr style="font-weight: bold; background: rgba(255, 255, 255, 0.03);">
+      ${rowHTML('Total Households of B+ Index Patients Identified', b6.hh_total_lt5, b6.hh_total_gt5, true)}
+      ${rowHTML('Total HH Contacts Screened for TB Symptoms', b6.screened_lt5, b6.screened_gt5, true)}
+      ${rowHTML('HH Contacts Diagnosed with Active TB Disease', b6.pos_lt5, b6.pos_gt5, true)}
+      <tr style="font-weight: bold; background: rgba(6,182,212,0.04);"><td colspan="4">HH Contacts Put on TPT by Regimen:</td></tr>
+      ${rowHTML('Initiated on Regimen: 6H (Isoniazid Daily 6m)', tpt6hLt5, tpt6hGt5)}
+      ${rowHTML('Initiated on Regimen: 3HR (Isoniazid + Rifampicin 3m)', tpt3hrLt5, tpt3hrGt5)}
+      ${rowHTML('Initiated on Regimen: 3HP (Isoniazid + Rifapentine 3m)', tpt3hpLt5, tpt3hpGt5)}
+      <tr style="font-weight: bold; background: rgba(16,185,129,0.06);">
         <td style="padding-left: 20px;">Total Household Contacts Put on TPT</td>
         <td style="text-align: right;">${totalContactsLt5.toLocaleString()}</td>
         <td style="text-align: right;">${totalContactsGt5.toLocaleString()}</td>
-        <td style="text-align: right; background: rgba(6,182,212,0.15); color: var(--accent-1);">${(totalContactsLt5 + totalContactsGt5).toLocaleString()}</td>
+        <td style="text-align: right; background: rgba(16,185,129,0.15); color: #10b981;">${(totalContactsLt5 + totalContactsGt5).toLocaleString()}</td>
       </tr>
-
-      <tr style="font-weight: 700; background: rgba(255,255,255,0.01)"><td colspan="4">HIV Negative / Immunocompromised Contacts Initiated on TPT</td></tr>
-      ${rowHTML('Initiated on Regimen: 6H (HIV- / Immuno-)', tpt6hImmLt5, tpt6hImmGt5, true)}
-      ${rowHTML('Initiated on Regimen: 3HR (HIV- / Immuno-)', tpt3hrImmLt5, tpt3hrImmGt5, true)}
-      ${rowHTML('Initiated on Regimen: 3HP (HIV- / Immuno-)', tpt3hpImmLt5, tpt3hpImmGt5, true)}
+      <tr style="font-weight: bold; background: rgba(6,182,212,0.04);"><td colspan="4">Immunocompromised Contacts (excl. HH) Put on TPT:</td></tr>
+      ${rowHTML('Initiated on Regimen: 6H (HIV- / Immuno-)', tpt6hImmLt5, tpt6hImmGt5)}
+      ${rowHTML('Initiated on Regimen: 3HR (HIV- / Immuno-)', tpt3hrImmLt5, tpt3hrImmGt5)}
+      ${rowHTML('Initiated on Regimen: 3HP (HIV- / Immuno-)', tpt3hpImmLt5, tpt3hpImmGt5)}
       <tr style="font-weight: bold; background: rgba(255, 255, 255, 0.03);">
         <td style="padding-left: 20px;">Total Immunocompromised Put on TPT</td>
         <td style="text-align: right;">${totalImmLt5.toLocaleString()}</td>
@@ -868,25 +1160,8 @@
     `;
   }
 
-  function exportJSON() {
-    const blocks = getBlocks();
-    const data = blocks[state.activeQuarter];
-    if (!data) {
-      toast('No data to export', 'error');
-      return;
-    }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `TB_Registration_${state.activeQuarter}_${data.year}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast('JSON report exported successfully!', 'success');
-  }
-
   /* ────────────────────────────────────────────
-     DATA VISUALIZATIONS (Chart.js) - Keep all existing chart functions
+     CHART RENDERERS
      ──────────────────────────────────────────── */
   if (typeof ChartDataLabels !== 'undefined') {
     Chart.register(ChartDataLabels);
@@ -960,19 +1235,185 @@
     renderDemographicsChart(data.block2);
     renderCategoriesChart(data.block1);
     renderCascadeChart(data.block3);
-    renderCascadePieChart(data.block3);
+    renderOpdPresumptiveChart(data.block3);
     renderDstChart(data.block5);
     renderHivChart(data.block4);
     renderContactTracingChart(data.block6);
+
+    // North vs South (only for ALL_PROJECT)
+    const card = document.getElementById('north-south-comparison-card');
+    if (state.activeSheet === 'ALL_PROJECT') {
+      card.style.display = 'block';
+      const regional = getRegionalData(state.activeQuarter);
+      renderNorthSouthComparison(regional.northData, regional.southData);
+    } else {
+      card.style.display = 'none';
+      if (state.charts['northSouthComparison']) {
+        state.charts['northSouthComparison'].destroy();
+        delete state.charts['northSouthComparison'];
+      }
+    }
   }
 
+  function renderNorthSouthComparison(northData, southData) {
+    const ctx = document.getElementById('chart-north-south-comparison');
+    if (!ctx) return;
+    const get = (obj, path) => {
+      try {
+        return path.split('.').reduce((o, key) => o[key], obj) || 0;
+      } catch {
+        return 0;
+      }
+    };
+    const metrics = [
+      { label: 'Total OPD', path: 'block3.opd' },
+      { label: 'Presumptive TB', path: 'block3.presumptive' },
+      { label: 'AFB Positive', path: 'block3.pos_afb' },
+      { label: 'Xpert Positive', path: 'block3.pos_xpert' },
+      { label: 'Registered Cases', path: 'block1.total.total' },
+      { label: 'B+ Confirmed', path: 'block3.pos_gtot' },
+      { label: 'Contacts Screened', path: 'block6' },
+      { label: 'HIV Screening', path: 'block4.tested_hiv' },
+      { label: 'Childhood TB', path: 'block2.total' }
+    ];
+    const northValues = metrics.map(m => {
+      if (m.label === 'Contacts Screened') {
+        const b6 = northData.block6 || {};
+        return (b6.screened_lt5 || 0) + (b6.screened_gt5 || 0);
+      }
+      if (m.label === 'Childhood TB') {
+        const b2 = northData.block2 || {};
+        const t = b2.total || {};
+        return (t.m_0_4 || 0) + (t.m_5_14 || 0) + (t.f_0_4 || 0) + (t.f_5_14 || 0);
+      }
+      return get(northData, m.path);
+    });
+    const southValues = metrics.map(m => {
+      if (m.label === 'Contacts Screened') {
+        const b6 = southData.block6 || {};
+        return (b6.screened_lt5 || 0) + (b6.screened_gt5 || 0);
+      }
+      if (m.label === 'Childhood TB') {
+        const b2 = southData.block2 || {};
+        const t = b2.total || {};
+        return (t.m_0_4 || 0) + (t.m_5_14 || 0) + (t.f_0_4 || 0) + (t.f_5_14 || 0);
+      }
+      return get(southData, m.path);
+    });
+    const labels = metrics.map(m => m.label);
+    if (state.charts['northSouthComparison']) {
+      state.charts['northSouthComparison'].destroy();
+    }
+    state.charts['northSouthComparison'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'North PK',
+            data: northValues,
+            backgroundColor: '#ec4899',
+            borderColor: '#ec4899',
+            borderWidth: 1,
+            borderRadius: 4,
+            order: 2,
+          },
+          {
+            label: 'South PK',
+            data: southValues,
+            backgroundColor: '#06b6d4',
+            borderColor: '#06b6d4',
+            borderWidth: 1,
+            borderRadius: 4,
+            order: 2,
+          },
+          {
+            type: 'line',
+            label: 'North PK Trend',
+            data: northValues,
+            borderColor: '#ec4899',
+            backgroundColor: 'rgba(236, 72, 153, 0.2)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointBackgroundColor: '#ec4899',
+            order: 1,
+            datalabels: { display: false }
+          },
+          {
+            type: 'line',
+            label: 'South PK Trend',
+            data: southValues,
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.2)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+            pointBackgroundColor: '#06b6d4',
+            order: 1,
+            datalabels: { display: false }
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 14 }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(17,24,39,0.95)',
+            titleFont: { family: 'Inter', size: 12, weight: 'bold' },
+            bodyFont: { family: 'Inter', size: 11 },
+            padding: 10,
+            cornerRadius: 8,
+            borderColor: 'rgba(255,255,255,0.08)',
+            borderWidth: 1,
+            callbacks: {
+              label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toLocaleString()}`
+            }
+          },
+          datalabels: {
+            color: '#f1f5f9',
+            font: { family: 'Inter', size: 11, weight: 'bold' },
+            formatter: (value, context) => {
+              if (context.datasetIndex < 2 && value > 0) {
+                return value.toLocaleString();
+              }
+              return '';
+            },
+            anchor: 'end',
+            align: 'end',
+            offset: 2,
+            clip: false
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } },
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            border: { color: 'rgba(255,255,255,0.06)' },
+          },
+          y: {
+            ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } },
+            grid: { color: 'rgba(255,255,255,0.04)' },
+            border: { color: 'rgba(255,255,255,0.06)' },
+            beginAtZero: true,
+          }
+        }
+      }
+    });
+  }
+
+  // --- Other chart functions (identical to original) ---
   function renderDemographicsChart(b2) {
     destroyChart('demographics');
     const ctx = document.getElementById('chart-demographics');
     if (!ctx) return;
-
     const ageLabels = ['0-4', '5-14', '15-24', '25-34', '35-44', '45-54', '55-64', '65 & Above'];
-
     const maleData = [
       b2.total.m_0_4, b2.total.m_5_14, b2.total.m_15_24, b2.total.m_25_34,
       b2.total.m_35_44, b2.total.m_45_54, b2.total.m_55_64, b2.total.m_65
@@ -981,7 +1422,6 @@
       b2.total.f_0_4, b2.total.f_5_14, b2.total.f_15_24, b2.total.f_25_34,
       b2.total.f_35_44, b2.total.f_45_54, b2.total.f_55_64, b2.total.f_65
     ];
-
     state.charts['demographics'] = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -1029,25 +1469,19 @@
     });
   }
 
-
   function renderCategoriesChart(b1) {
     destroyChart('categories');
     const ctx = document.getElementById('chart-categories');
     if (!ctx) return;
-
     const labels = ['Pulmonary (B+)', 'Pulmonary (Clinically)', 'Extra Pulm (B+)', 'Extra Pulm (Clinically)'];
     const rowKeys = ['pulm_b_cf', 'pulm_cd', 'ep_b_cf', 'ep_cd'];
-
     const newCases = rowKeys.map(k => b1[k].new);
     const relapseCases = rowKeys.map(k => b1[k].relapse);
     const ukCases = rowKeys.map(k => b1[k].uk);
     const prevTx = rowKeys.map(k => b1[k].fail + b1[k].lost + b1[k].other);
-
-    // Get Presumptive count from Block 3 for percentage calculation
     const blocks = getBlocks();
     const data = blocks[state.activeQuarter];
     const presumptive = data ? data.block3.presumptive : 0;
-
     state.charts['categories'] = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -1086,36 +1520,27 @@
     });
   }
 
-
-
-
-
-
   function renderCascadeChart(b3) {
     destroyChart('cascade');
     const ctx = document.getElementById('chart-cascade');
     if (!ctx) return;
-
     const labels = [
       'New OPD Visits', 'Presumptive Identified', 'LHW Comm Referrals',
       'Tested (AFB)', 'Tested (Xpert WRD)', 'Positive AFB', 'Positive Xpert',
       'AFB + Xpert Pos', 'B+ Confirmed (G.Tot)', 'All Registered B+ Cases', 'Registered Tested Xpert'
     ];
-
     const counts = [
       b3.opd, b3.presumptive, b3.comm_referrals,
       b3.tested_afb, b3.tested_xpert,
       b3.pos_afb, b3.pos_xpert, b3.afb_xpert_combo,
       b3.pos_gtot, b3.registered_b_plus, b3.tested_gene_xpert
     ];
-
     const bgColors = [
       'rgba(6, 182, 212, 0.30)', 'rgba(6, 182, 212, 0.50)', 'rgba(6, 182, 212, 0.70)',
       'rgba(59, 130, 246, 0.60)', 'rgba(59, 130, 246, 0.80)',
       'rgba(245, 158, 11, 0.60)', 'rgba(245, 158, 11, 0.75)', 'rgba(245, 158, 11, 0.90)',
       'rgba(16, 185, 129, 0.80)', 'rgba(16, 185, 129, 1.00)', 'rgba(139, 92, 246, 0.80)'
     ];
-
     state.charts['cascade'] = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -1161,29 +1586,23 @@
     });
   }
 
-  function renderCascadePieChart(b3) {
-    destroyChart('cascadePie');
-    const ctx = document.getElementById('chart-cascade-pie');
+  function renderOpdPresumptiveChart(b3) {
+    destroyChart('opdPresumptive');
+    const ctx = document.getElementById('chart-opd-presumptive');
     if (!ctx) return;
-
+    const labels = ['Presumptive Identified', 'Other OPD Visits'];
     const presumptive = b3.presumptive;
     const otherOpd = Math.max(0, b3.opd - b3.presumptive);
-
-    const labels = ['Presumptive Identified', 'Other New OPD Visits'];
-    const counts = [presumptive, otherOpd];
-
-    state.charts['cascadePie'] = new Chart(ctx, {
+    const data = [presumptive, otherOpd];
+    state.charts['opdPresumptive'] = new Chart(ctx, {
       type: 'pie',
       data: {
         labels: labels,
         datasets: [{
-          data: counts,
-          backgroundColor: [
-            'rgba(245, 158, 11, 0.85)',
-            'rgba(6, 182, 212, 0.85)'
-          ],
-          borderColor: 'rgba(10, 14, 23, 1)',
-          borderWidth: 2
+          data: data,
+          backgroundColor: ['rgba(6, 182, 212, 0.85)', 'rgba(148, 163, 184, 0.3)'],
+          borderWidth: 1,
+          borderColor: '#1e293b'
         }]
       },
       options: {
@@ -1193,7 +1612,7 @@
           legend: {
             display: true,
             position: 'bottom',
-            labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 14 }
+            labels: { color: '#e2e8f0', font: { family: 'Inter', size: 11 }, padding: 14 }
           },
           tooltip: {
             backgroundColor: 'rgba(17,24,39,0.95)',
@@ -1205,26 +1624,31 @@
             borderWidth: 1,
             callbacks: {
               label: (context) => {
-                const val = context.raw;
-                const total = b3.opd;
-                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
-                return ` ${context.label}: ${val.toLocaleString()} (${pct}%)`;
+                const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                const value = context.raw;
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%';
+                return ` ${context.label}: ${value.toLocaleString()} (${percentage})`;
               }
             }
           },
           datalabels: {
-            color: '#fff',
+            color: '#ffffff',
             font: { family: 'Inter', size: 11, weight: 'bold' },
             formatter: (value, context) => {
-              const total = b3.opd;
-              const pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-              return `${value.toLocaleString()}\n(${pct}%)`;
+              const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+              if (total === 0 || value === 0) return '';
+              const percentage = ((value / total) * 100).toFixed(1) + '%';
+              return `${value.toLocaleString()}\n(${percentage})`;
             },
             textAlign: 'center',
             anchor: 'center',
             align: 'center',
             offset: 0
           }
+        },
+        scales: {
+          x: { display: false },
+          y: { display: false }
         }
       }
     });
@@ -1234,11 +1658,9 @@
     destroyChart('dst');
     const ctx = document.getElementById('chart-dst');
     if (!ctx) return;
-
     const drugs = ['Rifampicin', 'Isoniazid', 'Fluoroquinolone'];
     const tested = [b5.total.rif_test, b5.total.inh_test, b5.total.flq_test];
     const resistant = [b5.total.rif_res, b5.total.inh_res, b5.total.flq_res];
-
     state.charts['dst'] = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -1256,10 +1678,8 @@
     destroyChart('hiv');
     const ctx = document.getElementById('chart-tb-hiv');
     if (!ctx) return;
-
     const labels = ['Screened for HIV', 'Tested Positive', 'Placed on ART'];
     const counts = [b4.tested_hiv, b4.pos_hiv, b4.art];
-
     state.charts['hiv'] = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -1281,21 +1701,17 @@
     destroyChart('contactTracing');
     const ctx = document.getElementById('chart-contact-tracing');
     if (!ctx) return;
-
     const labels = ['Total HH of B+ Patients', 'HH Contacts Screened', 'Contacts Diagnosed Active TB', 'Contacts Initiated TPT'];
-
     const totalTptContacts =
       b6.contacts_tpt_6h.reduce((a, b) => a + b, 0) +
       b6.contacts_tpt_3hr.reduce((a, b) => a + b, 0) +
       b6.contacts_tpt_3hp.reduce((a, b) => a + b, 0);
-
     const counts = [
       b6.hh_total_lt5 + b6.hh_total_gt5,
       b6.screened_lt5 + b6.screened_gt5,
       b6.pos_lt5 + b6.pos_gt5,
       totalTptContacts
     ];
-
     state.charts['contactTracing'] = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -1318,44 +1734,59 @@
   }
 
   /* ────────────────────────────────────────────
-     Auto-load excel files - Look for 2024 file
+     Auto-load & Event Bindings
      ──────────────────────────────────────────── */
   async function tryAutoLoad() {
-    try {
-      const res = await fetch('TB-07 All Projects-2024.xlsx');
-      if (!res.ok) throw new Error('Not found');
-      const blob = await res.blob();
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const wb = XLSX.read(data, { type: 'array' });
-
-          if (parseWorkbook(wb)) {
-            dom.emptyState.style.display = 'none';
-            dom.dashboard.style.display = 'block';
-            buildLoadedSheetsTab();
-            updateDashboardView();
-            toast('Auto-loaded TB-07 Projects Sheet 2024 successfully!', 'success');
-          }
-        } catch (err) {
-          console.error('Autoload parse error:', err);
+    // Try the current report year first, then fall back to older filenames
+    // if this page is deployed alongside a previous year's workbook instead.
+    const candidateFiles = [
+      'TB-07 All Projects-2024.xlsx',
+      'TB-07_All_Projects-2024.xlsx',
+      'TB-07 All Projects-2023.xlsx',
+      'TB-07_All_Projects-2023.xlsx',
+    ];
+    for (const filename of candidateFiles) {
+      try {
+        const res = await fetch(filename);
+        if (!res.ok) continue;
+        const blob = await res.blob();
+        const data = new Uint8Array(await blob.arrayBuffer());
+        const wb = XLSX.read(data, { type: 'array' });
+        if (parseWorkbook(wb)) {
+          dom.emptyState.style.display = 'none';
+          dom.dashboard.style.display = 'block';
+          buildLoadedSheetsTab();
+          updateDashboardView();
+          toast(`Auto-loaded ${filename} successfully!`, 'success');
         }
-      };
-      reader.readAsArrayBuffer(blob);
-    } catch (err) {
-      console.log('Autoload not found, awaiting manual file drop.');
+        return;
+      } catch (err) {
+        // try the next candidate filename
+      }
     }
+    console.log('Autoload not found, awaiting manual file drop.');
   }
 
-  /* ────────────────────────────────────────────
-     Event Bindings
-     ──────────────────────────────────────────── */
+  function exportJSON() {
+    const blocks = getBlocks();
+    const data = blocks[state.activeQuarter];
+    if (!data) {
+      toast('No data to export', 'error');
+      return;
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `TB_Registration_${state.activeQuarter}_${data.year}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('JSON report exported successfully!', 'success');
+  }
+
   function bindEvents() {
     dom.uploadZone.addEventListener('click', () => dom.fileInput.click());
     dom.fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
-
     dom.uploadZone.addEventListener('dragover', (e) => {
       e.preventDefault();
       dom.uploadZone.classList.add('dragover');
@@ -1368,44 +1799,36 @@
       dom.uploadZone.classList.remove('dragover');
       handleFiles(e.dataTransfer.files);
     });
-
     dom.quarterSelect.addEventListener('change', (e) => {
       state.activeQuarter = e.target.value;
       updateDashboardView();
       toast(`Switched view to ${e.target.options[e.target.selectedIndex].text}`, 'info');
     });
-
     dom.btnExport.addEventListener('click', exportJSON);
-
-    $$('.sidebar-nav a[data-section]').forEach(anchor => {
+    document.querySelectorAll('.sidebar-nav a[data-section]').forEach(anchor => {
       anchor.addEventListener('click', (e) => {
         e.preventDefault();
         const sectionId = anchor.getAttribute('data-section');
-        const sectionEl = $('#' + (sectionId === 'overview' ? 'overview' : (sectionId === 'charts' ? 'charts' : 'data-tables')));
-        $$('.sidebar-nav a[data-section]').forEach(a => a.classList.remove('active'));
+        const sectionEl = document.getElementById(sectionId === 'overview' ? 'overview' : (sectionId === 'charts' ? 'charts' : 'data-tables'));
+        document.querySelectorAll('.sidebar-nav a[data-section]').forEach(a => a.classList.remove('active'));
         anchor.classList.add('active');
-        if (sectionEl) {
-          sectionEl.scrollIntoView({ behavior: 'smooth' });
-        }
+        if (sectionEl) sectionEl.scrollIntoView({ behavior: 'smooth' });
       });
     });
-
-    $$('.tb-table-tab').forEach(tab => {
+    document.querySelectorAll('.tb-table-tab').forEach(tab => {
       tab.addEventListener('click', () => {
-        $$('.tb-table-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tb-table-tab').forEach(t => t.classList.remove('active'));
         tab.classList.add('active');
         const blockNum = tab.dataset.block;
-        $$('.tb-table-content').forEach(content => {
+        document.querySelectorAll('.tb-table-content').forEach(content => {
           content.style.display = 'none';
         });
-        $('#table-block-' + blockNum).style.display = 'block';
+        document.getElementById('table-block-' + blockNum).style.display = 'block';
       });
     });
-
     dom.mobileToggle.addEventListener('click', () => {
       dom.sidebar.classList.toggle('visible');
     });
-
     document.addEventListener('click', (e) => {
       if (!dom.sidebar.contains(e.target) && e.target !== dom.mobileToggle && dom.sidebar.classList.contains('visible')) {
         dom.sidebar.classList.remove('visible');
@@ -1413,9 +1836,6 @@
     });
   }
 
-  /* ────────────────────────────────────────────
-     Initialization
-     ──────────────────────────────────────────── */
   function init() {
     bindEvents();
     tryAutoLoad();
