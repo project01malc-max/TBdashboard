@@ -7,6 +7,10 @@
   <meta name="description"
     content="TB-07 Case Registration Dashboard — Monitor quarterly registration, diagnostics, HIV screening, drug sensitivity, and contact tracing." />
   <title>TB-07 — Case Registration Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
   <style>
     /* ===== CSS Variables & Reset ===== */
     :root {
@@ -20,6 +24,7 @@
       --border-color: rgba(255, 255, 255, 0.06);
       --accent-1: #06b6d4;
       --accent-2: #0891b2;
+      --accent-5: #10b981;
       --accent-6: #f43f5e;
       --gradient-primary: linear-gradient(135deg, #06b6d4, #0891b2);
       --radius-sm: 6px;
@@ -514,22 +519,28 @@
     /* ===== KPI Grid ===== */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: var(--space-md);
       margin-bottom: var(--space-xl);
     }
 
     .kpi-card {
       background: var(--bg-card);
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(16, 185, 129, 0.3);
       border-radius: var(--radius-md);
-      padding: var(--space-md);
+      padding: var(--space-lg);
       text-align: center;
-      transition: border-color 0.3s;
+      transition: all 0.3s ease;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .kpi-card:hover {
-      border-color: rgba(6, 182, 212, 0.2);
+      border-color: var(--accent-5);
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
+      transform: translateY(-2px);
     }
 
     .kpi-icon {
@@ -538,13 +549,14 @@
     }
 
     .kpi-value {
-      font-size: 1.6rem;
+      font-size: 1.2rem;
       font-weight: 700;
       background: var(--gradient-primary);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      line-height: 1.2;
+      line-height: 1.4;
+      word-wrap: break-word;
     }
 
     .kpi-label {
@@ -553,10 +565,10 @@
       font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      margin-top: 2px;
+      margin-top: 4px;
     }
 
-    /* ===== KPI Breakdown (South/North/Total) ===== */
+    /* ===== KPI Breakdown ===== */
     .kpi-breakdown {
       display: flex;
       justify-content: space-between;
@@ -610,8 +622,35 @@
       color: #f59e0b;
     }
 
+    /* ===== Category Breakdown inside Card 5 ===== */
+    .kpi-category-breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px 8px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.7rem;
+    }
 
-    /* ===== Charts Grid ===== */
+    .cat-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+    }
+
+    .cat-label {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .cat-value {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* ===== Charts ===== */
+
     .charts-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -631,7 +670,7 @@
     }
 
     .chart-card:hover {
-      border-color: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.08);
     }
 
     .chart-header {
@@ -801,28 +840,31 @@
         padding: var(--space-xs) var(--space-sm);
       }
     }
+
+    @media (max-width: 480px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi-category-breakdown {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- Loading Spinner -->
+  <!-- Spinner, Toast, Mobile Toggle -->
   <div id="spinner" class="spinner-overlay">
     <div class="spinner"></div>
   </div>
-
-  <!-- Toast Container -->
   <div id="toast-container" class="toast-container"></div>
-
-  <!-- Mobile Sidebar Toggle -->
   <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle sidebar">☰</button>
 
   <div class="app-layout">
-
-    <!-- ====== Sidebar ====== -->
+    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-
-      <!-- Brand -->
       <div class="sidebar-brand">
         <div class="brand-icon">🔬</div>
         <div>
@@ -830,8 +872,6 @@
           <div class="brand-sub">TB-07 Case Tracker</div>
         </div>
       </div>
-
-      <!-- Upload -->
       <div class="sidebar-section">
         <div class="sidebar-section-title">Data Source</div>
         <div class="upload-zone" id="upload-zone">
@@ -841,39 +881,24 @@
         </div>
         <input type="file" id="file-input" accept=".xlsx" />
       </div>
-
-      <!-- Sheet Tabs -->
       <div class="sidebar-section" id="sheet-section" style="display:none;">
         <div class="sidebar-section-title">Loaded Sheets</div>
         <div class="sheet-tabs" id="sheet-tabs"></div>
       </div>
-
-      <!-- Navigation -->
       <div class="sidebar-section">
         <div class="sidebar-section-title">Navigation</div>
         <nav class="sidebar-nav">
           <a class="nav-link active" href="#overview" data-section="overview">📊 &nbsp;Overview</a>
-          <a class="nav-link" href="#charts" data-section="charts">📈 &nbsp;Charts & Visuals</a>
+          <a class="nav-link" href="#charts" data-section="charts">📈 &nbsp;Charts &amp; Visuals</a>
           <a class="nav-link" href="#data-tables" data-section="data-tables">📋 &nbsp;Detailed Tables</a>
         </nav>
       </div>
-
-      <!-- Dashboards Switcher -->
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">Dashboards</div>
-        <nav class="sidebar-nav">
-          <a class="nav-link" href="index.html">👥 &nbsp;Patient Registry</a>
-          <a class="nav-link" href="targevsach.html">🎯 &nbsp;Target vs Achieved</a>
-          <a class="nav-link active" href="tb_dashboard.html">🦠 &nbsp;TB Registration</a>
-        </nav>
-      </div>
-
     </aside>
 
-    <!-- ====== Main Content ====== -->
+    <!-- Main Content -->
     <main class="main-content" id="main-content">
 
-      <!-- Empty State (shown before data load) -->
+      <!-- Empty State -->
       <div id="empty-state" class="empty-state">
         <div class="empty-icon">🦠</div>
         <h3>TB-07 Cases Registration Dashboard</h3>
@@ -885,17 +910,16 @@
         </button>
       </div>
 
-      <!-- Dashboard (hidden until data loads) -->
+      <!-- Dashboard -->
       <div id="dashboard" style="display:none;">
 
         <!-- Top Bar -->
         <div class="top-bar" id="overview">
           <div class="top-bar-left">
-            <h2 id="facility-title">TB Care Facility (BMU): MANGHOPIR</h2>
-            <p id="data-summary">District: Central | Year: 2023</p>
+            <h2 id="facility-title">TB Care Facility (BMU)</h2>
+            <p id="data-summary">District: — | Year: 2023</p>
           </div>
           <div class="top-bar-actions">
-            <!-- Quarter Dropdown Filter -->
             <div class="quarter-selector-group">
               <label for="quarter-select">Select Quarter:</label>
               <select id="quarter-select" class="quarter-selector">
@@ -911,29 +935,33 @@
           </div>
         </div>
 
-        <!-- KPI Cards -->
+        <!-- ====== KPI Grid ====== -->
         <div class="kpi-grid" id="kpi-grid">
+
+          <!-- CARD 1: Total New OPD Consultations -->
           <div class="kpi-card">
             <div class="kpi-header">
-              <div class="kpi-icon">👥</div>
+              <div class="kpi-icon">🏥</div>
             </div>
-            <div class="kpi-value" id="kpi-total-registered">—</div>
-            <div class="kpi-label">Total TB Cases Registered</div>
+            <div class="kpi-value" id="kpi-total-opd">—</div>
+            <div class="kpi-label">Total New OPD Consultations</div>
             <div class="kpi-breakdown">
               <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-total-south">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-opd-south">—</span></div>
               <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-total-north">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-opd-north">—</span></div>
               <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-total-sub">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-opd-sub">—</span></div>
             </div>
           </div>
+
+          <!-- CARD 2: Presumptive TB Cases Identified -->
           <div class="kpi-card">
             <div class="kpi-header">
               <div class="kpi-icon">🔎</div>
             </div>
             <div class="kpi-value" id="kpi-presumptive-rate">—</div>
-            <div class="kpi-label">Presumptive TB ID Rate (of OPD)</div>
+            <div class="kpi-label">Presumptive TB Cases Identified (Count &amp; % of OPD)</div>
             <div class="kpi-breakdown">
               <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
                   class="kpi-breakdown-val" id="kpi-presumptive-south">—</span></div>
@@ -943,105 +971,75 @@
                   class="kpi-breakdown-val" id="kpi-presumptive-sub">—</span></div>
             </div>
           </div>
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <div class="kpi-icon">🎗️</div>
-            </div>
-            <div class="kpi-value" id="kpi-hiv-screening">—</div>
-            <div class="kpi-label">HIV Screening Rate <br> (of Presumptive)</div>
-            <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-hiv-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-hiv-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-hiv-sub">—</span></div>
-            </div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <div class="kpi-icon">🧬</div>
-            </div>
-            <div class="kpi-value" id="kpi-wrd-testing">—</div>
-            <div class="kpi-label">GeneXpert Testing Rate <BR> (Of Registered Case)</div>
-            <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-wrd-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-wrd-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-wrd-sub">—</span></div>
-            </div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <div class="kpi-icon">👨‍👩‍👧‍👦</div>
-            </div>
-            <div class="kpi-value" id="kpi-contact-screened">—</div>
-            <div class="kpi-label">HH Contacts Screened</Pre>
-            </div>
-            <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-contact-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-contact-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-contact-sub">—</span></div>
-            </div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <div class="kpi-icon">🛡️</div>
-            </div>
-            <div class="kpi-value" id="kpi-tpt-initiated">—</div>
-            <div class="kpi-label">Contacts Put on TPT</div>
-            <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-tpt-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-tpt-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-tpt-sub">—</span></div>
-            </div>
-          </div>
-          <!-- New Lab Cascade KPI Cards -->
+
+          <!-- CARD 3: AFB Positive Cases -->
           <div class="kpi-card">
             <div class="kpi-header">
               <div class="kpi-icon">🔬</div>
             </div>
-            <div class="kpi-value" id="kpi-afb-testing-rate">—</div>
-            <div class="kpi-label">AFB Testing Rate <br> (of Presumptive)</div>
+            <div class="kpi-value" id="kpi-afb-positive">—</div>
+            <div class="kpi-label">AFB Positive Cases (Count &amp; % of AFB Tested)</div>
             <div class="kpi-breakdown">
               <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-afb-south">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-afb-pos-south">—</span></div>
               <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-afb-north">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-afb-pos-north">—</span></div>
               <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-afb-sub">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-afb-pos-sub">—</span></div>
             </div>
           </div>
+
+          <!-- CARD 4: GeneXpert Positive Cases -->
           <div class="kpi-card">
             <div class="kpi-header">
-              <div class="kpi-icon">🧪</div>
+              <div class="kpi-icon">🧬</div>
             </div>
-            <div class="kpi-value" id="kpi-xpert-positivity">—</div>
-            <div class="kpi-label">GeneXpert Positivity Rate <br> (from Presumptive)</div>
+            <div class="kpi-value" id="kpi-xpert-positive">—</div>
+            <div class="kpi-label">GeneXpert Positive Cases (Count &amp; % of Xpert Tested)</div>
             <div class="kpi-breakdown">
               <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-xpos-south">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-xpert-pos-south">—</span></div>
               <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-xpos-north">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-xpert-pos-north">—</span></div>
               <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-xpos-sub">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-xpert-pos-sub">—</span></div>
             </div>
           </div>
+
+          <!-- CARD 5: All TB Cases Registered -->
           <div class="kpi-card">
             <div class="kpi-header">
-              <div class="kpi-icon">📊</div>
+              <div class="kpi-icon">👥</div>
+            </div>
+            <div class="kpi-value" id="kpi-total-registered">—</div>
+            <div class="kpi-label">All TB Cases Registered (Count &amp; % of Presumptive)</div>
+            <div class="kpi-category-breakdown">
+              <div class="cat-item"><span class="cat-label">Pulm B+CF</span><span class="cat-value"
+                  id="kpi-reg-pulm-bcf">—</span></div>
+              <div class="cat-item"><span class="cat-label">Pulm CD</span><span class="cat-value"
+                  id="kpi-reg-pulm-cd">—</span></div>
+              <div class="cat-item"><span class="cat-label">EP B+CF</span><span class="cat-value"
+                  id="kpi-reg-ep-bcf">—</span></div>
+              <div class="cat-item"><span class="cat-label">EP CD</span><span class="cat-value"
+                  id="kpi-reg-ep-cd">—</span></div>
+            </div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-total-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-total-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-total-sub">—</span></div>
+            </div>
+          </div>
+
+          <!-- CARD 6: B+ Confirmed Cases -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">✅</div>
             </div>
             <div class="kpi-value" id="kpi-b-plus-confirmed">—</div>
-            <div class="kpi-label">B+ Confirmed Cases <br> (of Presumptive> </Pre>
-            </div>
+            <div class="kpi-label">B+ Confirmed Cases<br>(of Total TB Cases Registered)</div>
             <div class="kpi-breakdown">
               <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
                   class="kpi-breakdown-val" id="kpi-bplus-south">—</span></div>
@@ -1051,315 +1049,338 @@
                   class="kpi-breakdown-val" id="kpi-bplus-sub">—</span></div>
             </div>
           </div>
-          <div class="kpi-card">
+
+          <!-- ★ NEW CARD 7: Total No. of HH of B+PTB -->
+          <div class="kpi-card" id="kpi-card-hh-total">
             <div class="kpi-header">
-              <div class="kpi-icon">🧫</div>
+              <div class="kpi-icon">🏠</div>
             </div>
-            <div class="kpi-value" id="kpi-xpert-testing-rate">—</div>
-            <div class="kpi-label">% of Registered Tested Xpert <br> (of Presumptive)</div>
+            <div class="kpi-value" id="kpi-hh-total">—</div>
+            <div class="kpi-label">Total No. of HH of B+PTB</div>
             <div class="kpi-breakdown">
               <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-xr-south">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-hh-south">—</span></div>
               <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-xr-north">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-hh-north">—</span></div>
               <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-xr-sub">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-hh-sub">—</span></div>
             </div>
           </div>
+
+          <!-- CARD 8  HH Contacts Screened -->
           <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">👨‍👩‍👧‍👦</div>
+            </div>
+            <div class="kpi-value" id="kpi-contact-screened">—</div>
+            <div class="kpi-label">HH Contacts Screened<br>out of Total No. of HH of B+PT</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-sub">—</span></div>
+            </div>
+          </div>
+
+          <!-- CARD 9 : HH Contacts Diagnosed with Active TB -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🩺</div>
+            </div>
+            <div class="kpi-value" id="kpi-contact-diagnosed">—</div>
+            <div class="kpi-label">HH Contacts Diagnosed with Active TB<br>(Count &amp; % of HH Contacts Screened)</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-diagnosed-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-diagnosed-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-diagnosed-sub">—</span></div>
+            </div>
+          </div>
+
+          <!-- CARD 10 : Childhood TB (<15 Years) -->
+          <div class="kpi-card" id="kpi-card-childhood-tb">
             <div class="kpi-header">
               <div class="kpi-icon">👶</div>
             </div>
             <div class="kpi-value" id="kpi-childhood-tb">—</div>
-            <div class="kpi-label">Childhood TB Cases (&lt;15 Years) <br> (Of Registered)</div>
+            <div class="kpi-label">Childhood TB Cases (&lt;15 Years)<br>(Count &amp; % of Registered)</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">♂ Male</span><span
-                  class="kpi-breakdown-val" id="kpi-child-male">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">♀ Female</span><span
-                  class="kpi-breakdown-val" id="kpi-child-female">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-child-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-child-north">—</span></div>
               <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
                   class="kpi-breakdown-val" id="kpi-child-sub">—</span></div>
             </div>
           </div>
+
+          <!-- CARD 11 : Contacts Put on TPT -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🛡️</div>
+            </div>
+            <div class="kpi-value" id="kpi-tpt-initiated">—</div>
+            <div class="kpi-label">Contacts Put on TPT<br>(Count &amp; % of HH Contacts Diagnosed)</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-tpt-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-tpt-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-tpt-sub">—</span></div>
+            </div>
+          </div>
+
+          <!-- CARD 12 : HIV Screening -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🩺</div>
+            </div>
+            <div class="kpi-value" id="kpi-hiv-screening">—</div>
+            <div class="kpi-label">HIV Screening</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-hiv-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-hiv-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-hiv-sub">—</span></div>
+            </div>
+          </div>
+
+        </div><!-- end kpi-grid -->
+
+        <!-- ====== Charts Section ====== -->
+        <div id="north-south-comparison-card" class="chart-card full-width" style="display:none;">
+          <div class="chart-header">
+            <div class="chart-title">North vs South Regional Comparison</div>
+            <div class="chart-subtitle">Key TB indicators across South PK and North PK regions</div>
+          </div>
+          <div class="chart-canvas-wrap" style="height:300px;">
+            <canvas id="chart-north-south-comparison"></canvas>
+          </div>
         </div>
 
-
-        <!-- Charts Section -->
-        <div class="charts-grid" id="charts" style="margin-top: var(--space-xl);">
-
-          <!-- Demographics Age & Gender Pyramid -->
-          <div class="chart-card full-width">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 2: Age Group & Gender Demographics (N+R+UK Cases)</div>
-                <div class="chart-subtitle">Comparison of Male vs Female patient distribution across age categories
-                </div>
+        <div id="charts">
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Age &amp; Gender Distribution of TB Cases</div>
+                <div class="chart-subtitle">Registered cases by age group and sex (Block 2)</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-demographics"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap" style="height: 350px;">
-              <canvas id="chart-demographics"></canvas>
-            </div>
-          </div>
-
-          <!-- Clinical Categories & Case Types -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 1: Case Registration Categories</div>
-                <div class="chart-subtitle">Breakdown of Pulmonary and Extra-Pulmonary cases by registration type</div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">TB Case Registration by Category</div>
+                <div class="chart-subtitle">New, Relapse, UK &amp; Previously Treated (Block 1)</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-categories"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-categories"></canvas>
-            </div>
-          </div>
-
-          <!-- Diagnostics Cascade -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 3: Diagnostic Laboratory Funnel</div>
-                <div class="chart-subtitle">Path from OPD consultations to confirmed bacteriologically positive (B+)
-                  cases</div>
+            <div class="chart-card full-width">
+              <div class="chart-header">
+                <div class="chart-title">TB Diagnostic Cascade</div>
+                <div class="chart-subtitle">From OPD visit to confirmed TB diagnosis (Block 3)</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-cascade"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-cascade"></canvas>
-            </div>
-          </div>
-
-          <!-- Diagnostics Cascade Pie -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 3: OPD to Presumptive Proportion</div>
-                <div class="chart-subtitle">Proportion of Presumptive Identified vs Other New OPD Visits</div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">OPD — Presumptive TB Identification Rate</div>
+                <div class="chart-subtitle">Proportion of OPD patients identified as presumptive TB</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-opd-presumptive"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-opd-presumptive"></canvas>
-            </div>
-          </div>
-
-          <!-- DST Resistance Profiling -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 5: Drug Sensitivity Testing (DST) Results</div>
-                <div class="chart-subtitle">Tested vs Resistant cases for Rifampicin, Isoniazid, and Fluoroquinolone
-                </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Drug Sensitivity Testing (DST) Results</div>
+                <div class="chart-subtitle">Tested vs Resistant by drug type (Block 5)</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-dst"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-dst"></canvas>
-            </div>
-          </div>
-
-          <!-- TB/HIV Activities -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 4: TB/HIV Activities</div>
-                <div class="chart-subtitle">Testing, Co-infection status, and ART/TPT treatment coverage</div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">TB-HIV Co-infection Cascade</div>
+                <div class="chart-subtitle">HIV screening, positivity &amp; ART (Block 4)</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-tb-hiv"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-tb-hiv"></canvas>
-            </div>
-          </div>
-
-          <!-- Contact Tracing & Prevention -->
-          <div class="chart-card full-width">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 6: Household Contact Tracing & Preventive Therapy (TPT)</div>
-                <div class="chart-subtitle">Metrics on family contact screening, TB diagnosis, and preventive therapy
-                  enrollment</div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Contact Tracing &amp; TPT Cascade</div>
+                <div class="chart-subtitle">Household contacts screened and initiated on TPT (Block 6)</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-contact-tracing"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap" style="height: 320px;">
-              <canvas id="chart-contact-tracing"></canvas>
-            </div>
           </div>
+        </div>
 
-        </div><!-- /charts-grid -->
-
-        <!-- Detailed Tables Section -->
-        <div class="table-section" id="data-tables" style="margin-top: var(--space-xl);">
-          <div class="table-toolbar" style="flex-direction: column; align-items: flex-start; gap: var(--space-md);">
-            <div>
-              <div class="chart-title">📋 Raw Report Tables</div>
-              <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;">View exact data counts matching
-                standard TB-07 reporting forms</p>
-            </div>
-            <!-- Block Selection Tabs -->
+        <!-- ====== Data Tables ====== -->
+        <div class="table-section" id="data-tables">
+          <div class="table-toolbar">
             <div class="tb-table-tabs">
-              <button class="tb-table-tab active" data-block="1">Block 1: Case Registration</button>
-              <button class="tb-table-tab" data-block="2">Block 2: Age & Gender</button>
-              <button class="tb-table-tab" data-block="3">Block 3 & 4: Lab & HIV</button>
-              <button class="tb-table-tab" data-block="5">Block 5: DST Profile</button>
-              <button class="tb-table-tab" data-block="6">Block 6: Contacts & TPT</button>
+              <button class="tb-table-tab active" data-block="1">📋 Block 1: Case Registration</button>
+              <button class="tb-table-tab" data-block="2">👥 Block 2: Demographics</button>
+              <button class="tb-table-tab" data-block="3">🔬 Block 3/4: Lab &amp; HIV</button>
+              <button class="tb-table-tab" data-block="5">💊 Block 5: DST Results</button>
+              <button class="tb-table-tab" data-block="6">🏠 Block 6: Contact Tracing</button>
             </div>
           </div>
-
-          <!-- Block 1 Table -->
-          <div class="table-wrap tb-table-content" id="table-block-1">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Clinical Classification (All Registered Cases)</th>
-                  <th style="text-align: right;">New (N)</th>
-                  <th style="text-align: right;">Relapse (R)</th>
-                  <th style="text-align: right;">History Unknown (UK)</th>
-                  <th style="text-align: right; background: rgba(255,255,255,0.02)">Subtotal (N+R+UK)</th>
-                  <th style="text-align: right;">Prev Tx: Failure</th>
-                  <th style="text-align: right;">Prev Tx: Lost Follow-up</th>
-                  <th style="text-align: right;">Prev Tx: Others</th>
-                  <th style="text-align: right; background: rgba(6,182,212,0.1); font-weight: bold;">Grand Total</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-block-1"></tbody>
-            </table>
+          <!-- Table contents -->
+          <div id="table-block-1" class="tb-table-content">
+            <div class="tab-section-header">Block 1 — Case Registration by TB Type &amp; Treatment History</div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th style="text-align:right">New (N)</th>
+                    <th style="text-align:right">Relapse (R)</th>
+                    <th style="text-align:right">History Unknown</th>
+                    <th style="text-align:right">Sub-total (N+R+UK)</th>
+                    <th style="text-align:right">Tx Failure</th>
+                    <th style="text-align:right">Lost to FU</th>
+                    <th style="text-align:right">Other Prev Tx</th>
+                    <th style="text-align:right">TOTAL</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-block-1"></tbody>
+              </table>
+            </div>
           </div>
-
-          <!-- Block 2 Table -->
-          <div class="table-wrap tb-table-content" id="table-block-2" style="display: none;">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th rowspan="2" style="vertical-align: middle;">Classification (New, Relapse, UK Cases)</th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">0-4 yrs</th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">5-14 yrs
-                  </th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">15-24 yrs
-                  </th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">25-34 yrs
-                  </th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">35-44 yrs
-                  </th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">45-54 yrs
-                  </th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">55-64 yrs
-                  </th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">65+ yrs</th>
-                  <th colspan="2"
-                    style="text-align: center; border-bottom: 1px solid var(--border-color); background: rgba(255,255,255,0.02)">
-                    Subtotal</th>
-                  <th rowspan="2"
-                    style="text-align: right; vertical-align: middle; background: rgba(6,182,212,0.1); font-weight: bold;">
-                    Grand Total</th>
-                </tr>
-                <tr>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-block-2"></tbody>
-            </table>
+          <div id="table-block-2" class="tb-table-content" style="display:none;">
+            <div class="tab-section-header">Block 2 — Age Group &amp; Gender Distribution</div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th style="text-align:right">0-4 M</th>
+                    <th style="text-align:right">0-4 F</th>
+                    <th style="text-align:right">5-14 M</th>
+                    <th style="text-align:right">5-14 F</th>
+                    <th style="text-align:right">15-24 M</th>
+                    <th style="text-align:right">15-24 F</th>
+                    <th style="text-align:right">25-34 M</th>
+                    <th style="text-align:right">25-34 F</th>
+                    <th style="text-align:right">35-44 M</th>
+                    <th style="text-align:right">35-44 F</th>
+                    <th style="text-align:right">45-54 M</th>
+                    <th style="text-align:right">45-54 F</th>
+                    <th style="text-align:right">55-64 M</th>
+                    <th style="text-align:right">55-64 F</th>
+                    <th style="text-align:right">65+ M</th>
+                    <th style="text-align:right">65+ F</th>
+                    <th style="text-align:right">Total M</th>
+                    <th style="text-align:right">Total F</th>
+                    <th style="text-align:right">Grand Total</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-block-2"></tbody>
+              </table>
+            </div>
           </div>
-
-          <!-- Block 3 & 4 Table -->
-          <div class="table-wrap tb-table-content" id="table-block-3" style="display: none;">
-            <div class="pyramid-wrap" style="height: auto; align-items: flex-start;">
-              <div style="flex: 1; min-width: 45%;">
-                <div class="tab-section-header">Block 3: Laboratory Diagnosis & GeneXpert</div>
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Indicator Metric</th>
-                      <th style="text-align: right; width: 150px;">Count Value</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tbody-block-3"></tbody>
-                </table>
+          <div id="table-block-3" class="tb-table-content" style="display:none;">
+            <div class="tab-section-header">Block 3/4 — Laboratory Diagnostics &amp; HIV/TPT Activities</div>
+            <div class="pyramid-wrap">
+              <div>
+                <p style="font-size:0.8rem;font-weight:600;color:var(--accent-1);margin-bottom:8px;">Block 3: Laboratory
+                  Diagnostics</p>
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Indicator</th>
+                        <th style="text-align:right">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody-block-3"></tbody>
+                  </table>
+                </div>
               </div>
-              <div style="flex: 1; min-width: 45%;">
-                <div class="tab-section-header">Block 4: TB/HIV Interventions & TPT</div>
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Indicator Metric</th>
-                      <th style="text-align: right; width: 150px;">Count Value</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tbody-block-4"></tbody>
-                </table>
+              <div>
+                <p style="font-size:0.8rem;font-weight:600;color:var(--accent-1);margin-bottom:8px;">Block 4: HIV
+                  Activities &amp; TPT</p>
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Indicator</th>
+                        <th style="text-align:right">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody-block-4"></tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
-
-          <!-- Block 5 Table -->
-          <div class="table-wrap tb-table-content" id="table-block-5" style="display: none;">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th rowspan="2" style="vertical-align: middle;">Drug Resistance Profile (B+ Cases)</th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">Rifampicin
-                    (RIF)</th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">Isoniazid
-                    (INH)</th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">
-                    Fluoroquinolone (FLQ)</th>
-                </tr>
-                <tr>
-                  <th style="text-align: right;">Tested Result</th>
-                  <th style="text-align: right;">Resistant</th>
-                  <th style="text-align: right;">Tested Result</th>
-                  <th style="text-align: right;">Resistant</th>
-                  <th style="text-align: right;">Tested Result</th>
-                  <th style="text-align: right;">Resistant</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-block-5"></tbody>
-            </table>
+          <div id="table-block-5" class="tb-table-content" style="display:none;">
+            <div class="tab-section-header">Block 5 — Drug Sensitivity Testing (DST) Results</div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Patient Category</th>
+                    <th style="text-align:right">RIF Tested</th>
+                    <th style="text-align:right">RIF Resistant</th>
+                    <th style="text-align:right">INH Tested</th>
+                    <th style="text-align:right">INH Resistant</th>
+                    <th style="text-align:right">FLQ Tested</th>
+                    <th style="text-align:right">FLQ Resistant</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-block-5"></tbody>
+              </table>
+            </div>
           </div>
-
-          <!-- Block 6 Table -->
-          <div class="table-wrap tb-table-content" id="table-block-6" style="display: none;">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>HH Contact Screening Indicators (B+ Cases)</th>
-                  <th style="text-align: right; width: 180px;">Age &le; 5 yrs</th>
-                  <th style="text-align: right; width: 180px;">Age &gt; 5 yrs</th>
-                  <th style="text-align: right; width: 180px; background: rgba(6,182,212,0.1); font-weight: bold;">
-                    Combined Total</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-block-6"></tbody>
-            </table>
+          <div id="table-block-6" class="tb-table-content" style="display:none;">
+            <div class="tab-section-header">Block 6 — Household Contact Tracing &amp; TPT</div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Indicator</th>
+                    <th style="text-align:right">&lt;5 Years</th>
+                    <th style="text-align:right">&gt;5 Years</th>
+                    <th style="text-align:right">Total</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-block-6"></tbody>
+              </table>
+            </div>
           </div>
+        </div><!-- end table-section -->
 
-        </div><!-- /table-section -->
-
-      </div><!-- /dashboard -->
+      </div><!-- end dashboard -->
 
     </main>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js">
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js">
-  </script>
-  <script src="tb_dashboard.js">
-  </script>
+  <!-- External Libraries -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script src="tb_dashboard.js"></script>
 
 </body>
 
