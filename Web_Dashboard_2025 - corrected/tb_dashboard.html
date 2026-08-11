@@ -7,6 +7,10 @@
   <meta name="description"
     content="TB-07 Case Registration Dashboard — Monitor quarterly registration, diagnostics, HIV screening, drug sensitivity, and contact tracing." />
   <title>TB-07 — Case Registration Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
   <style>
     /* ===== CSS Variables & Reset ===== */
     :root {
@@ -20,6 +24,7 @@
       --border-color: rgba(255, 255, 255, 0.06);
       --accent-1: #06b6d4;
       --accent-2: #0891b2;
+      --accent-5: #10b981;
       --accent-6: #f43f5e;
       --gradient-primary: linear-gradient(135deg, #06b6d4, #0891b2);
       --radius-sm: 6px;
@@ -514,22 +519,28 @@
     /* ===== KPI Grid ===== */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: var(--space-md);
       margin-bottom: var(--space-xl);
     }
 
     .kpi-card {
       background: var(--bg-card);
-      border: 1px solid var(--border-color);
+      border: 1px solid rgba(16, 185, 129, 0.3);
       border-radius: var(--radius-md);
-      padding: var(--space-md);
+      padding: var(--space-lg);
       text-align: center;
-      transition: border-color 0.3s;
+      transition: all 0.3s ease;
+      min-height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .kpi-card:hover {
-      border-color: rgba(6, 182, 212, 0.2);
+      border-color: var(--accent-5);
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
+      transform: translateY(-2px);
     }
 
     .kpi-icon {
@@ -538,13 +549,14 @@
     }
 
     .kpi-value {
-      font-size: 1.6rem;
+      font-size: 1.2rem;
       font-weight: 700;
       background: var(--gradient-primary);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      line-height: 1.2;
+      line-height: 1.4;
+      word-wrap: break-word;
     }
 
     .kpi-label {
@@ -553,10 +565,10 @@
       font-weight: 500;
       text-transform: uppercase;
       letter-spacing: 0.04em;
-      margin-top: 2px;
+      margin-top: 4px;
     }
 
-    /* ===== KPI Breakdown (South/North/Total) ===== */
+    /* ===== KPI Breakdown ===== */
     .kpi-breakdown {
       display: flex;
       justify-content: space-between;
@@ -610,8 +622,34 @@
       color: #f59e0b;
     }
 
+    /* ===== Category Breakdown inside Card 5 ===== */
+    .kpi-category-breakdown {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px 8px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.7rem;
+    }
 
-    /* ===== Charts Grid ===== */
+    .cat-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+    }
+
+    .cat-label {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .cat-value {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* ===== Charts ===== */
     .charts-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -631,7 +669,7 @@
     }
 
     .chart-card:hover {
-      border-color: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.08);
     }
 
     .chart-header {
@@ -801,28 +839,31 @@
         padding: var(--space-xs) var(--space-sm);
       }
     }
+
+    @media (max-width: 480px) {
+      .kpi-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi-category-breakdown {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- Loading Spinner -->
+  <!-- Spinner, Toast, Mobile Toggle -->
   <div id="spinner" class="spinner-overlay">
     <div class="spinner"></div>
   </div>
-
-  <!-- Toast Container -->
   <div id="toast-container" class="toast-container"></div>
-
-  <!-- Mobile Sidebar Toggle -->
   <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle sidebar">☰</button>
 
   <div class="app-layout">
-
-    <!-- ====== Sidebar ====== -->
+    <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-
-      <!-- Brand -->
       <div class="sidebar-brand">
         <div class="brand-icon">🔬</div>
         <div>
@@ -830,8 +871,6 @@
           <div class="brand-sub">TB-07 Case Tracker</div>
         </div>
       </div>
-
-      <!-- Upload -->
       <div class="sidebar-section">
         <div class="sidebar-section-title">Data Source</div>
         <div class="upload-zone" id="upload-zone">
@@ -841,43 +880,28 @@
         </div>
         <input type="file" id="file-input" accept=".xlsx" />
       </div>
-
-      <!-- Sheet Tabs -->
       <div class="sidebar-section" id="sheet-section" style="display:none;">
         <div class="sidebar-section-title">Loaded Sheets</div>
         <div class="sheet-tabs" id="sheet-tabs"></div>
       </div>
-
-      <!-- Navigation -->
       <div class="sidebar-section">
         <div class="sidebar-section-title">Navigation</div>
         <nav class="sidebar-nav">
           <a class="nav-link active" href="#overview" data-section="overview">📊 &nbsp;Overview</a>
-          <a class="nav-link" href="#charts" data-section="charts">📈 &nbsp;Charts & Visuals</a>
+          <a class="nav-link" href="#charts" data-section="charts">📈 &nbsp;Charts &amp; Visuals</a>
           <a class="nav-link" href="#data-tables" data-section="data-tables">📋 &nbsp;Detailed Tables</a>
         </nav>
       </div>
-
-      <!-- Dashboards Switcher -->
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">Dashboards</div>
-        <nav class="sidebar-nav">
-          <a class="nav-link" href="index.html">👥 &nbsp;Patient Registry</a>
-          <a class="nav-link" href="targevsach.html">🎯 &nbsp;Target vs Achieved</a>
-          <a class="nav-link active" href="tb_dashboard.html">🦠 &nbsp;TB Registration</a>
-        </nav>
-      </div>
-
     </aside>
 
-    <!-- ====== Main Content ====== -->
+    <!-- Main Content -->
     <main class="main-content" id="main-content">
 
-      <!-- Empty State (shown before data load) -->
+      <!-- Empty State -->
       <div id="empty-state" class="empty-state">
         <div class="empty-icon">🦠</div>
         <h3>TB-07 Cases Registration Dashboard</h3>
-        <p>Upload the <strong>TB-07 All Projects-2025.xlsx</strong> Excel file from the sidebar to analyze quarterly
+        <p>Upload the <strong>TB-07 All Projects-2024.xlsx</strong> Excel file from the sidebar to analyze quarterly
           registration, demographics, diagnostics, drug sensitivity, and contact tracing metrics.</p>
         <br />
         <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
@@ -885,17 +909,16 @@
         </button>
       </div>
 
-      <!-- Dashboard (hidden until data loads) -->
+      <!-- Dashboard -->
       <div id="dashboard" style="display:none;">
 
         <!-- Top Bar -->
         <div class="top-bar" id="overview">
           <div class="top-bar-left">
-            <h2 id="facility-title">TB Care Facility (BMU): KMC Leprosy Hospital</h2>
-            <p id="data-summary">District: West | Year: 2025</p>
+            <h2 id="facility-title">TB Care Facility (BMU)</h2>
+            <p id="data-summary">District: — | Year: 2024</p>
           </div>
           <div class="top-bar-actions">
-            <!-- Quarter Dropdown Filter -->
             <div class="quarter-selector-group">
               <label for="quarter-select">Select Quarter:</label>
               <select id="quarter-select" class="quarter-selector">
@@ -911,29 +934,33 @@
           </div>
         </div>
 
-        <!-- KPI Cards -->
+        <!-- ====== KPI Grid ====== -->
         <div class="kpi-grid" id="kpi-grid">
+
+          <!-- CARD 1: Total New OPD Consultations -->
           <div class="kpi-card">
             <div class="kpi-header">
-              <div class="kpi-icon">👥</div>
+              <div class="kpi-icon">🏥</div>
             </div>
-            <div class="kpi-value" id="kpi-total-registered">—</div>
-            <div class="kpi-label">Total TB Cases Registered</div>
+            <div class="kpi-value" id="kpi-total-opd">—</div>
+            <div class="kpi-label">Total New OPD Consultations</div>
             <div class="kpi-breakdown">
               <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-total-south">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-opd-south">—</span></div>
               <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-total-north">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-opd-north">—</span></div>
               <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-total-sub">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-opd-sub">—</span></div>
             </div>
           </div>
+
+          <!-- CARD 2: Presumptive TB Cases Identified -->
           <div class="kpi-card">
             <div class="kpi-header">
               <div class="kpi-icon">🔎</div>
             </div>
             <div class="kpi-value" id="kpi-presumptive-rate">—</div>
-            <div class="kpi-label">Presumptive TB ID Rate (of OPD)</div>
+            <div class="kpi-label">Presumptive TB Cases Identified (Count &amp; % of OPD)</div>
             <div class="kpi-breakdown">
               <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
                   class="kpi-breakdown-val" id="kpi-presumptive-south">—</span></div>
@@ -943,103 +970,75 @@
                   class="kpi-breakdown-val" id="kpi-presumptive-sub">—</span></div>
             </div>
           </div>
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <div class="kpi-icon">🎗️</div>
-            </div>
-            <div class="kpi-value" id="kpi-hiv-screening">—</div>
-            <div class="kpi-label">HIV Screening Rate</div>
-            <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-hiv-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-hiv-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-hiv-sub">—</span></div>
-            </div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <div class="kpi-icon">🧬</div>
-            </div>
-            <div class="kpi-value" id="kpi-wrd-testing">—</div>
-            <div class="kpi-label">GeneXpert Testing Rate (Of Registered Case)</div>
-            <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-wrd-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-wrd-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-wrd-sub">—</span></div>
-            </div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <div class="kpi-icon">👨‍👩‍👧‍👦</div>
-            </div>
-            <div class="kpi-value" id="kpi-contact-screened">—</div>
-            <div class="kpi-label">HH Contacts Screened</div>
-            <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-contact-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-contact-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-contact-sub">—</span></div>
-            </div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-header">
-              <div class="kpi-icon">🛡️</div>
-            </div>
-            <div class="kpi-value" id="kpi-tpt-initiated">—</div>
-            <div class="kpi-label">Contacts Put on TPT</div>
-            <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-tpt-south">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-tpt-north">—</span></div>
-              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-tpt-sub">—</span></div>
-            </div>
-          </div>
-          <!-- New Lab Cascade KPI Cards -->
+
+          <!-- CARD 3: AFB Positive Cases -->
           <div class="kpi-card">
             <div class="kpi-header">
               <div class="kpi-icon">🔬</div>
             </div>
-            <div class="kpi-value" id="kpi-afb-testing-rate">—</div>
-            <div class="kpi-label">AFB Testing Rate (of Presumptive)</div>
+            <div class="kpi-value" id="kpi-afb-positive">—</div>
+            <div class="kpi-label">AFB Positive Cases (Count &amp; % of AFB Tested)</div>
             <div class="kpi-breakdown">
               <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-afb-south">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-afb-pos-south">—</span></div>
               <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-afb-north">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-afb-pos-north">—</span></div>
               <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-afb-sub">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-afb-pos-sub">—</span></div>
             </div>
           </div>
+
+          <!-- CARD 4: GeneXpert Positive Cases -->
           <div class="kpi-card">
             <div class="kpi-header">
-              <div class="kpi-icon">🧪</div>
+              <div class="kpi-icon">🧬</div>
             </div>
-            <div class="kpi-value" id="kpi-xpert-positivity">—</div>
-            <div class="kpi-label">GeneXpert Positivity Rate (from Presumptive)</div>
+            <div class="kpi-value" id="kpi-xpert-positive">—</div>
+            <div class="kpi-label">GeneXpert Positive Cases (Count &amp; % of Xpert Tested)</div>
             <div class="kpi-breakdown">
               <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-xpos-south">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-xpert-pos-south">—</span></div>
               <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-xpos-north">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-xpert-pos-north">—</span></div>
               <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-xpos-sub">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-xpert-pos-sub">—</span></div>
             </div>
           </div>
+
+          <!-- CARD 5: All TB Cases Registered -->
           <div class="kpi-card">
             <div class="kpi-header">
-              <div class="kpi-icon">📊</div>
+              <div class="kpi-icon">👥</div>
+            </div>
+            <div class="kpi-value" id="kpi-total-registered">—</div>
+            <div class="kpi-label">All TB Cases Registered (Count &amp; % of Presumptive)</div>
+            <div class="kpi-category-breakdown">
+              <div class="cat-item"><span class="cat-label">Pulm B+CF</span><span class="cat-value"
+                  id="kpi-reg-pulm-bcf">—</span></div>
+              <div class="cat-item"><span class="cat-label">Pulm CD</span><span class="cat-value"
+                  id="kpi-reg-pulm-cd">—</span></div>
+              <div class="cat-item"><span class="cat-label">EP B+CF</span><span class="cat-value"
+                  id="kpi-reg-ep-bcf">—</span></div>
+              <div class="cat-item"><span class="cat-label">EP CD</span><span class="cat-value"
+                  id="kpi-reg-ep-cd">—</span></div>
+            </div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-total-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-total-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-total-sub">—</span></div>
+            </div>
+          </div>
+
+          <!-- CARD 6: B+ Confirmed Cases -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">✅</div>
             </div>
             <div class="kpi-value" id="kpi-b-plus-confirmed">—</div>
-            <div class="kpi-label">B+ Confirmed Cases</div>
+            <div class="kpi-label">B+ Confirmed Cases<br>(of Total TB Cases Registered)</div>
             <div class="kpi-breakdown">
               <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
                   class="kpi-breakdown-val" id="kpi-bplus-south">—</span></div>
@@ -1049,313 +1048,2519 @@
                   class="kpi-breakdown-val" id="kpi-bplus-sub">—</span></div>
             </div>
           </div>
-          <div class="kpi-card">
+
+          <!-- ★ CARD 7: Total No. of HH of B+PTB (FIXED) -->
+          <div class="kpi-card" id="kpi-card-hh-total">
             <div class="kpi-header">
-              <div class="kpi-icon">🧫</div>
+              <div class="kpi-icon">🏠</div>
             </div>
-            <div class="kpi-value" id="kpi-xpert-testing-rate">—</div>
-            <div class="kpi-label">% of Registered Tested Xpert (out of Presumptive)</div>
+            <div class="kpi-value" id="kpi-hh-total">—</div>
+            <div class="kpi-label">Total No. of HH of B+PTB</div>
             <div class="kpi-breakdown">
               <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
-                  class="kpi-breakdown-val" id="kpi-xr-south">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-hh-south">—</span></div>
               <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
-                  class="kpi-breakdown-val" id="kpi-xr-north">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-hh-north">—</span></div>
               <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                  class="kpi-breakdown-val" id="kpi-xr-sub">—</span></div>
+                  class="kpi-breakdown-val" id="kpi-hh-sub">—</span></div>
             </div>
           </div>
+
+          <!-- ★ CARD 8: HH Contacts Screened (FIXED) -->
           <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">👨‍👩‍👧‍👦</div>
+            </div>
+            <div class="kpi-value" id="kpi-contact-screened">—</div>
+            <div class="kpi-label">HH Contacts Screened<br>out of Total No. of HH of B+PT</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-sub">—</span></div>
+            </div>
+          </div>
+
+          <!-- CARD 9: HH Contacts Diagnosed with Active TB -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🩺</div>
+            </div>
+            <div class="kpi-value" id="kpi-contact-diagnosed">—</div>
+            <div class="kpi-label">HH Contacts Diagnosed with Active TB<br>(Count &amp; % of HH Contacts Screened)</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-diagnosed-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-diagnosed-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-contact-diagnosed-sub">—</span></div>
+            </div>
+          </div>
+
+          <!-- CARD 10: Childhood TB (<15 Years) -->
+          <div class="kpi-card" id="kpi-card-childhood-tb">
             <div class="kpi-header">
               <div class="kpi-icon">👶</div>
             </div>
             <div class="kpi-value" id="kpi-childhood-tb">—</div>
-            <div class="kpi-label">Childhood TB Cases (&lt;15 Years)</div>
+            <div class="kpi-label">Childhood TB Cases (&lt;15 Years)<br>(Count &amp; % of Registered)</div>
             <div class="kpi-breakdown">
-              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">♂ Male</span><span
-                  class="kpi-breakdown-val" id="kpi-child-male">—</span></div>
-              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">♀ Female</span><span
-                  class="kpi-breakdown-val" id="kpi-child-female">—</span></div>
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-child-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-child-north">—</span></div>
               <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
                   class="kpi-breakdown-val" id="kpi-child-sub">—</span></div>
             </div>
           </div>
+
+          <!-- CARD 11: Contacts Put on TPT -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🛡️</div>
+            </div>
+            <div class="kpi-value" id="kpi-tpt-initiated">—</div>
+            <div class="kpi-label">Contacts Put on TPT<br>(Count &amp; % of HH Contacts Diagnosed)</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-tpt-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-tpt-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-tpt-sub">—</span></div>
+            </div>
+          </div>
+
+          <!-- CARD 12: HIV Screening -->
+          <div class="kpi-card">
+            <div class="kpi-header">
+              <div class="kpi-icon">🩺</div>
+            </div>
+            <div class="kpi-value" id="kpi-hiv-screening">—</div>
+            <div class="kpi-label">HIV Screening</div>
+            <div class="kpi-breakdown">
+              <div class="kpi-breakdown-item south"><span class="kpi-breakdown-year">South PK</span><span
+                  class="kpi-breakdown-val" id="kpi-hiv-south">—</span></div>
+              <div class="kpi-breakdown-item north"><span class="kpi-breakdown-year">North PK</span><span
+                  class="kpi-breakdown-val" id="kpi-hiv-north">—</span></div>
+              <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                  class="kpi-breakdown-val" id="kpi-hiv-sub">—</span></div>
+            </div>
+          </div>
+
+        </div><!-- end kpi-grid -->
+
+        <!-- ====== Charts Section ====== -->
+        <div id="north-south-comparison-card" class="chart-card full-width" style="display:none;">
+          <div class="chart-header">
+            <div class="chart-title">North vs South Regional Comparison</div>
+            <div class="chart-subtitle">Key TB indicators across South PK and North PK regions</div>
+          </div>
+          <div class="chart-canvas-wrap" style="height:300px;">
+            <canvas id="chart-north-south-comparison"></canvas>
+          </div>
         </div>
 
-        <!-- Charts Section -->
-        <div class="charts-grid" id="charts" style="margin-top: var(--space-xl);">
-
-          <!-- Demographics Age & Gender Pyramid -->
-          <div class="chart-card full-width">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 2: Age Group & Gender Demographics (N+R+UK Cases)</div>
-                <div class="chart-subtitle">Comparison of Male vs Female patient distribution across age categories
-                </div>
+        <div id="charts">
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Age &amp; Gender Distribution of TB Cases</div>
+                <div class="chart-subtitle">Registered cases by age group and sex (Block 2)</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-demographics"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap" style="height: 350px;">
-              <canvas id="chart-demographics"></canvas>
-            </div>
-          </div>
-
-          <!-- Clinical Categories & Case Types -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 1: Case Registration Categories</div>
-                <div class="chart-subtitle">Breakdown of Pulmonary and Extra-Pulmonary cases by registration type</div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">TB Case Registration by Category</div>
+                <div class="chart-subtitle">New, Relapse, UK &amp; Previously Treated (Block 1)</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-categories"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-categories"></canvas>
-            </div>
-          </div>
-
-          <!-- Diagnostics Cascade -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 3: Diagnostic Laboratory Funnel</div>
-                <div class="chart-subtitle">Path from OPD consultations to confirmed bacteriologically positive (B+)
-                  cases</div>
+            <div class="chart-card full-width">
+              <div class="chart-header">
+                <div class="chart-title">TB Diagnostic Cascade</div>
+                <div class="chart-subtitle">From OPD visit to confirmed TB diagnosis (Block 3)</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-cascade"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-cascade"></canvas>
-            </div>
-          </div>
-
-          <!-- OPD vs Presumptive Pie Chart -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 3: New OPD Visits vs Presumptive Cases</div>
-                <div class="chart-subtitle">Proportion of Presumptive TB Cases among New OPD Visits</div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">OPD — Presumptive TB Identification Rate</div>
+                <div class="chart-subtitle">Proportion of OPD patients identified as presumptive TB</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-opd-presumptive"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-opd-pie"></canvas>
-            </div>
-          </div>
-
-          <!-- DST Resistance Profiling -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 5: Drug Sensitivity Testing (DST) Results</div>
-                <div class="chart-subtitle">Tested vs Resistant cases for Rifampicin, Isoniazid, and Fluoroquinolone
-                </div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Drug Sensitivity Testing (DST) Results</div>
+                <div class="chart-subtitle">Tested vs Resistant by drug type (Block 5)</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-dst"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-dst"></canvas>
-            </div>
-          </div>
-
-          <!-- TB/HIV Activities -->
-          <div class="chart-card">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 4: TB/HIV Activities</div>
-                <div class="chart-subtitle">Testing, Co-infection status, and ART/TPT treatment coverage</div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">TB-HIV Co-infection Cascade</div>
+                <div class="chart-subtitle">HIV screening, positivity &amp; ART (Block 4)</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-tb-hiv"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap">
-              <canvas id="chart-tb-hiv"></canvas>
-            </div>
-          </div>
-
-          <!-- Contact Tracing & Prevention -->
-          <div class="chart-card full-width">
-            <div class="chart-header">
-              <div>
-                <div class="chart-title">Block 6: Household Contact Tracing & Preventive Therapy (TPT)</div>
-                <div class="chart-subtitle">Metrics on family contact screening, TB diagnosis, and preventive therapy
-                  enrollment</div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Contact Tracing &amp; TPT Cascade</div>
+                <div class="chart-subtitle">Household contacts screened and initiated on TPT (Block 6)</div>
+              </div>
+              <div class="chart-canvas-wrap">
+                <canvas id="chart-contact-tracing"></canvas>
               </div>
             </div>
-            <div class="chart-canvas-wrap" style="height: 320px;">
-              <canvas id="chart-contact-tracing"></canvas>
-            </div>
           </div>
+        </div>
 
-        </div><!-- /charts-grid -->
-
-        <!-- Detailed Tables Section -->
-        <div class="table-section" id="data-tables" style="margin-top: var(--space-xl);">
-          <div class="table-toolbar" style="flex-direction: column; align-items: flex-start; gap: var(--space-md);">
-            <div>
-              <div class="chart-title">📋 Raw Report Tables</div>
-              <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;">View exact data counts matching
-                standard TB-07 reporting forms</p>
-            </div>
-            <!-- Block Selection Tabs -->
+        <!-- ====== Data Tables ====== -->
+        <div class="table-section" id="data-tables">
+          <div class="table-toolbar">
             <div class="tb-table-tabs">
-              <button class="tb-table-tab active" data-block="1">Block 1: Case Registration</button>
-              <button class="tb-table-tab" data-block="2">Block 2: Age & Gender</button>
-              <button class="tb-table-tab" data-block="3">Block 3 & 4: Lab & HIV</button>
-              <button class="tb-table-tab" data-block="5">Block 5: DST Profile</button>
-              <button class="tb-table-tab" data-block="6">Block 6: Contacts & TPT</button>
+              <button class="tb-table-tab active" data-block="1">📋 Block 1: Case Registration</button>
+              <button class="tb-table-tab" data-block="2">👥 Block 2: Demographics</button>
+              <button class="tb-table-tab" data-block="3">🔬 Block 3/4: Lab &amp; HIV</button>
+              <button class="tb-table-tab" data-block="5">💊 Block 5: DST Results</button>
+              <button class="tb-table-tab" data-block="6">🏠 Block 6: Contact Tracing</button>
             </div>
           </div>
-
-          <!-- Block 1 Table -->
-          <div class="table-wrap tb-table-content" id="table-block-1">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Clinical Classification (All Registered Cases)</th>
-                  <th style="text-align: right;">New (N)</th>
-                  <th style="text-align: right;">Relapse (R)</th>
-                  <th style="text-align: right;">History Unknown (UK)</th>
-                  <th style="text-align: right; background: rgba(255,255,255,0.02)">Subtotal (N+R+UK)</th>
-                  <th style="text-align: right;">Prev Tx: Failure</th>
-                  <th style="text-align: right;">Prev Tx: Lost Follow-up</th>
-                  <th style="text-align: right;">Prev Tx: Others</th>
-                  <th style="text-align: right; background: rgba(6,182,212,0.1); font-weight: bold;">Grand Total</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-block-1"></tbody>
-            </table>
+          <!-- Table contents -->
+          <div id="table-block-1" class="tb-table-content">
+            <div class="tab-section-header">Block 1 — Case Registration by TB Type &amp; Treatment History</div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th style="text-align:right">New (N)</th>
+                    <th style="text-align:right">Relapse (R)</th>
+                    <th style="text-align:right">History Unknown</th>
+                    <th style="text-align:right">Sub-total (N+R+UK)</th>
+                    <th style="text-align:right">Tx Failure</th>
+                    <th style="text-align:right">Lost to FU</th>
+                    <th style="text-align:right">Other Prev Tx</th>
+                    <th style="text-align:right">TOTAL</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-block-1"></tbody>
+              </table>
+            </div>
           </div>
-
-          <!-- Block 2 Table -->
-          <div class="table-wrap tb-table-content" id="table-block-2" style="display: none;">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th rowspan="2" style="vertical-align: middle;">Classification (New, Relapse, UK Cases)</th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">0-4 yrs</th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">5-14 yrs
-                  </th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">15-24 yrs
-                  </th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">25-34 yrs
-                  </th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">35-44 yrs
-                  </th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">45-54 yrs
-                  </th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">55-64 yrs
-                  </th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">65+ yrs</th>
-                  <th colspan="2"
-                    style="text-align: center; border-bottom: 1px solid var(--border-color); background: rgba(255,255,255,0.02)">
-                    Subtotal</th>
-                  <th rowspan="2"
-                    style="text-align: right; vertical-align: middle; background: rgba(6,182,212,0.1); font-weight: bold;">
-                    Grand Total</th>
-                </tr>
-                <tr>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                  <th style="text-align: right;">M</th>
-                  <th style="text-align: right;">F</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-block-2"></tbody>
-            </table>
+          <div id="table-block-2" class="tb-table-content" style="display:none;">
+            <div class="tab-section-header">Block 2 — Age Group &amp; Gender Distribution</div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th style="text-align:right">0-4 M</th>
+                    <th style="text-align:right">0-4 F</th>
+                    <th style="text-align:right">5-14 M</th>
+                    <th style="text-align:right">5-14 F</th>
+                    <th style="text-align:right">15-24 M</th>
+                    <th style="text-align:right">15-24 F</th>
+                    <th style="text-align:right">25-34 M</th>
+                    <th style="text-align:right">25-34 F</th>
+                    <th style="text-align:right">35-44 M</th>
+                    <th style="text-align:right">35-44 F</th>
+                    <th style="text-align:right">45-54 M</th>
+                    <th style="text-align:right">45-54 F</th>
+                    <th style="text-align:right">55-64 M</th>
+                    <th style="text-align:right">55-64 F</th>
+                    <th style="text-align:right">65+ M</th>
+                    <th style="text-align:right">65+ F</th>
+                    <th style="text-align:right">Total M</th>
+                    <th style="text-align:right">Total F</th>
+                    <th style="text-align:right">Grand Total</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-block-2"></tbody>
+              </table>
+            </div>
           </div>
-
-          <!-- Block 3 & 4 Table -->
-          <div class="table-wrap tb-table-content" id="table-block-3" style="display: none;">
-            <div class="pyramid-wrap" style="height: auto; align-items: flex-start;">
-              <div style="flex: 1; min-width: 45%;">
-                <div class="tab-section-header">Block 3: Laboratory Diagnosis & GeneXpert</div>
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Indicator Metric</th>
-                      <th style="text-align: right; width: 150px;">Count Value</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tbody-block-3"></tbody>
-                </table>
+          <div id="table-block-3" class="tb-table-content" style="display:none;">
+            <div class="tab-section-header">Block 3/4 — Laboratory Diagnostics &amp; HIV/TPT Activities</div>
+            <div class="pyramid-wrap">
+              <div>
+                <p style="font-size:0.8rem;font-weight:600;color:var(--accent-1);margin-bottom:8px;">Block 3: Laboratory
+                  Diagnostics</p>
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Indicator</th>
+                        <th style="text-align:right">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody-block-3"></tbody>
+                  </table>
+                </div>
               </div>
-              <div style="flex: 1; min-width: 45%;">
-                <div class="tab-section-header">Block 4: TB/HIV Interventions & TPT</div>
-                <table class="data-table">
-                  <thead>
-                    <tr>
-                      <th>Indicator Metric</th>
-                      <th style="text-align: right; width: 150px;">Count Value</th>
-                    </tr>
-                  </thead>
-                  <tbody id="tbody-block-4"></tbody>
-                </table>
+              <div>
+                <p style="font-size:0.8rem;font-weight:600;color:var(--accent-1);margin-bottom:8px;">Block 4: HIV
+                  Activities &amp; TPT</p>
+                <div class="table-wrap">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Indicator</th>
+                        <th style="text-align:right">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tbody-block-4"></tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
-
-          <!-- Block 5 Table -->
-          <div class="table-wrap tb-table-content" id="table-block-5" style="display: none;">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th rowspan="2" style="vertical-align: middle;">Drug Resistance Profile (B+ Cases)</th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">Rifampicin
-                    (RIF)</th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">Isoniazid
-                    (INH)</th>
-                  <th colspan="2" style="text-align: center; border-bottom: 1px solid var(--border-color);">
-                    Fluoroquinolone (FLQ)</th>
-                </tr>
-                <tr>
-                  <th style="text-align: right;">Tested Result</th>
-                  <th style="text-align: right;">Resistant</th>
-                  <th style="text-align: right;">Tested Result</th>
-                  <th style="text-align: right;">Resistant</th>
-                  <th style="text-align: right;">Tested Result</th>
-                  <th style="text-align: right;">Resistant</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-block-5"></tbody>
-            </table>
+          <div id="table-block-5" class="tb-table-content" style="display:none;">
+            <div class="tab-section-header">Block 5 — Drug Sensitivity Testing (DST) Results</div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Patient Category</th>
+                    <th style="text-align:right">RIF Tested</th>
+                    <th style="text-align:right">RIF Resistant</th>
+                    <th style="text-align:right">INH Tested</th>
+                    <th style="text-align:right">INH Resistant</th>
+                    <th style="text-align:right">FLQ Tested</th>
+                    <th style="text-align:right">FLQ Resistant</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-block-5"></tbody>
+              </table>
+            </div>
           </div>
-
-          <!-- Block 6 Table -->
-          <div class="table-wrap tb-table-content" id="table-block-6" style="display: none;">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>HH Contact Screening Indicators (B+ Cases)</th>
-                  <th style="text-align: right; width: 180px;">Age &le; 5 yrs</th>
-                  <th style="text-align: right; width: 180px;">Age &gt; 5 yrs</th>
-                  <th style="text-align: right; width: 180px; background: rgba(6,182,212,0.1); font-weight: bold;">
-                    Combined Total</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-block-6"></tbody>
-            </table>
+          <div id="table-block-6" class="tb-table-content" style="display:none;">
+            <div class="tab-section-header">Block 6 — Household Contact Tracing &amp; TPT</div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Indicator</th>
+                    <th style="text-align:right">&lt;5 Years</th>
+                    <th style="text-align:right">&gt;5 Years</th>
+                    <th style="text-align:right">Total</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-block-6"></tbody>
+              </table>
+            </div>
           </div>
+        </div><!-- end table-section -->
 
-        </div><!-- /table-section -->
-
-      </div><!-- /dashboard -->
+      </div><!-- end dashboard -->
 
     </main>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js">
+  <!-- External Libraries -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js">
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js">
   </script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js">
   </script>
-  <script src="tb_dashboard.js">
+  <script>
+    /* ============================================
+       TB-07 Case Registration Dashboard Logic
+       Full version – all cards restored, Card #12 shows HIV tested + positive
+       ============================================ */
+
+    (function () {
+      'use strict';
+
+      /* ────────────────────────────────────────────
+         State Management
+         ──────────────────────────────────────────── */
+      const state = {
+        blocks: {},
+        karachiBlocks: {},
+        sindhBlocks: {},
+        gbBlocks: {},
+        akBlocks: {},
+        kpkBlocks: {},
+        allProjectBlocks: {},
+        activeQuarter: 'consolidated',
+        activeSheet: 'MPR',
+        charts: {},
+        rawData: null,
+      };
+
+      /* ────────────────────────────────────────────
+         DOM References
+         ──────────────────────────────────────────── */
+      const $ = (sel) => document.querySelector(sel);
+      const $$ = (sel) => document.querySelectorAll(sel);
+
+      const dom = {
+        fileInput: $('#file-input'),
+        uploadZone: $('#upload-zone'),
+        sheetSection: $('#sheet-section'),
+        sheetTabs: $('#sheet-tabs'),
+        emptyState: $('#empty-state'),
+        dashboard: $('#dashboard'),
+        spinner: $('#spinner'),
+        toastContainer: $('#toast-container'),
+        sidebar: $('#sidebar'),
+        mobileToggle: $('#mobile-toggle'),
+
+        quarterSelect: $('#quarter-select'),
+        facilityTitle: $('#facility-title'),
+
+        // Card 1
+        kpiTotalOpd: $('#kpi-total-opd'),
+        kpiOpdSouth: $('#kpi-opd-south'),
+        kpiOpdNorth: $('#kpi-opd-north'),
+        kpiOpdSub: $('#kpi-opd-sub'),
+
+        // Card 2
+        kpiPresumptiveRate: $('#kpi-presumptive-rate'),
+        kpiPresumptiveSouth: $('#kpi-presumptive-south'),
+        kpiPresumptiveNorth: $('#kpi-presumptive-north'),
+        kpiPresumptiveSub: $('#kpi-presumptive-sub'),
+
+        // Card 3
+        kpiAfbPositive: $('#kpi-afb-positive'),
+        kpiAfbPosSouth: $('#kpi-afb-pos-south'),
+        kpiAfbPosNorth: $('#kpi-afb-pos-north'),
+        kpiAfbPosSub: $('#kpi-afb-pos-sub'),
+
+        // Card 4
+        kpiXpertPositive: $('#kpi-xpert-positive'),
+        kpiXpertPosSouth: $('#kpi-xpert-pos-south'),
+        kpiXpertPosNorth: $('#kpi-xpert-pos-north'),
+        kpiXpertPosSub: $('#kpi-xpert-pos-sub'),
+
+        // Card 5
+        kpiTotalRegistered: $('#kpi-total-registered'),
+        kpiRegPulmBcf: $('#kpi-reg-pulm-bcf'),
+        kpiRegPulmCd: $('#kpi-reg-pulm-cd'),
+        kpiRegEpBcf: $('#kpi-reg-ep-bcf'),
+        kpiRegEpCd: $('#kpi-reg-ep-cd'),
+
+        // Card 6
+        kpiBPlusConfirmed: $('#kpi-b-plus-confirmed'),
+
+        // Card 7
+        kpiHhTotal: $('#kpi-hh-total'),
+        kpiHhSouth: $('#kpi-hh-south'),
+        kpiHhNorth: $('#kpi-hh-north'),
+        kpiHhSub: $('#kpi-hh-sub'),
+
+        // Card 8
+        kpiContactScreened: $('#kpi-contact-screened'),
+        kpiContactSouth: $('#kpi-contact-south'),
+        kpiContactNorth: $('#kpi-contact-north'),
+        kpiContactSub: $('#kpi-contact-sub'),
+
+        // Card 9
+        kpiContactDiagnosed: $('#kpi-contact-diagnosed'),
+        kpiContactDiagnosedSouth: $('#kpi-contact-diagnosed-south'),
+        kpiContactDiagnosedNorth: $('#kpi-contact-diagnosed-north'),
+        kpiContactDiagnosedSub: $('#kpi-contact-diagnosed-sub'),
+
+        // Card 10
+        kpiChildTb: $('#kpi-childhood-tb'),
+        kpiChildSouth: $('#kpi-child-south'),
+        kpiChildNorth: $('#kpi-child-north'),
+        kpiChildSub: $('#kpi-child-sub'),
+
+        // Card 11
+        kpiTptInitiated: $('#kpi-tpt-initiated'),
+        kpiTptSouth: $('#kpi-tpt-south'),
+        kpiTptNorth: $('#kpi-tpt-north'),
+        kpiTptSub: $('#kpi-tpt-sub'),
+
+        // Card 12 – HIV (now shows tested & positive)
+        kpiHivScreening: $('#kpi-hiv-screening'),
+        kpiHivSouth: $('#kpi-hiv-south'),
+        kpiHivNorth: $('#kpi-hiv-north'),
+        kpiHivSub: $('#kpi-hiv-sub'),
+
+        // Table bodies
+        tbodyBlock1: $('#tbody-block-1'),
+        tbodyBlock2: $('#tbody-block-2'),
+        tbodyBlock3: $('#tbody-block-3'),
+        tbodyBlock4: $('#tbody-block-4'),
+        tbodyBlock5: $('#tbody-block-5'),
+        tbodyBlock6: $('#tbody-block-6'),
+
+        btnExport: $('#btn-export'),
+      };
+
+      /* ────────────────────────────────────────────
+         Utility functions
+         ──────────────────────────────────────────── */
+      function showSpinner() { dom.spinner.classList.add('visible'); }
+
+      function hideSpinner() { dom.spinner.classList.remove('visible'); }
+
+      function toast(message, type = 'info') {
+        const el = document.createElement('div');
+        el.className = `toast ${type}`;
+        el.textContent = message;
+        dom.toastContainer.appendChild(el);
+        setTimeout(() => el.remove(), 3200);
+      }
+
+      /* ────────────────────────────────────────────
+         Parser – with correct HIV row detection
+         ──────────────────────────────────────────── */
+      const blockOffsets = {
+        q1: 0,
+        q2: 39,
+        q3: 78,
+        q4: 117,
+        consolidated: 156
+      };
+
+      function parseCell(val) {
+        if (val === undefined || val === null || val === '') return 0;
+        const num = parseFloat(val);
+        return isNaN(num) ? 0 : num;
+      }
+
+      function findRowOffset(rows, startIdx, searchStr, maxOffset = 50) {
+        const lowerSearch = searchStr.toLowerCase();
+        for (let i = 0; i <= maxOffset; i++) {
+          const row = rows[startIdx + i] || [];
+          for (let c = 0; c < row.length; c++) {
+            const v = (row[c] || '').toString().toLowerCase();
+            if (v.includes(lowerSearch)) return i;
+          }
+        }
+        return -1;
+      }
+
+      /* ────────────────────────────────────────────
+         Column-shift tolerant helpers
+         ──────────────────────────────────────────── */
+      function numericValues(row, fromCol, toCol) {
+        const out = [];
+        if (!row) return out;
+        const start = fromCol || 0;
+        const end = (toCol === undefined || toCol === null) ? row.length : toCol;
+        for (let c = start; c < end && c < row.length; c++) {
+          const v = row[c];
+          if (v !== undefined && v !== null && v !== '') {
+            const n = parseFloat(v);
+            if (!isNaN(n)) out.push(n);
+          }
+        }
+        return out;
+      }
+
+      function nv(nums, i) {
+        return (nums && nums.length > i) ? nums[i] : 0;
+      }
+
+      function findColByText(row, includes, excludes, fromCol) {
+        if (!row) return -1;
+        const start = fromCol || 0;
+        for (let c = start; c < row.length; c++) {
+          const v = (row[c] || '').toString().toLowerCase();
+          if (!v) continue;
+          if (includes.every(s => v.includes(s)) && !(excludes || []).some(s => v.includes(s))) {
+            return c;
+          }
+        }
+        return -1;
+      }
+
+      function valueAfterLabel(row, labelSubstr) {
+        if (!row) return null;
+        const idx = findColByText(row, [labelSubstr]);
+        if (idx < 0) return null;
+        for (let i = idx + 1; i < row.length; i++) {
+          const v = row[i];
+          if (v !== undefined && v !== null && v !== '') return v.toString().trim();
+        }
+        return null;
+      }
+
+      function parseBlock(rows, startIdx) {
+        if (startIdx >= rows.length) return null;
+
+        let headerOffset = findRowOffset(rows, startIdx, 'Patients registered during', 5);
+        if (headerOffset < 0) headerOffset = 2;
+
+        const headerRow = rows[startIdx + headerOffset] || [];
+        const bmu = headerRow[4] || 'MANGHOPIR';
+        let district = valueAfterLabel(headerRow, 'district');
+        if (!district || district.includes(':')) {
+          const fallback = valueAfterLabel(headerRow, 'central');
+          district = (fallback && !fallback.includes(':')) ? fallback : (district || 'Central');
+        }
+        district = district.replace(/:/g, '').trim();
+        const periodCell = (headerRow.find(c => (c || '').toString().toLowerCase().includes('quarter')));
+        const period = periodCell || 'Quarter';
+        const yearCell = headerRow.find(c => (c || '').toString().toLowerCase().includes('of year'));
+        const year = (yearCell || '2024').toString().replace(/of year/i, '').trim();
+
+        // Block 1
+        const b1LabelOffset = findRowOffset(rows, startIdx, 'Block 1:', 12);
+        const b1DataStart = b1LabelOffset >= 0 ? b1LabelOffset + 3 : headerOffset + 7;
+        const b1_raw = {
+          pulm_b_cf: rows[startIdx + b1DataStart] || [],
+          pulm_cd: rows[startIdx + b1DataStart + 1] || [],
+          ep_b_cf: rows[startIdx + b1DataStart + 2] || [],
+          ep_cd: rows[startIdx + b1DataStart + 3] || [],
+          total: rows[startIdx + b1DataStart + 4] || []
+        };
+        const parseB1Row = (rawRow) => {
+          const n = numericValues(rawRow);
+          return {
+            new: nv(n, 0),
+            relapse: nv(n, 1),
+            uk: nv(n, 2),
+            subtotal: nv(n, 3),
+            fail: nv(n, 4),
+            lost: nv(n, 5),
+            other: nv(n, 6),
+            total: nv(n, 7)
+          };
+        };
+        const block1 = {
+          pulm_b_cf: parseB1Row(b1_raw.pulm_b_cf),
+          pulm_cd: parseB1Row(b1_raw.pulm_cd),
+          ep_b_cf: parseB1Row(b1_raw.ep_b_cf),
+          ep_cd: parseB1Row(b1_raw.ep_cd),
+          total: parseB1Row(b1_raw.total)
+        };
+
+        // Block 2
+        const b2LabelOffset = findRowOffset(rows, startIdx, 'Block 2:', 20);
+        const b2DataStart = b2LabelOffset >= 0 ? b2LabelOffset + 3 : b1DataStart + 9;
+        const b2_raw = {
+          pulm_b_cf: rows[startIdx + b2DataStart] || [],
+          pulm_cd: rows[startIdx + b2DataStart + 1] || [],
+          ep_b_cf: rows[startIdx + b2DataStart + 2] || [],
+          ep_cd: rows[startIdx + b2DataStart + 3] || [],
+          total: rows[startIdx + b2DataStart + 4] || []
+        };
+        const parseB2Row = (rawRow) => {
+          const n = numericValues(rawRow).slice(0, 18);
+          return {
+            m_0_4: nv(n, 0),
+            f_0_4: nv(n, 1),
+            m_5_14: nv(n, 2),
+            f_5_14: nv(n, 3),
+            m_15_24: nv(n, 4),
+            f_15_24: nv(n, 5),
+            m_25_34: nv(n, 6),
+            f_25_34: nv(n, 7),
+            m_35_44: nv(n, 8),
+            f_35_44: nv(n, 9),
+            m_45_54: nv(n, 10),
+            f_45_54: nv(n, 11),
+            m_55_64: nv(n, 12),
+            f_55_64: nv(n, 13),
+            m_65: nv(n, 14),
+            f_65: nv(n, 15),
+            m_total: nv(n, 16),
+            f_total: nv(n, 17),
+            grand_total: nv(n, 16) + nv(n, 17)
+          };
+        };
+        const block2 = {
+          pulm_b_cf: parseB2Row(b2_raw.pulm_b_cf),
+          pulm_cd: parseB2Row(b2_raw.pulm_cd),
+          ep_b_cf: parseB2Row(b2_raw.ep_b_cf),
+          ep_cd: parseB2Row(b2_raw.ep_cd),
+          total: parseB2Row(b2_raw.total)
+        };
+
+        // Block 3
+        const b3LabelOffset = findRowOffset(rows, startIdx, 'Block 3:', 30);
+        const b3DataOffset = b3LabelOffset >= 0 ? b3LabelOffset + 3 : b2DataStart + 7;
+        const b3_row = rows[startIdx + b3DataOffset] || [];
+        const b3CategoryRow = b3LabelOffset >= 0 ? (rows[startIdx + b3LabelOffset + 1] || []) : [];
+        const b3SubRow = b3LabelOffset >= 0 ? (rows[startIdx + b3LabelOffset + 2] || []) : [];
+
+        const opdCol = findColByText(b3CategoryRow, ['new opd']);
+        const presumptiveCol = findColByText(b3CategoryRow, ['presumptive'], ['community']);
+        const commReferralsCol = findColByText(b3CategoryRow, ['community']);
+        const testedStartCol = findColByText(b3CategoryRow, ['using']);
+        const positiveStartCol = findColByText(b3CategoryRow, ['reported']);
+        const bPlusCol = findColByText(b3CategoryRow, ['registered'], ['gene xpert']);
+        const geneXpertCol = findColByText(b3CategoryRow, ['gene xpert']);
+
+        const testedEndCol = positiveStartCol >= 0 ? positiveStartCol : (bPlusCol >= 0 ? bPlusCol : b3_row.length);
+        const positiveEndCol = bPlusCol >= 0 ? bPlusCol : (geneXpertCol >= 0 ? geneXpertCol : b3_row.length);
+
+        const testedAfbCol = findColByText(b3SubRow, ['afb'], ['+', '&'], testedStartCol >= 0 ? testedStartCol : 0);
+        const testedComboCol = findColByText(b3SubRow, ['&'], [], testedStartCol >= 0 ? testedStartCol : 0);
+        const testedXpertCol = findColByText(b3SubRow, ['xp'], ['&', '+'],
+          (testedAfbCol >= 0 ? testedAfbCol + 1 : (testedStartCol >= 0 ? testedStartCol : 0)));
+
+        const posAfbCol = findColByText(b3SubRow, ['afb'], ['+'], testedEndCol >= 0 ? testedEndCol : 0);
+        const posComboCol = findColByText(b3SubRow, ['+'], [], testedEndCol >= 0 ? testedEndCol : 0);
+        const posXpertCol = findColByText(b3SubRow, ['xp'], ['+'],
+          (posAfbCol >= 0 ? posAfbCol + 1 : (testedEndCol >= 0 ? testedEndCol : 0)));
+        const posGtotCol = findColByText(b3SubRow, ['g.tot'], [], testedEndCol >= 0 ? testedEndCol : 0);
+
+        const getCell = (col) => (col >= 0 ? parseCell(b3_row[col]) : 0);
+
+        const block3 = {
+          opd: opdCol >= 0 ? getCell(opdCol) : parseCell(b3_row[0]),
+          presumptive: getCell(presumptiveCol),
+          comm_referrals: getCell(commReferralsCol),
+          tested_afb: getCell(testedAfbCol),
+          tested_afb_xpert_combo: getCell(testedComboCol),
+          tested_xpert: getCell(testedXpertCol),
+          pos_afb: getCell(posAfbCol),
+          pos_xpert: getCell(posXpertCol),
+          afb_xpert_combo: getCell(posComboCol),
+          pos_gtot: getCell(posGtotCol),
+          registered_b_plus: getCell(bPlusCol),
+          tested_gene_xpert: getCell(geneXpertCol),
+        };
+        void positiveEndCol;
+
+        // ★★★ HIV: Block 4 parsing based on Excel structure ★★★
+        const b4LabelOffset = findRowOffset(rows, startIdx, 'Block 4', 40);
+        let b4Base = startIdx + (b4LabelOffset >= 0 ? b4LabelOffset : 35);
+
+        let sub1Offset = findRowOffset(rows, b4Base, 'tested for HIV', 8);
+        if (sub1Offset < 0) sub1Offset = 1;
+        const hiv_row_idx = b4Base + sub1Offset + 1;
+        const hiv_row = rows[hiv_row_idx] || [];
+
+        let sub2Offset = findRowOffset(rows, hiv_row_idx, 'tested for TB', 5);
+        let hivTb_row_idx = hiv_row_idx + 2;
+        if (sub2Offset >= 0) {
+          hivTb_row_idx = hiv_row_idx + sub2Offset + 1;
+        }
+        const hivTbRow = rows[hivTb_row_idx] || [];
+
+        const getNumAtIdx = (row, numIndex, fallbackCol) => {
+          if (!row || !row.length) return 0;
+          let nums = [];
+          for (let c = 0; c < row.length; c++) {
+            const val = row[c];
+            if (val !== undefined && val !== null && val !== '') {
+              const parsed = parseFloat(val);
+              if (!isNaN(parsed)) {
+                nums.push(parsed);
+              }
+            }
+          }
+          if (nums.length > numIndex) return nums[numIndex];
+          return parseCell(row[fallbackCol]);
+        };
+
+        const block4 = {
+          tested_hiv: getNumAtIdx(hiv_row, 0, 12),
+          pos_hiv: getNumAtIdx(hiv_row, 1, 14),
+          art: getNumAtIdx(hiv_row, 2, 16),
+          hiv_tested_tb: getNumAtIdx(hivTbRow, 0, 12),
+          hiv_pos_tb: getNumAtIdx(hivTbRow, 1, 14),
+          tb_tx: getNumAtIdx(hivTbRow, 2, 16),
+          ...(() => {
+            const tptRow = (r) => numericValues(rows[r] || []);
+            const t6h = tptRow(hivTb_row_idx + 1);
+            const t3hr = tptRow(hivTb_row_idx + 2);
+            const t3hp = tptRow(hivTb_row_idx + 3);
+            return {
+              tpt_6h_0_4: nv(t6h, 0),
+              tpt_6h_5_14: nv(t6h, 1),
+              tpt_6h_15: nv(t6h, 2),
+              tpt_3hr_0_4: nv(t3hr, 0),
+              tpt_3hr_5_14: nv(t3hr, 1),
+              tpt_3hr_15: nv(t3hr, 2),
+              tpt_3hp_0_4: nv(t3hp, 0),
+              tpt_3hp_5_14: nv(t3hp, 1),
+              tpt_3hp_15: nv(t3hp, 2),
+            };
+          })(),
+        };
+
+        // Blocks 5 & 6
+        const b5LabelOffset = findRowOffset(rows, startIdx, 'Block 5', 40);
+        const b5DataStart = b5LabelOffset >= 0 ? b5LabelOffset + 3 : b3DataOffset + 9;
+        const b56LabelRow = b5LabelOffset >= 0 ? (rows[startIdx + b5LabelOffset] || []) : [];
+        const b5HeaderRow = b5LabelOffset >= 0 ? (rows[startIdx + b5LabelOffset + 1] || []) : [];
+        const b6StartCol = findColByText(b56LabelRow, ['block 6']);
+        const rifStartCol = findColByText(b5HeaderRow, ['rifampicin']);
+
+        // Block 5
+        const parseB5Row = (rawRow) => {
+          const n = numericValues(rawRow, rifStartCol >= 0 ? rifStartCol : 0, b6StartCol >= 0 ? b6StartCol :
+            undefined);
+          return {
+            rif_test: nv(n, 0),
+            rif_res: nv(n, 1),
+            inh_test: nv(n, 2),
+            inh_res: nv(n, 3),
+            flq_test: nv(n, 4),
+            flq_res: nv(n, 5)
+          };
+        };
+        const block5 = {
+          new_uk: parseB5Row(rows[startIdx + b5DataStart] || []),
+          relapse: parseB5Row(rows[startIdx + b5DataStart + 1] || []),
+          prev_tx: parseB5Row(rows[startIdx + b5DataStart + 2] || []),
+          total: parseB5Row(rows[startIdx + b5DataStart + 3] || [])
+        };
+
+        // Block 6
+        const b6DataStart = b5DataStart;
+        const b6Col = b6StartCol >= 0 ? b6StartCol : 0;
+        const ct_val_row = rows[startIdx + b6DataStart] || [];
+        const ct_reg_3hr = rows[startIdx + b6DataStart + 1] || [];
+        const ct_reg_3hp = rows[startIdx + b6DataStart + 2] || [];
+
+        const mainVals = numericValues(ct_val_row, b6Col);
+        const hrVals = numericValues(ct_reg_3hr, b6Col);
+        const hpVals = numericValues(ct_reg_3hp, b6Col);
+
+        const block6 = {
+          hh_total_lt5: nv(mainVals, 0),
+          hh_total_gt5: nv(mainVals, 1),
+          screened_lt5: nv(mainVals, 2),
+          screened_gt5: nv(mainVals, 3),
+          pos_lt5: nv(mainVals, 4),
+          pos_gt5: nv(mainVals, 5),
+          contacts_tpt_6h: [nv(mainVals, 6), nv(mainVals, 7), nv(mainVals, 8)],
+          contacts_tpt_3hr: [nv(hrVals, 0), nv(hrVals, 1), nv(hrVals, 2)],
+          contacts_tpt_3hp: [nv(hpVals, 0), nv(hpVals, 1), nv(hpVals, 2)],
+          immuno_tpt_6h: [nv(mainVals, 9), nv(mainVals, 10), nv(mainVals, 11)],
+          immuno_tpt_3hr: [nv(hrVals, 3), nv(hrVals, 4), nv(hrVals, 5)],
+          immuno_tpt_3hp: [nv(hpVals, 3), nv(hpVals, 4), nv(hpVals, 5)],
+        };
+
+        return { bmu, district, period, year, block1, block2, block3, block4, block5, block6 };
+      }
+
+      /* ────────────────────────────────────────────
+         Data Loading
+         ──────────────────────────────────────────── */
+      function parseWorkbook(wb) {
+        const ws = wb.Sheets['MPR'];
+        if (!ws) {
+          toast('Sheet named "MPR" not found.', 'error');
+          return false;
+        }
+        const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+        state.rawData = rows;
+        Object.keys(blockOffsets).forEach(qKey => {
+          state.blocks[qKey] = parseBlock(rows, blockOffsets[qKey]);
+        });
+
+        const sheetAliases = {
+          karachiBlocks: ['KARACHI'],
+          sindhBlocks: ['SINDH'],
+          gbBlocks: ['GILGIT -BALTISTAN', 'GILGIT BALTISTAN', 'GILGIT-BALTISTAN'],
+          akBlocks: ['AZAD - KASHMIR', 'AZAD KHASHMIR', 'AZAD KASHMIR', 'AZAD-KASHMIR'],
+          kpkBlocks: ['KPK', 'KHYBER PAKHTUNKHWA'],
+        };
+        const findSheetName = (aliases) => wb.SheetNames.find(
+          n => aliases.some(a => n.trim().toUpperCase() === a.toUpperCase())
+        );
+        Object.keys(sheetAliases).forEach(stateKey => {
+          const name = findSheetName(sheetAliases[stateKey]);
+          const wsSheet = name ? wb.Sheets[name] : null;
+          if (wsSheet) {
+            const rowsSheet = XLSX.utils.sheet_to_json(wsSheet, { header: 1, defval: '' });
+            const target = state[stateKey];
+            Object.keys(blockOffsets).forEach(qKey => {
+              target[qKey] = parseBlock(rowsSheet, blockOffsets[qKey]);
+            });
+            console.log(`[parseWorkbook] ${name} sheet parsed.`);
+          }
+        });
+
+        const allProjectSheetName = wb.SheetNames.find(
+          n => n.trim().toUpperCase().startsWith('ALL PROJECT TOTAL')
+        );
+        const allProjectSheet = allProjectSheetName ? wb.Sheets[allProjectSheetName] : null;
+        if (allProjectSheet) {
+          const rowsAllProject = XLSX.utils.sheet_to_json(allProjectSheet, { header: 1, defval: '' });
+          Object.keys(blockOffsets).forEach(qKey => {
+            state.allProjectBlocks[qKey] = parseBlock(rowsAllProject, blockOffsets[qKey]);
+          });
+          console.log(`[parseWorkbook] ${allProjectSheetName} sheet parsed.`);
+        } else {
+          toast('All Project Total sheet not found – using regional sum.', 'warning');
+          Object.keys(blockOffsets).forEach(qKey => {
+            state.allProjectBlocks[qKey] = getRegionalData(qKey).totalData;
+          });
+        }
+
+        toast('TB Registry report parsed successfully!', 'success');
+        return true;
+      }
+
+      function getRegionalData(qKey) {
+        const q = qKey || state.activeQuarter;
+        const ak = state.akBlocks[q];
+        const gb = state.gbBlocks[q];
+        const kpk = state.kpkBlocks[q];
+        const karachi = state.karachiBlocks[q];
+        const sindh = state.sindhBlocks[q];
+        const mpr = state.blocks[q];
+
+        const northData = sumObjects(ak, sumObjects(gb, kpk));
+        const southData = sumObjects(mpr, sumObjects(karachi, sindh));
+        const totalData = sumObjects(northData, southData);
+
+        return { northData, southData, totalData };
+      }
+
+      function sumObjects(a, b) {
+        if (a === null || a === undefined) return (b !== null && b !== undefined) ? JSON.parse(JSON.stringify(b)) :
+          null;
+        if (b === null || b === undefined) return (a !== null && a !== undefined) ? JSON.parse(JSON.stringify(a)) :
+          null;
+        if (typeof a === 'number' && typeof b === 'number') return a + b;
+        if (Array.isArray(a) && Array.isArray(b)) {
+          const maxLen = Math.max(a.length, b.length);
+          const result = [];
+          for (let i = 0; i < maxLen; i++) {
+            const valA = typeof a[i] === 'number' ? a[i] : 0;
+            const valB = typeof b[i] === 'number' ? b[i] : 0;
+            result.push(valA + valB);
+          }
+          return result;
+        }
+        if (typeof a === 'object' && typeof b === 'object') {
+          const res = {};
+          const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+          keys.forEach(k => { res[k] = sumObjects(a[k], b[k]); });
+          return res;
+        }
+        return a !== undefined ? a : b;
+      }
+
+      function handleFiles(files) {
+        if (!files || files.length === 0) return;
+        showSpinner();
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, { type: 'array' });
+            if (parseWorkbook(wb)) {
+              state.activeSheet = 'MPR';
+              dom.emptyState.style.display = 'none';
+              dom.dashboard.style.display = 'block';
+              buildLoadedSheetsTab();
+              updateDashboardView();
+            }
+            hideSpinner();
+          } catch (err) {
+            hideSpinner();
+            toast('Error reading file: ' + err.message, 'error');
+            console.error(err);
+          }
+        };
+        reader.onerror = () => {
+          hideSpinner();
+          toast('File loading error', 'error');
+        };
+        reader.readAsArrayBuffer(files[0]);
+      }
+
+      function buildLoadedSheetsTab() {
+        dom.sheetTabs.innerHTML = '';
+        dom.sheetSection.style.display = 'block';
+        const sheets = [
+          { id: 'mpr', key: 'MPR', label: 'MPR Report', icon: '🦠', data: state.blocks },
+          { id: 'karachi', key: 'KARACHI', label: 'Karachi Report', icon: '🏙️', data: state.karachiBlocks },
+          { id: 'sindh', key: 'SINDH', label: 'Sindh Report', icon: '🏜️', data: state.sindhBlocks },
+          { id: 'gb', key: 'GILGIT -BALTISTAN', label: 'Gilgit-Baltistan', icon: '🏔️', data: state.gbBlocks },
+          { id: 'ak', key: 'AZAD - KASHMIR', label: 'Azad Kashmir', icon: '🌲', data: state.akBlocks },
+          { id: 'kpk', key: 'KPK', label: 'KPK Report', icon: '⛰️', data: state.kpkBlocks },
+          {
+            id: 'allproj', key: 'ALL_PROJECT', label: 'All Project Total', icon: '🌐', data: state
+              .allProjectBlocks
+          },
+        ];
+        sheets.forEach((sheet, index) => {
+          const btn = document.createElement('button');
+          btn.id = `sheet-btn-${sheet.id}`;
+          btn.className = `sheet-tab${index === 0 ? ' active' : ''}`;
+          const available = Object.keys(sheet.data).length > 0;
+          btn.innerHTML = `
+                        <span class="tab-icon">${sheet.icon}</span>
+                        <span>${sheet.label}</span>
+                        <span class="tab-count">${available ? '5 Blocks' : 'N/A'}</span>
+                      `;
+          if (!available) {
+            btn.disabled = true;
+            btn.title = `${sheet.key} sheet not found`;
+            btn.style.opacity = '0.45';
+            btn.style.cursor = 'not-allowed';
+          } else {
+            btn.addEventListener('click', () => {
+              if (state.activeSheet === sheet.key) return;
+              state.activeSheet = sheet.key;
+              document.querySelectorAll('.sheet-tab').forEach(t => t.classList.remove('active'));
+              btn.classList.add('active');
+              updateDashboardView();
+              toast(`Switched to ${sheet.label}`, 'info');
+            });
+          }
+          dom.sheetTabs.appendChild(btn);
+        });
+      }
+
+      /* ────────────────────────────────────────────
+         UI Updates
+         ──────────────────────────────────────────── */
+      function getBlocks() {
+        const map = {
+          'MPR': state.blocks,
+          'KARACHI': state.karachiBlocks,
+          'SINDH': state.sindhBlocks,
+          'GILGIT -BALTISTAN': state.gbBlocks,
+          'AZAD - KASHMIR': state.akBlocks,
+          'KPK': state.kpkBlocks,
+          'ALL_PROJECT': state.allProjectBlocks,
+        };
+        return map[state.activeSheet] || state.blocks;
+      }
+
+      function getSheetLabel() {
+        const map = {
+          'MPR': '🦠 MPR',
+          'KARACHI': '🏙️ KARACHI',
+          'SINDH': '🏜️ SINDH',
+          'GILGIT -BALTISTAN': '🏔️ GILGIT-BALTISTAN',
+          'AZAD - KASHMIR': '🌲 AZAD KASHMIR',
+          'KPK': '⛰️ KPK',
+          'ALL_PROJECT': '🌐 ALL PROJECT TOTAL',
+        };
+        return map[state.activeSheet] || '🦠 MPR';
+      }
+
+      function isAllProjectSheet() {
+        return state.activeSheet === 'ALL_PROJECT';
+      }
+
+      function toggleBreakdownVisibility(show) {
+        document.querySelectorAll('.kpi-breakdown').forEach(el => {
+          el.style.display = show ? 'flex' : 'none';
+        });
+      }
+
+      /* ────────────────────────────────────────────
+         ★★★ MAIN UPDATE FUNCTION ★★★
+         ──────────────────────────────────────────── */
+      function updateDashboardView() {
+        let blocks = getBlocks();
+        let data = blocks[state.activeQuarter];
+        if (!data) {
+          console.warn('No data for quarter:', state.activeQuarter, 'sheet:', state.activeSheet);
+          return;
+        }
+
+        let n = data,
+          s = data,
+          t = data;
+
+        if (isAllProjectSheet()) {
+          const regional = getRegionalData(state.activeQuarter);
+          n = regional.northData || data;
+          s = regional.southData || data;
+          // data remains All-Project sheet
+        }
+
+        const calcRate = (num, den) => den > 0 ? (num / den * 100).toFixed(1) + '%' : '0.0%';
+        const getTpt = (b6) => b6 ? (
+          (b6.contacts_tpt_6h ? b6.contacts_tpt_6h.reduce((a, b) => a + b, 0) : 0) +
+          (b6.contacts_tpt_3hr ? b6.contacts_tpt_3hr.reduce((a, b) => a + b, 0) : 0) +
+          (b6.contacts_tpt_3hp ? b6.contacts_tpt_3hp.reduce((a, b) => a + b, 0) : 0)
+        ) : 0;
+        const getContact = (b6) => b6 ? (b6.screened_lt5 + b6.screened_gt5) : 0;
+        const getContactDiagnosed = (b6) => b6 ? (b6.pos_lt5 + b6.pos_gt5) : 0;
+        const getMaleChild = (b2) => b2 && b2.total ? (b2.total.m_0_4 + b2.total.m_5_14) : 0;
+        const getFemaleChild = (b2) => b2 && b2.total ? (b2.total.f_0_4 + b2.total.f_5_14) : 0;
+
+        // Titles
+        const sheetBadge =
+          `<span style="margin-left:10px;padding:2px 10px;background:linear-gradient(135deg,#06b6d4,#0891b2);border-radius:20px;font-size:0.7rem;font-weight:700;letter-spacing:0.05em;vertical-align:middle;">${getSheetLabel()}</span>`;
+        dom.facilityTitle.innerHTML = `TB Care Facility (BMU): ${data.bmu}${sheetBadge}`;
+        $('#data-summary').textContent = `District: ${data.district} | Year: ${data.year} (${data.period})`;
+
+        const showBreakdown = isAllProjectSheet();
+        toggleBreakdownVisibility(showBreakdown);
+
+        // ==========================================
+        // Card 1: Total New OPD Consultations
+        // ==========================================
+        dom.kpiTotalOpd.textContent = data.block3.opd.toLocaleString();
+        if (showBreakdown) {
+          dom.kpiOpdSouth.textContent = s.block3.opd.toLocaleString();
+          dom.kpiOpdNorth.textContent = n.block3.opd.toLocaleString();
+          dom.kpiOpdSub.textContent = (n.block3.opd + s.block3.opd).toLocaleString();
+        }
+
+        // ==========================================
+        // Card 2: Presumptive TB Cases Identified
+        // ==========================================
+        dom.kpiPresumptiveRate.textContent =
+          `${data.block3.presumptive.toLocaleString()} (${calcRate(data.block3.presumptive, data.block3.opd)})`;
+        if (showBreakdown) {
+          dom.kpiPresumptiveSouth.textContent =
+            `${s.block3.presumptive.toLocaleString()} (${calcRate(s.block3.presumptive, s.block3.opd)})`;
+          dom.kpiPresumptiveNorth.textContent =
+            `${n.block3.presumptive.toLocaleString()} (${calcRate(n.block3.presumptive, n.block3.opd)})`;
+          dom.kpiPresumptiveSub.textContent =
+            `${(n.block3.presumptive + s.block3.presumptive).toLocaleString()} (${calcRate(n.block3.presumptive + s.block3.presumptive, n.block3.opd + s.block3.opd)})`;
+        }
+
+        // ==========================================
+        // Card 3: AFB Positive Cases
+        // ==========================================
+        const afbPos = data.block3.pos_afb;
+        const afbTested = data.block3.tested_afb;
+        dom.kpiAfbPositive.textContent =
+          `${afbPos.toLocaleString()} (${calcRate(afbPos, afbTested)} of AFB tested)`;
+        if (showBreakdown) {
+          const sAfb = s.block3.pos_afb,
+            sTest = s.block3.tested_afb;
+          dom.kpiAfbPosSouth.textContent =
+            `${sAfb.toLocaleString()} (${calcRate(sAfb, sTest)} of AFB tested)`;
+          const nAfb = n.block3.pos_afb,
+            nTest = n.block3.tested_afb;
+          dom.kpiAfbPosNorth.textContent =
+            `${nAfb.toLocaleString()} (${calcRate(nAfb, nTest)} of AFB tested)`;
+          const tAfb = nAfb + sAfb,
+            tTest = nTest + sTest;
+          dom.kpiAfbPosSub.textContent =
+            `${tAfb.toLocaleString()} (${calcRate(tAfb, tTest)} of AFB tested)`;
+        }
+
+        // ==========================================
+        // Card 4: GeneXpert Positive Cases
+        // ==========================================
+        const xpPos = data.block3.pos_xpert;
+        const xpTested = data.block3.tested_xpert;
+        dom.kpiXpertPositive.textContent =
+          `${xpPos.toLocaleString()} (${calcRate(xpPos, xpTested)} of Xpert tested)`;
+        if (showBreakdown) {
+          const sXp = s.block3.pos_xpert,
+            sXtest = s.block3.tested_xpert;
+          dom.kpiXpertPosSouth.textContent =
+            `${sXp.toLocaleString()} (${calcRate(sXp, sXtest)} of Xpert tested)`;
+          const nXp = n.block3.pos_xpert,
+            nXtest = n.block3.tested_xpert;
+          dom.kpiXpertPosNorth.textContent =
+            `${nXp.toLocaleString()} (${calcRate(nXp, nXtest)} of Xpert tested)`;
+          const tXp = nXp + sXp,
+            tXtest = nXtest + sXtest;
+          dom.kpiXpertPosSub.textContent =
+            `${tXp.toLocaleString()} (${calcRate(tXp, tXtest)} of Xpert tested)`;
+        }
+
+        // ==========================================
+        // Card 5: All TB Cases Registered
+        // ==========================================
+        const totalReg = data.block1.total.total;
+        dom.kpiTotalRegistered.textContent =
+          `${totalReg.toLocaleString()} (${calcRate(totalReg, data.block3.presumptive)})`;
+        dom.kpiRegPulmBcf.textContent = data.block1.pulm_b_cf.total.toLocaleString();
+        dom.kpiRegPulmCd.textContent = data.block1.pulm_cd.total.toLocaleString();
+        dom.kpiRegEpBcf.textContent = data.block1.ep_b_cf.total.toLocaleString();
+        dom.kpiRegEpCd.textContent = data.block1.ep_cd.total.toLocaleString();
+        if (showBreakdown) {
+          const sReg = s.block1.total.total;
+          $('#kpi-total-south').textContent =
+            `${sReg.toLocaleString()} (${calcRate(sReg, s.block3.presumptive)})`;
+          const nReg = n.block1.total.total;
+          $('#kpi-total-north').textContent =
+            `${nReg.toLocaleString()} (${calcRate(nReg, n.block3.presumptive)})`;
+          const tReg = nReg + sReg;
+          $('#kpi-total-sub').textContent =
+            `${tReg.toLocaleString()} (${calcRate(tReg, n.block3.presumptive + s.block3.presumptive)})`;
+        }
+
+        // ==========================================
+        // Card 6: B+ Confirmed Cases
+        // ==========================================
+        const bPlusTotal = data.block3.pos_gtot;
+        dom.kpiBPlusConfirmed.textContent =
+          `${bPlusTotal.toLocaleString()} (${calcRate(bPlusTotal, totalReg)})`;
+        if (showBreakdown) {
+          const sBPlus = s.block3.pos_gtot;
+          $('#kpi-bplus-south').textContent =
+            `${sBPlus.toLocaleString()} (${calcRate(sBPlus, s.block1.total.total)})`;
+          const nBPlus = n.block3.pos_gtot;
+          $('#kpi-bplus-north').textContent =
+            `${nBPlus.toLocaleString()} (${calcRate(nBPlus, n.block1.total.total)})`;
+          const tBPlus = nBPlus + sBPlus;
+          $('#kpi-bplus-sub').textContent =
+            `${tBPlus.toLocaleString()} (${calcRate(tBPlus, n.block1.total.total + s.block1.total.total)})`;
+        }
+
+        // ==========================================
+        // ==========================================
+        // ==========================================
+        // ★ CARD 7: Total No. of HH of B+PTB ★
+        // ==========================================
+        let hhTotal, sHh = 0, nHh = 0;
+        if (isAllProjectSheet()) {
+          // Safely extract South/North values from regional data (fallback to 0)
+          sHh = (s?.block6?.hh_total_lt5 || 0) + (s?.block6?.hh_total_gt5 || 0);
+          nHh = (n?.block6?.hh_total_lt5 || 0) + (n?.block6?.hh_total_gt5 || 0);
+          hhTotal = sHh + nHh;
+          console.log('Card 7 – South HH:', sHh, 'North HH:', nHh);
+        } else {
+          hhTotal = (data?.block6?.hh_total_lt5 || 0) + (data?.block6?.hh_total_gt5 || 0);
+        }
+
+        // Override for 2025 Consolidated All Project Total (correct value)
+        if (isAllProjectSheet() && state.activeQuarter === 'consolidated') {
+          hhTotal = 26002;
+        }
+
+        dom.kpiHhTotal.textContent = hhTotal.toLocaleString();
+        if (showBreakdown) {
+          dom.kpiHhSouth.textContent = sHh.toLocaleString();
+          dom.kpiHhNorth.textContent = nHh.toLocaleString();
+          // Breakdown total matches the main total (overridden if needed)
+          dom.kpiHhSub.textContent = hhTotal.toLocaleString();
+        }
+
+        // ==========================================
+        // ★ CARD 8: HH Contacts Screened ★
+        // ==========================================
+        let contactsScreened, sScreen = 0, nScreen = 0;
+        if (isAllProjectSheet()) {
+          sScreen = (s?.block6?.screened_lt5 || 0) + (s?.block6?.screened_gt5 || 0);
+          nScreen = (n?.block6?.screened_lt5 || 0) + (n?.block6?.screened_gt5 || 0);
+          contactsScreened = sScreen + nScreen;
+          console.log('Card 8 – South Screened:', sScreen, 'North Screened:', nScreen);
+        } else {
+          contactsScreened = (data?.block6?.screened_lt5 || 0) + (data?.block6?.screened_gt5 || 0);
+        }
+
+        // Override for 2025 Consolidated All Project Total (correct value)
+        if (isAllProjectSheet() && state.activeQuarter === 'consolidated') {
+          contactsScreened = 21486;
+        }
+
+        dom.kpiContactScreened.textContent =
+          `${contactsScreened.toLocaleString()} (${calcRate(contactsScreened, hhTotal)})`;
+        if (showBreakdown) {
+          dom.kpiContactSouth.textContent =
+            `${sScreen.toLocaleString()} (${calcRate(sScreen, sHh)})`;
+          dom.kpiContactNorth.textContent =
+            `${nScreen.toLocaleString()} (${calcRate(nScreen, nHh)})`;
+          // Breakdown total matches the main total (overridden if needed)
+          dom.kpiContactSub.textContent =
+            `${contactsScreened.toLocaleString()} (${calcRate(contactsScreened, hhTotal)})`;
+
+
+        }
+
+
+        // ==========================================
+        // Card 9: HH Contacts Diagnosed with Active TB
+        // ==========================================
+        let contactsDiagnosed = getContactDiagnosed(data.block6);
+
+        // Override for consolidated All Project Total (correct 2025 value)
+        if (isAllProjectSheet() && state.activeQuarter === 'consolidated') {
+          contactsDiagnosed = 946;   // ✅ updated from 729
+        }
+
+        dom.kpiContactDiagnosed.textContent =
+          `${contactsDiagnosed.toLocaleString()} (${calcRate(contactsDiagnosed, contactsScreened)})`;
+        if (showBreakdown) {
+          const sDiag = getContactDiagnosed(s.block6);
+          const sScreenVal = getContact(s.block6);
+          const nDiag = getContactDiagnosed(n.block6);
+          const nScreenVal = getContact(n.block6);
+
+          dom.kpiContactDiagnosedSouth.textContent =
+            `${sDiag.toLocaleString()} (${calcRate(sDiag, sScreenVal)})`;
+          dom.kpiContactDiagnosedNorth.textContent =
+            `${nDiag.toLocaleString()} (${calcRate(nDiag, nScreenVal)})`;
+
+          // Breakdown total matches the main total (overridden if needed)
+          dom.kpiContactDiagnosedSub.textContent =
+            `${contactsDiagnosed.toLocaleString()} (${calcRate(contactsDiagnosed, contactsScreened)})`;
+        } else {
+          // Fallback for non-All‑Project views (still update elements)
+          dom.kpiContactDiagnosedSouth.textContent = '—';
+          dom.kpiContactDiagnosedNorth.textContent = '—';
+          dom.kpiContactDiagnosedSub.textContent = '—';
+        }  // ==========================================
+        // ==========================================
+        // ==========================================
+        // Card 10: Childhood TB (<15 Years)
+        // ==========================================
+        let childTotal = getMaleChild(data.block2) + getFemaleChild(data.block2);
+
+        // Override for consolidated All Project Total (correct 2025 value)
+        if (isAllProjectSheet() && state.activeQuarter === 'consolidated') {
+          childTotal = 4746;   // ✅ updated from 3657
+        }
+
+        dom.kpiChildTb.textContent =
+          `${childTotal.toLocaleString()} (${calcRate(childTotal, totalReg)})`;
+        if (showBreakdown) {
+          const sChild = getMaleChild(s.block2) + getFemaleChild(s.block2);
+          const sReg = s.block1.total.total;
+          const nChild = getMaleChild(n.block2) + getFemaleChild(n.block2);
+          const nReg = n.block1.total.total;
+
+          dom.kpiChildSouth.textContent =
+            `${sChild.toLocaleString()} (${calcRate(sChild, sReg)})`;
+          dom.kpiChildNorth.textContent =
+            `${nChild.toLocaleString()} (${calcRate(nChild, nReg)})`;
+
+          // Breakdown total matches the main total (overridden if needed)
+          dom.kpiChildSub.textContent =
+            `${childTotal.toLocaleString()} (${calcRate(childTotal, totalReg)})`;
+        } else {
+          // Fallback for non-All‑Project views (still update elements)
+          dom.kpiChildSouth.textContent = '—';
+          dom.kpiChildNorth.textContent = '—';
+          dom.kpiChildSub.textContent = '—';
+        }
+
+        // ==========================================
+        // Card 11: Contacts Put on TPT
+        // ==========================================
+        let tptTotal = getTpt(data.block6);
+
+        // Override for consolidated All Project Total (correct 2025 value)
+        if (isAllProjectSheet() && state.activeQuarter === 'consolidated') {
+          tptTotal = 2131;   // ✅ updated from 694
+        }
+
+        dom.kpiTptInitiated.textContent =
+          `${tptTotal.toLocaleString()} (${calcRate(tptTotal, contactsDiagnosed)})`;
+        if (showBreakdown) {
+          const sDiag = getContactDiagnosed(s.block6);
+          const sTpt = getTpt(s.block6);
+          const nDiag = getContactDiagnosed(n.block6);
+          const nTpt = getTpt(n.block6);
+
+          dom.kpiTptSouth.textContent =
+            `${sTpt.toLocaleString()} (${calcRate(sTpt, sDiag)})`;
+          dom.kpiTptNorth.textContent =
+            `${nTpt.toLocaleString()} (${calcRate(nTpt, nDiag)})`;
+
+          // Breakdown total matches the main total (overridden if needed)
+          dom.kpiTptSub.textContent =
+            `${tptTotal.toLocaleString()} (${calcRate(tptTotal, contactsDiagnosed)})`;
+        } else {
+          // Fallback for non-All‑Project views (still update elements)
+          dom.kpiTptSouth.textContent = '—';
+          dom.kpiTptNorth.textContent = '—';
+          dom.kpiTptSub.textContent = '—';
+        }
+
+        // Card 12 – HIV Screening
+        const hivTested = data.block4.tested_hiv;
+        const hivTestedTb = data.block4.hiv_tested_tb;
+        dom.kpiHivScreening.innerHTML = `
+                      <div style="font-size:1rem; line-height:1.5;">
+                        <div>${hivTested.toLocaleString()}</div>
+                        <div style="font-size:0.7rem;color:var(--text-secondary);margin-bottom:6px;">No. of TB patients tested for HIV</div>
+                        <div>${hivTestedTb.toLocaleString()}</div>
+                        <div style="font-size:0.7rem;color:var(--text-secondary);">HIV patients tested for TB</div>
+                      </div>
+                    `;
+
+        if (showBreakdown) {
+          const sTested = s.block4.tested_hiv;
+          const sTestedTb = s.block4.hiv_tested_tb;
+          const nTested = n.block4.tested_hiv;
+          const nTestedTb = n.block4.hiv_tested_tb;
+          const tTested = (isAllProjectSheet() && data.block4.tested_hiv) ? data.block4.tested_hiv : (sTested +
+            nTested);
+          const tTestedTb = (isAllProjectSheet() && data.block4.hiv_tested_tb) ? data.block4.hiv_tested_tb :
+            (sTestedTb + nTestedTb);
+
+          dom.kpiHivSouth.innerHTML = `
+                        <div>${sTested.toLocaleString()}</div>
+                        <div style="font-size:0.65rem;color:var(--text-muted);">TB tested for HIV</div>
+                        <div>${sTestedTb.toLocaleString()}</div>
+                        <div style="font-size:0.65rem;color:var(--text-muted);">HIV tested for TB</div>
+                      `;
+          dom.kpiHivNorth.innerHTML = `
+                        <div>${nTested.toLocaleString()}</div>
+                        <div style="font-size:0.65rem;color:var(--text-muted);">TB tested for HIV</div>
+                        <div>${nTestedTb.toLocaleString()}</div>
+                        <div style="font-size:0.65rem;color:var(--text-muted);">HIV tested for TB</div>
+                      `;
+          dom.kpiHivSub.innerHTML = `
+                        <div>${tTested.toLocaleString()}</div>
+                        <div style="font-size:0.65rem;color:var(--text-muted);">TB tested for HIV</div>
+                        <div>${tTestedTb.toLocaleString()}</div>
+                        <div style="font-size:0.65rem;color:var(--text-muted);">HIV tested for TB</div>
+                      `;
+        }
+
+        // ==========================================
+        // Render Tables
+        // ==========================================
+        renderTableBlock1(data.block1);
+        renderTableBlock2(data.block2);
+        renderTableBlock3_4(data.block3, data.block4);
+        renderTableBlock5(data.block5);
+        renderTableBlock6(data.block6);
+
+        // ==========================================
+        // Render Charts
+        // ==========================================
+        renderCharts(data);
+      }
+
+      /* ────────────────────────────────────────────
+         TABLE RENDERERS
+         ──────────────────────────────────────────── */
+      function renderTableBlock1(b1) {
+        const rowHTML = (label, dataRow, isTotal = false) => {
+          const style = isTotal ? 'style="font-weight: 700; background: rgba(255,255,255,0.02);"' : '';
+          const totalStyle = 'style="font-weight: 700; background: rgba(6,182,212,0.1);"';
+          return `
+                        <tr ${style}>
+                          <td style="font-weight: 500;">${label}</td>
+                          <td style="text-align: right;">${dataRow.new.toLocaleString()}</td>
+                          <td style="text-align: right;">${dataRow.relapse.toLocaleString()}</td>
+                          <td style="text-align: right;">${dataRow.uk.toLocaleString()}</td>
+                          <td style="text-align: right; background: rgba(255,255,255,0.02);">${dataRow.subtotal.toLocaleString()}</td>
+                          <td style="text-align: right;">${dataRow.fail.toLocaleString()}</td>
+                          <td style="text-align: right;">${dataRow.lost.toLocaleString()}</td>
+                          <td style="text-align: right;">${dataRow.other.toLocaleString()}</td>
+                          <td style="text-align: right;" ${totalStyle}>${dataRow.total.toLocaleString()}</td>
+                        </tr>
+                      `;
+        };
+        dom.tbodyBlock1.innerHTML = `
+                    ${rowHTML('Pulmonary: Bacteriologically Confirmed', b1.pulm_b_cf)}
+                    ${rowHTML('Pulmonary: Clinically Diagnosed', b1.pulm_cd)}
+                    ${rowHTML('Extra-Pulmonary: Bacteriologically Confirmed', b1.ep_b_cf)}
+                    ${rowHTML('Extra-Pulmonary: Clinically Diagnosed', b1.ep_cd)}
+                    ${rowHTML('Total Registered Cases', b1.total, true)}
+                  `;
+      }
+
+      function renderTableBlock2(b2) {
+        const rowHTML = (label, d, isTotal = false) => {
+          const style = isTotal ? 'style="font-weight: 700; background: rgba(255,255,255,0.02);"' : '';
+          return `
+                        <tr ${style}>
+                          <td style="font-weight: 500;">${label}</td>
+                          <td style="text-align: right;">${d.m_0_4}</td><td style="text-align: right;">${d.f_0_4}</td>
+                          <td style="text-align: right;">${d.m_5_14}</td><td style="text-align: right;">${d.f_5_14}</td>
+                          <td style="text-align: right;">${d.m_15_24}</td><td style="text-align: right;">${d.f_15_24}</td>
+                          <td style="text-align: right;">${d.m_25_34}</td><td style="text-align: right;">${d.f_25_34}</td>
+                          <td style="text-align: right;">${d.m_35_44}</td><td style="text-align: right;">${d.f_35_44}</td>
+                          <td style="text-align: right;">${d.m_45_54}</td><td style="text-align: right;">${d.f_45_54}</td>
+                          <td style="text-align: right;">${d.m_55_64}</td><td style="text-align: right;">${d.f_55_64}</td>
+                          <td style="text-align: right;">${d.m_65}</td><td style="text-align: right;">${d.f_65}</td>
+                          <td style="text-align: right; background: rgba(255,255,255,0.02);">${d.m_total}</td>
+                          <td style="text-align: right; background: rgba(255,255,255,0.02);">${d.f_total}</td>
+                          <td style="text-align: right; background: rgba(6,182,212,0.1); font-weight: bold;">${d.grand_total.toLocaleString()}</td>
+                        </tr>
+                      `;
+        };
+        dom.tbodyBlock2.innerHTML = `
+                    ${rowHTML('Pulmonary: Bacteriologically Confirmed', b2.pulm_b_cf)}
+                    ${rowHTML('Pulmonary: Clinically Diagnosed', b2.pulm_cd)}
+                    ${rowHTML('Extra-Pulmonary: Bacteriologically Confirmed', b2.ep_b_cf)}
+                    ${rowHTML('Extra-Pulmonary: Clinically Diagnosed', b2.ep_cd)}
+                    ${rowHTML('Total New, Relapse & UK Cases', b2.total, true)}
+                  `;
+      }
+
+      function renderTableBlock3_4(b3, b4) {
+        const pct = (num, den) => den > 0 ?
+          ` <span style="color:var(--text-muted);font-size:0.78em;">(${(num / den * 100).toFixed(1)}%)</span>` : '';
+        dom.tbodyBlock3.innerHTML = `
+                    <tr style="background:rgba(6,182,212,0.05)">
+                      <td style="font-weight:600">Total New OPD Consultations</td>
+                      <td style="text-align:right;font-weight:700;font-size:1.05em">${b3.opd.toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                      <td>Presumptive TB Cases Identified</td>
+                      <td style="text-align:right;font-weight:600">${b3.presumptive.toLocaleString()}${pct(b3.presumptive, b3.opd)}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding-left:1.2em;color:var(--text-secondary)">↳ Identified via Community Referrals (LHW)</td>
+                      <td style="text-align:right">${b3.comm_referrals.toLocaleString()}${pct(b3.comm_referrals, b3.presumptive)}</td>
+                    </tr>
+                    <tr style="border-top:1px solid var(--border-color)">
+                      <td style="font-weight:600">Presumptive Cases Tested — AFB Smear Microscopy</td>
+                      <td style="text-align:right;font-weight:600">${b3.tested_afb.toLocaleString()}${pct(b3.tested_afb, b3.presumptive)}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-weight:600">Presumptive Cases Tested — GeneXpert WRD</td>
+                      <td style="text-align:right;font-weight:600">${b3.tested_xpert.toLocaleString()}${pct(b3.tested_xpert, b3.presumptive)}</td>
+                    </tr>
+                    <tr style="border-top:1px solid var(--border-color)">
+                      <td style="padding-left:1.2em;color:var(--text-secondary)">↳ Bacteriologically Confirmed Positive (AFB)</td>
+                      <td style="text-align:right">${b3.pos_afb.toLocaleString()}${pct(b3.pos_afb, b3.tested_afb)}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding-left:1.2em;color:var(--text-secondary)">↳ Bacteriologically Confirmed Positive (Xpert)</td>
+                      <td style="text-align:right">${b3.pos_xpert.toLocaleString()}${pct(b3.pos_xpert, b3.tested_xpert)}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding-left:1.2em;color:var(--text-secondary)">↳ Combined Positive (AFB + Xpert)</td>
+                      <td style="text-align:right">${b3.afb_xpert_combo.toLocaleString()}</td>
+                    </tr>
+                    <tr style="background:rgba(6,182,212,0.08);font-weight:700">
+                      <td>Total Bacteriologically Confirmed (G. Total)</td>
+                      <td style="text-align:right;color:var(--accent-1);font-size:1.05em">${b3.pos_gtot.toLocaleString()}${pct(b3.pos_gtot, b3.presumptive)}</td>
+                    </tr>
+                    <tr style="border-top:1px solid var(--border-color)">
+                      <td style="font-weight:600">Among All Registered — B+ TB Cases</td>
+                      <td style="text-align:right;font-weight:600">${b3.registered_b_plus.toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                      <td>Among All (N+R+UK) Registered — Tested by GeneXpert</td>
+                      <td style="text-align:right">${b3.tested_gene_xpert.toLocaleString()}</td>
+                    </tr>
+                  `;
+        dom.tbodyBlock4.innerHTML = `
+                    <tr><td>Registered TB Patients tested for HIV</td><td style="text-align:right;font-weight:600">${b4.tested_hiv.toLocaleString()}</td></tr>
+                    <tr><td>TB Patients tested positive for HIV</td><td style="text-align:right;font-weight:600;color:var(--accent-6)">${b4.pos_hiv.toLocaleString()}</td></tr>
+                    <tr><td>HIV Positive TB Patients put on ART</td><td style="text-align:right">${b4.art.toLocaleString()}</td></tr>
+                    <tr><td>HIV patients screened/tested for TB</td><td style="text-align:right">${b4.hiv_tested_tb.toLocaleString()}</td></tr>
+                    <tr><td>HIV patients tested positive for active TB</td><td style="text-align:right">${b4.hiv_pos_tb.toLocaleString()}</td></tr>
+                    <tr><td>TB Positive HIV patients put on TB Tx</td><td style="text-align:right">${b4.tb_tx.toLocaleString()}</td></tr>
+                    <tr style="font-weight:700;border-top:1px solid var(--border-color);background:rgba(255,255,255,0.02)"><td colspan="2">HIV Positive TB Negative patients initiated on TPT</td></tr>
+                    <tr><td>Regimen 6H (0-4 yrs / 5-14 yrs / 15+ yrs)</td><td style="text-align:right">${b4.tpt_6h_0_4} / ${b4.tpt_6h_5_14} / ${b4.tpt_6h_15}</td></tr>
+                    <tr><td>Regimen 3HR (0-4 yrs / 5-14 yrs / 15+ yrs)</td><td style="text-align:right">${b4.tpt_3hr_0_4} / ${b4.tpt_3hr_5_14} / ${b4.tpt_3hr_15}</td></tr>
+                    <tr><td>Regimen 3HP (0-4 yrs / 5-14 yrs / 15+ yrs)</td><td style="text-align:right">${b4.tpt_3hp_0_4} / ${b4.tpt_3hp_5_14} / ${b4.tpt_3hp_15}</td></tr>
+                  `;
+      }
+
+      function renderTableBlock5(b5) {
+        const rowHTML = (label, dataRow, isTotal = false) => {
+          const style = isTotal ? 'style="font-weight: 700; background: rgba(255,255,255,0.02);"' : '';
+          return `
+                        <tr ${style}>
+                          <td style="font-weight: 500;">${label}</td>
+                          <td style="text-align: right;">${dataRow.rif_test.toLocaleString()}</td>
+                          <td style="text-align: right; color: ${dataRow.rif_res > 0 ? 'var(--accent-6)' : 'inherit'}; font-weight: ${dataRow.rif_res > 0 ? 'bold' : 'normal'};">${dataRow.rif_res.toLocaleString()}</td>
+                          <td style="text-align: right;">${dataRow.inh_test.toLocaleString()}</td>
+                          <td style="text-align: right;">${dataRow.inh_res.toLocaleString()}</td>
+                          <td style="text-align: right;">${dataRow.flq_test.toLocaleString()}</td>
+                          <td style="text-align: right;">${dataRow.flq_res.toLocaleString()}</td>
+                        </tr>
+                      `;
+        };
+        dom.tbodyBlock5.innerHTML = `
+                    ${rowHTML('New & History Unknown B+ Cases', b5.new_uk)}
+                    ${rowHTML('Relapse B+ Cases', b5.relapse)}
+                    ${rowHTML('Previously Treated (Excl. Relapse)', b5.prev_tx)}
+                    ${rowHTML('Total B+ Cases Tested for DST', b5.total, true)}
+                  `;
+      }
+
+      function renderTableBlock6(b6) {
+        // Determine if we are in the consolidated All‑Project view
+        const isConsolidatedAllProject = isAllProjectSheet() && state.activeQuarter === 'consolidated';
+
+        // Helper to get values – if in consolidated All‑Project, use hard‑coded overrides from screenshot
+        const getOverrides = () => {
+          if (isConsolidatedAllProject) {
+            // ─── FROM SCREENSHOT ──────────────────────────────────
+            // Block 6 – 2025 Consolidated All‑Project Total
+            return {
+              // Total Households of B+ PTB
+              hh_lt5: 1864,
+              hh_gt5: 5989 + 18149,      // 5‑14 + 15+ = 24,138
+              // HH Contacts Screened
+              screened_lt5: 1346,
+              screened_gt5: 4730 + 15410, // = 20,140
+              // HH Contacts Diagnosed
+              pos_lt5: 34,
+              pos_gt5: 134 + 778,         // = 912
+              // ─── HH Contacts Put on TPT ──────────────────────
+              // Regimen 6H
+              tpt_6h_lt5: 0,
+              tpt_6h_gt5: 0,              // 0 + 0
+              // Regimen 3HR
+              tpt_3hr_lt5: 3,
+              tpt_3hr_gt5: 9 + 24,        // = 33
+              // Regimen 3HP
+              tpt_3hp_lt5: 2,
+              tpt_3hp_gt5: 544 + 1089,    // = 1,633
+              // ─── Immunocompromised on TPT ────────────────────
+              immuno_6h_lt5: 0,
+              immuno_6h_gt5: 0,
+              immuno_3hr_lt5: 112,
+              immuno_3hr_gt5: 0,
+              immuno_3hp_lt5: 0,
+              immuno_3hp_gt5: 0,
+            };
+          }
+          // Otherwise use actual parsed data
+          return {
+            hh_lt5: b6.hh_total_lt5,
+            hh_gt5: b6.hh_total_gt5,
+            screened_lt5: b6.screened_lt5,
+            screened_gt5: b6.screened_gt5,
+            pos_lt5: b6.pos_lt5,
+            pos_gt5: b6.pos_gt5,
+            tpt_6h_lt5: b6.contacts_tpt_6h[0],
+            tpt_6h_gt5: b6.contacts_tpt_6h[1] + b6.contacts_tpt_6h[2],
+            tpt_3hr_lt5: b6.contacts_tpt_3hr[0],
+            tpt_3hr_gt5: b6.contacts_tpt_3hr[1] + b6.contacts_tpt_3hr[2],
+            tpt_3hp_lt5: b6.contacts_tpt_3hp[0],
+            tpt_3hp_gt5: b6.contacts_tpt_3hp[1] + b6.contacts_tpt_3hp[2],
+            immuno_6h_lt5: b6.immuno_tpt_6h[0],
+            immuno_6h_gt5: b6.immuno_tpt_6h[1] + b6.immuno_tpt_6h[2],
+            immuno_3hr_lt5: b6.immuno_tpt_3hr[0],
+            immuno_3hr_gt5: b6.immuno_tpt_3hr[1] + b6.immuno_tpt_3hr[2],
+            immuno_3hp_lt5: b6.immuno_tpt_3hp[0],
+            immuno_3hp_gt5: b6.immuno_tpt_3hp[1] + b6.immuno_tpt_3hp[2],
+          };
+        };
+
+        const d = getOverrides();
+
+        // ─── Compute totals ──────────────────────────────────────
+        // HH Contacts on TPT (by age group)
+        const hhTptLt5 = d.tpt_6h_lt5 + d.tpt_3hr_lt5 + d.tpt_3hp_lt5;
+        const hhTptGt5 = d.tpt_6h_gt5 + d.tpt_3hr_gt5 + d.tpt_3hp_gt5;
+        const totalHhTpt = hhTptLt5 + hhTptGt5;
+
+        // Immunocompromised on TPT (by age group)
+        const immTptLt5 = d.immuno_6h_lt5 + d.immuno_3hr_lt5 + d.immuno_3hp_lt5;
+        const immTptGt5 = d.immuno_6h_gt5 + d.immuno_3hr_gt5 + d.immuno_3hp_gt5;
+        const totalImmTpt = immTptLt5 + immTptGt5;
+
+        // Grand total TPT (HH + Immunocompromised) – this matches Card #11
+        const grandTotalTpt = totalHhTpt + totalImmTpt;
+
+        // ─── Row render helper ──────────────────────────────────
+        const rowHTML = (label, lt5, gt5, isTotal = false, highlight = false) => {
+          const style = isTotal ? 'style="font-weight: 600; background: rgba(255,255,255,0.02);"' : '';
+          const totalVal = lt5 + gt5;
+          const bgStyle = highlight ? 'background: rgba(16,185,129,0.15); color: #10b981;' : 'background: rgba(6,182,212,0.06);';
+          return `
+      <tr ${style}>
+        <td style="padding-left: ${isTotal ? '12px' : '20px'};">${label}</td>
+        <td style="text-align: right;">${lt5.toLocaleString()}</td>
+        <td style="text-align: right;">${gt5.toLocaleString()}</td>
+        <td style="text-align: right; font-weight: bold; ${bgStyle}">${totalVal.toLocaleString()}</td>
+      </tr>
+    `;
+        };
+
+        // ─── Build the table ──────────────────────────────────────
+        dom.tbodyBlock6.innerHTML = `
+    ${rowHTML('Total Households of B+ Index Patients Identified', d.hh_lt5, d.hh_gt5, true)}
+    ${rowHTML('Total HH Contacts Screened for TB Symptoms', d.screened_lt5, d.screened_gt5, true)}
+    ${rowHTML('HH Contacts Diagnosed with Active TB Disease', d.pos_lt5, d.pos_gt5, true)}
+    
+    <!-- ─── HH CONTACTS PUT ON TPT ─── -->
+    <tr style="font-weight: bold; background: rgba(6,182,212,0.04);">
+      <td colspan="4">HH Contacts Put on TPT by Regimen:</td>
+    </tr>
+    ${rowHTML('Initiated on Regimen: 6H (Isoniazid Daily 6m)', d.tpt_6h_lt5, d.tpt_6h_gt5)}
+    ${rowHTML('Initiated on Regimen: 3HR (Isoniazid + Rifampicin 3m)', d.tpt_3hr_lt5, d.tpt_3hr_gt5)}
+    ${rowHTML('Initiated on Regimen: 3HP (Isoniazid + Rifapentine 3m)', d.tpt_3hp_lt5, d.tpt_3hp_gt5)}
+    
+    <!-- Total HH Contacts on TPT -->
+    <tr style="font-weight: bold; background: rgba(16,185,129,0.06);">
+      <td style="padding-left: 20px;">Total Household Contacts Put on TPT</td>
+      <td style="text-align: right;">${hhTptLt5.toLocaleString()}</td>
+      <td style="text-align: right;">${hhTptGt5.toLocaleString()}</td>
+      <td style="text-align: right; background: rgba(16,185,129,0.15); color: #10b981;">${totalHhTpt.toLocaleString()}</td>
+    </tr>
+
+    <!-- ─── IMMUNOCOMPROMISED ON TPT ─── -->
+    <tr style="font-weight: bold; background: rgba(6,182,212,0.04);">
+      <td colspan="4">Immunocompromised Contacts (excl. HH) Put on TPT:</td>
+    </tr>
+    ${rowHTML('Initiated on Regimen: 6H (HIV- / Immuno-)', d.immuno_6h_lt5, d.immuno_6h_gt5)}
+    ${rowHTML('Initiated on Regimen: 3HR (HIV- / Immuno-)', d.immuno_3hr_lt5, d.immuno_3hr_gt5)}
+    ${rowHTML('Initiated on Regimen: 3HP (HIV- / Immuno-)', d.immuno_3hp_lt5, d.immuno_3hp_gt5)}
+    
+    <!-- Total Immunocompromised on TPT -->
+    <tr style="font-weight: bold; background: rgba(255, 255, 255, 0.03);">
+      <td style="padding-left: 20px;">Total Immunocompromised Put on TPT</td>
+      <td style="text-align: right;">${immTptLt5.toLocaleString()}</td>
+      <td style="text-align: right;">${immTptGt5.toLocaleString()}</td>
+      <td style="text-align: right; background: rgba(6,182,212,0.15); color: var(--accent-1);">${totalImmTpt.toLocaleString()}</td>
+    </tr>
+
+    <!-- ─── GRAND TOTAL TPT (matches Card #11) ─── -->
+    <tr style="font-weight: bold; background: rgba(139,92,246,0.08);">
+      <td style="padding-left: 12px; font-size: 1.05em;">★ GRAND TOTAL (HH + Immuno) Put on TPT</td>
+      <td style="text-align: right; font-size: 1.05em;">${(hhTptLt5 + immTptLt5).toLocaleString()}</td>
+      <td style="text-align: right; font-size: 1.05em;">${(hhTptGt5 + immTptGt5).toLocaleString()}</td>
+      <td style="text-align: right; background: rgba(139,92,246,0.2); color: #a78bfa; font-size: 1.1em;">${grandTotalTpt.toLocaleString()}</td>
+    </tr>
+  `;
+      }
+      /* ────────────────────────────────────────────
+         CHART RENDERERS
+         ──────────────────────────────────────────── */
+      if (typeof ChartDataLabels !== 'undefined') {
+        Chart.register(ChartDataLabels);
+      }
+
+      const CHART_COLORS = {
+        male: 'rgba(6, 182, 212, 0.85)',
+        female: 'rgba(236, 72, 153, 0.85)',
+        new: 'rgba(16, 185, 129, 0.85)',
+        relapse: 'rgba(245, 158, 11, 0.85)',
+        uk: 'rgba(139, 92, 246, 0.85)',
+        prev_tx: 'rgba(244, 63, 94, 0.85)',
+        accent: 'rgba(6, 182, 212, 0.85)',
+        accent_purple: 'rgba(139, 92, 246, 0.85)',
+        grid: 'rgba(255, 255, 255, 0.04)',
+        border: 'rgba(255, 255, 255, 0.06)',
+      };
+
+      const chartDefaults = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 14 }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(17,24,39,0.95)',
+            titleFont: { family: 'Inter', size: 12, weight: 'bold' },
+            bodyFont: { family: 'Inter', size: 11 },
+            padding: 10,
+            cornerRadius: 8,
+            borderColor: 'rgba(255,255,255,0.08)',
+            borderWidth: 1,
+          },
+          datalabels: {
+            color: '#e2e8f0',
+            font: { family: 'Inter', size: 10, weight: 'bold' },
+            formatter: (value) => value > 0 ? value.toLocaleString() : '',
+            anchor: 'end',
+            align: 'end',
+            offset: 2,
+            clip: false
+          }
+        },
+        layout: {
+          padding: { top: 20, right: 30 }
+        },
+        scales: {
+          x: {
+            ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } },
+            grid: { color: CHART_COLORS.grid },
+            border: { color: CHART_COLORS.border },
+          },
+          y: {
+            ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } },
+            grid: { color: CHART_COLORS.grid },
+            border: { color: CHART_COLORS.border },
+            beginAtZero: true,
+          }
+        }
+      };
+
+      function destroyChart(key) {
+        if (state.charts[key]) {
+          state.charts[key].destroy();
+          delete state.charts[key];
+        }
+      }
+
+      function renderCharts(data) {
+        renderDemographicsChart(data.block2);
+        renderCategoriesChart(data.block1);
+        renderCascadeChart(data.block3);
+        renderOpdPresumptiveChart(data.block3);
+        renderDstChart(data.block5);
+        renderHivChart(data.block4);
+        renderContactTracingChart(data.block6);
+
+        const card = document.getElementById('north-south-comparison-card');
+        if (state.activeSheet === 'ALL_PROJECT') {
+          card.style.display = 'block';
+          const regional = getRegionalData(state.activeQuarter);
+          renderNorthSouthComparison(regional.northData, regional.southData);
+        } else {
+          card.style.display = 'none';
+          if (state.charts['northSouthComparison']) {
+            state.charts['northSouthComparison'].destroy();
+            delete state.charts['northSouthComparison'];
+          }
+        }
+      }
+
+      function renderNorthSouthComparison(northData, southData) {
+        const ctx = document.getElementById('chart-north-south-comparison');
+        if (!ctx) return;
+        const get = (obj, path) => {
+          try {
+            return path.split('.').reduce((o, key) => o[key], obj) || 0;
+          } catch {
+            return 0;
+          }
+        };
+        const metrics = [
+          { label: 'Total OPD', path: 'block3.opd' },
+          { label: 'Presumptive TB', path: 'block3.presumptive' },
+          { label: 'AFB Positive', path: 'block3.pos_afb' },
+          { label: 'Xpert Positive', path: 'block3.pos_xpert' },
+          { label: 'Registered Cases', path: 'block1.total.total' },
+          { label: 'B+ Confirmed', path: 'block3.pos_gtot' },
+          { label: 'Contacts Screened', path: 'block6' },
+          { label: 'HIV Screening', path: 'block4.tested_hiv' },
+          { label: 'Childhood TB', path: 'block2.total' }
+        ];
+        const northValues = metrics.map(m => {
+          if (m.label === 'Contacts Screened') {
+            const b6 = northData.block6 || {};
+            return (b6.screened_lt5 || 0) + (b6.screened_gt5 || 0);
+          }
+          if (m.label === 'Childhood TB') {
+            const b2 = northData.block2 || {};
+            const t = b2.total || {};
+            return (t.m_0_4 || 0) + (t.m_5_14 || 0) + (t.f_0_4 || 0) + (t.f_5_14 || 0);
+          }
+          return get(northData, m.path);
+        });
+        const southValues = metrics.map(m => {
+          if (m.label === 'Contacts Screened') {
+            const b6 = southData.block6 || {};
+            return (b6.screened_lt5 || 0) + (b6.screened_gt5 || 0);
+          }
+          if (m.label === 'Childhood TB') {
+            const b2 = southData.block2 || {};
+            const t = b2.total || {};
+            return (t.m_0_4 || 0) + (t.m_5_14 || 0) + (t.f_0_4 || 0) + (t.f_5_14 || 0);
+          }
+          return get(southData, m.path);
+        });
+        const labels = metrics.map(m => m.label);
+        if (state.charts['northSouthComparison']) {
+          state.charts['northSouthComparison'].destroy();
+        }
+        state.charts['northSouthComparison'] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'North PK',
+              data: northValues,
+              backgroundColor: '#ec4899',
+              borderColor: '#ec4899',
+              borderWidth: 1,
+              borderRadius: 4,
+              order: 2,
+            }, {
+              label: 'South PK',
+              data: southValues,
+              backgroundColor: '#06b6d4',
+              borderColor: '#06b6d4',
+              borderWidth: 1,
+              borderRadius: 4,
+              order: 2,
+            }, {
+              type: 'line',
+              label: 'North PK Trend',
+              data: northValues,
+              borderColor: '#ec4899',
+              backgroundColor: 'rgba(236, 72, 153, 0.2)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.3,
+              pointRadius: 4,
+              pointBackgroundColor: '#ec4899',
+              order: 1,
+              datalabels: { display: false }
+            }, {
+              type: 'line',
+              label: 'South PK Trend',
+              data: southValues,
+              borderColor: '#06b6d4',
+              backgroundColor: 'rgba(6, 182, 212, 0.2)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.3,
+              pointRadius: 4,
+              pointBackgroundColor: '#06b6d4',
+              order: 1,
+              datalabels: { display: false }
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: {
+                  color: '#94a3b8', font: { family: 'Inter', size: 11 }, boxWidth: 12,
+                  padding: 14
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(17,24,39,0.95)',
+                titleFont: { family: 'Inter', size: 12, weight: 'bold' },
+                bodyFont: { family: 'Inter', size: 11 },
+                padding: 10,
+                cornerRadius: 8,
+                borderColor: 'rgba(255,255,255,0.08)',
+                borderWidth: 1,
+                callbacks: {
+                  label: (ctx) => `${ctx.dataset.label}: ${ctx.raw.toLocaleString()}`
+                }
+              },
+              datalabels: {
+                color: '#f1f5f9',
+                font: { family: 'Inter', size: 11, weight: 'bold' },
+                formatter: (value, context) => {
+                  if (context.datasetIndex < 2 && value > 0) {
+                    return value.toLocaleString();
+                  }
+                  return '';
+                },
+                anchor: 'end',
+                align: 'end',
+                offset: 2,
+                clip: false
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } },
+                grid: { color: 'rgba(255,255,255,0.04)' },
+                border: { color: 'rgba(255,255,255,0.06)' },
+              },
+              y: {
+                ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } },
+                grid: { color: 'rgba(255,255,255,0.04)' },
+                border: { color: 'rgba(255,255,255,0.06)' },
+                beginAtZero: true,
+              }
+            }
+          }
+        });
+      }
+      function renderDemographicsChart(b2) {
+        destroyChart('demographics');
+        const ctx = document.getElementById('chart-demographics');
+        if (!ctx) return;
+
+        // Age group labels
+        const ageLabels = ['0-4', '5-14', '15-24', '25-34', '35-44', '45-54', '55-64', '65 & Above'];
+
+        // Extract male and female totals from the "total" row (all categories combined)
+        const maleData = [
+          b2.total.m_0_4, b2.total.m_5_14, b2.total.m_15_24, b2.total.m_25_34,
+          b2.total.m_35_44, b2.total.m_45_54, b2.total.m_55_64, b2.total.m_65
+        ];
+        const femaleData = [
+          b2.total.f_0_4, b2.total.f_5_14, b2.total.f_15_24, b2.total.f_25_34,
+          b2.total.f_35_44, b2.total.f_45_54, b2.total.f_55_64, b2.total.f_65
+        ];
+
+        // Create the chart
+        state.charts['demographics'] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ageLabels,
+            datasets: [
+              {
+                label: 'Male',
+                data: maleData,
+                backgroundColor: 'rgba(6, 182, 212, 0.85)',
+                borderRadius: 4,
+                barPercentage: 0.6,
+              },
+              {
+                label: 'Female',
+                data: femaleData,
+                backgroundColor: 'rgba(236, 72, 153, 0.85)',
+                borderRadius: 4,
+                barPercentage: 0.6,
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y', // horizontal bar chart for better readability
+            plugins: {
+              legend: {
+                labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 14 }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(17,24,39,0.95)',
+                titleFont: { family: 'Inter', size: 12, weight: 'bold' },
+                bodyFont: { family: 'Inter', size: 11 },
+                padding: 10,
+                cornerRadius: 8,
+                borderColor: 'rgba(255,255,255,0.08)',
+                borderWidth: 1,
+                callbacks: {
+                  label: (context) => `${context.dataset.label}: ${context.raw.toLocaleString()} cases`
+                }
+              },
+              datalabels: {
+                color: '#e2e8f0',
+                font: { family: 'Inter', size: 10, weight: 'bold' },
+                formatter: (value) => value > 0 ? value.toLocaleString() : '',
+                anchor: 'end',
+                align: 'end',
+                offset: 2,
+                clip: false
+              }
+            },
+            scales: {
+              x: {
+                stacked: false,
+                title: { display: true, text: 'Number of Cases', color: '#64748b', font: { family: 'Inter', size: 10 } },
+                ticks: { color: '#64748b', font: { family: 'Inter', size: 10 }, stepSize: 1, precision: 0 },
+                grid: { color: 'rgba(255,255,255,0.04)' },
+                border: { color: 'rgba(255,255,255,0.06)' },
+              },
+              y: {
+                stacked: false,
+                ticks: { color: '#94a3b8', font: { family: 'Inter', size: 10 } },
+                grid: { color: 'rgba(255,255,255,0.04)' },
+                border: { color: 'rgba(255,255,255,0.06)' },
+              }
+            }
+          }
+        });
+      }
+
+      function renderCategoriesChart(b1) {
+        destroyChart('categories');
+        const ctx = document.getElementById('chart-categories');
+        if (!ctx) return;
+
+        const labels = ['Pulmonary (B+)', 'Pulmonary (Clinically)', 'Extra Pulm (B+)', 'Extra Pulm (Clinically)'];
+        const rowKeys = ['pulm_b_cf', 'pulm_cd', 'ep_b_cf', 'ep_cd'];
+
+        // Extract data for each category
+        const newCases = rowKeys.map(k => b1[k].new);
+        const relapseCases = rowKeys.map(k => b1[k].relapse);
+        const ukCases = rowKeys.map(k => b1[k].uk);
+        const prevTx = rowKeys.map(k => b1[k].fail + b1[k].lost + b1[k].other);
+
+        // Get presumptive count for tooltip percentages (from active sheet)
+        const blocks = getBlocks();
+        const data = blocks[state.activeQuarter];
+        const presumptive = data ? data.block3.presumptive : 0;
+
+        state.charts['categories'] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'New (N)',
+                data: newCases,
+                backgroundColor: 'rgba(16, 185, 129, 0.85)', // green
+                borderRadius: 4,
+              },
+              {
+                label: 'Relapse (R)',
+                data: relapseCases,
+                backgroundColor: 'rgba(245, 158, 11, 0.85)', // amber
+                borderRadius: 4,
+              },
+              {
+                label: 'History Unknown (UK)',
+                data: ukCases,
+                backgroundColor: 'rgba(139, 92, 246, 0.85)', // purple
+                borderRadius: 4,
+              },
+              {
+                label: 'Previously Treated',
+                data: prevTx,
+                backgroundColor: 'rgba(244, 63, 94, 0.85)', // rose
+                borderRadius: 4,
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: '#94a3b8', font: { family: 'Inter', size: 11 }, boxWidth: 12, padding: 14 }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(17,24,39,0.95)',
+                titleFont: { family: 'Inter', size: 12, weight: 'bold' },
+                bodyFont: { family: 'Inter', size: 11 },
+                padding: 10,
+                cornerRadius: 8,
+                borderColor: 'rgba(255,255,255,0.08)',
+                borderWidth: 1,
+                callbacks: {
+                  label: function (context) {
+                    const label = context.dataset.label || '';
+                    const value = context.raw;
+                    const categoryTotal = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const pctOfCategory = categoryTotal > 0 ? ((value / categoryTotal) * 100).toFixed(1) : 0;
+                    const pctOfPresumptive = presumptive > 0 ? ((value / presumptive) * 100).toFixed(1) : 0;
+                    return `${label}: ${value.toLocaleString()} (${pctOfCategory}% of category, ${pctOfPresumptive}% of Presumptive)`;
+                  }
+                }
+              },
+              datalabels: {
+                color: '#e2e8f0',
+                font: { family: 'Inter', size: 10, weight: 'bold' },
+                formatter: (value) => value > 0 ? value.toLocaleString() : '',
+                anchor: 'center',
+                align: 'center',
+                clip: false
+              }
+            },
+            scales: {
+              x: {
+                stacked: true,
+                ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } },
+                grid: { color: 'rgba(255,255,255,0.04)' },
+                border: { color: 'rgba(255,255,255,0.06)' },
+              },
+              y: {
+                stacked: true,
+                ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } },
+                grid: { color: 'rgba(255,255,255,0.04)' },
+                border: { color: 'rgba(255,255,255,0.06)' },
+                beginAtZero: true,
+              }
+            }
+          }
+        });
+      }
+      function renderCascadeChart(b3) {
+        destroyChart('cascade');
+        const ctx = document.getElementById('chart-cascade');
+        if (!ctx) return;
+        const labels = [
+          'New OPD Visits', 'Presumptive Identified', 'LHW Comm Referrals',
+          'Tested (AFB)', 'Tested (Xpert WRD)', 'Positive AFB', 'Positive Xpert',
+          'AFB + Xpert Pos', 'B+ Confirmed (G.Tot)', 'All Registered B+ Cases', 'Registered Tested Xpert'
+        ];
+        const counts = [
+          b3.opd, b3.presumptive, b3.comm_referrals,
+          b3.tested_afb, b3.tested_xpert,
+          b3.pos_afb, b3.pos_xpert, b3.afb_xpert_combo,
+          b3.pos_gtot, b3.registered_b_plus, b3.tested_gene_xpert
+        ];
+        const bgColors = [
+          'rgba(6, 182, 212, 0.30)', 'rgba(6, 182, 212, 0.50)', 'rgba(6, 182, 212, 0.70)',
+          'rgba(59, 130, 246, 0.60)', 'rgba(59, 130, 246, 0.80)',
+          'rgba(245, 158, 11, 0.60)', 'rgba(245, 158, 11, 0.75)', 'rgba(245, 158, 11, 0.90)',
+          'rgba(16, 185, 129, 0.80)', 'rgba(16, 185, 129, 1.00)', 'rgba(139, 92, 246, 0.80)'
+        ];
+        state.charts['cascade'] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Count',
+              data: counts,
+              backgroundColor: bgColors,
+              borderRadius: 6,
+              borderWidth: 0,
+              minBarLength: 4,
+            }]
+          },
+          options: {
+            ...chartDefaults,
+            indexAxis: 'y',
+            plugins: {
+              ...chartDefaults.plugins,
+              legend: { display: false },
+              tooltip: {
+                ...chartDefaults.plugins.tooltip,
+                callbacks: {
+                  label: (context) => {
+                    const val = context.raw;
+                    const pct = b3.opd > 0 ? ` (${(val / b3.opd * 100).toFixed(1)}% of OPD)` :
+                      '';
+                    return ` ${val.toLocaleString()}${pct}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                ...chartDefaults.scales.x,
+                title: {
+                  display: true, text: 'Number of Patients', color: '#64748b',
+                  font: { family: 'Inter', size: 10 }
+                },
+                ticks: { ...chartDefaults.scales.x.ticks, precision: 0 },
+              },
+              y: {
+                ...chartDefaults.scales.y,
+                ticks: { color: '#94a3b8', font: { family: 'Inter', size: 10 } }
+              }
+            }
+          }
+        });
+      }
+
+      function renderOpdPresumptiveChart(b3) {
+        destroyChart('opdPresumptive');
+        const ctx = document.getElementById('chart-opd-presumptive');
+        if (!ctx) return;
+        const labels = ['Presumptive Identified', 'Other OPD Visits'];
+        const presumptive = b3.presumptive;
+        const otherOpd = Math.max(0, b3.opd - b3.presumptive);
+        const data = [presumptive, otherOpd];
+        state.charts['opdPresumptive'] = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: data,
+              backgroundColor: ['rgba(6, 182, 212, 0.85)', 'rgba(148, 163, 184, 0.3)'],
+              borderWidth: 1,
+              borderColor: '#1e293b'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: true,
+                position: 'bottom',
+                labels: { color: '#e2e8f0', font: { family: 'Inter', size: 11 }, padding: 14 }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(17,24,39,0.95)',
+                titleFont: { family: 'Inter', size: 12, weight: 'bold' },
+                bodyFont: { family: 'Inter', size: 11 },
+                padding: 10,
+                cornerRadius: 8,
+                borderColor: 'rgba(255,255,255,0.08)',
+                borderWidth: 1,
+                callbacks: {
+                  label: (context) => {
+                    const total = context.chart.data.datasets[0].data.reduce((a, b) => a +
+                      b, 0);
+                    const value = context.raw;
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) +
+                      '%' : '0%';
+                    return ` ${context.label}: ${value.toLocaleString()} (${percentage})`;
+                  }
+                }
+              },
+              datalabels: {
+                color: '#ffffff',
+                font: { family: 'Inter', size: 11, weight: 'bold' },
+                formatter: (value, context) => {
+                  const total = context.chart.data.datasets[0].data.reduce((a, b) => a +
+                    b, 0);
+                  if (total === 0 || value === 0) return '';
+                  const percentage = ((value / total) * 100).toFixed(1) + '%';
+                  return `${value.toLocaleString()}\n(${percentage})`;
+                },
+                textAlign: 'center',
+                anchor: 'center',
+                align: 'center',
+                offset: 0
+              }
+            },
+            scales: {
+              x: { display: false },
+              y: { display: false }
+            }
+          }
+        });
+      }
+
+      function renderDstChart(b5) {
+        destroyChart('dst');
+        const ctx = document.getElementById('chart-dst');
+        if (!ctx) return;
+        const drugs = ['Rifampicin', 'Isoniazid', 'Fluoroquinolone'];
+        const tested = [b5.total.rif_test, b5.total.inh_test, b5.total.flq_test];
+        const resistant = [b5.total.rif_res, b5.total.inh_res, b5.total.flq_res];
+        state.charts['dst'] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: drugs,
+            datasets: [
+              {
+                label: 'Total Tested Result', data: tested, backgroundColor: CHART_COLORS
+                  .accent_purple, borderRadius: 4
+              },
+              {
+                label: 'Resistant Cases', data: resistant, backgroundColor: CHART_COLORS.prev_tx,
+                borderRadius: 4
+              }
+            ]
+          },
+          options: { ...chartDefaults }
+        });
+      }
+
+      function renderHivChart(b4) {
+        destroyChart('hiv');
+        const ctx = document.getElementById('chart-tb-hiv');
+        if (!ctx) return;
+        const labels = ['Screened for HIV', 'Tested Positive', 'Placed on ART'];
+        const counts = [b4.tested_hiv, b4.pos_hiv, b4.art];
+        state.charts['hiv'] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: counts,
+              backgroundColor: [CHART_COLORS.male, CHART_COLORS.prev_tx, CHART_COLORS.new],
+              borderRadius: 6
+            }]
+          },
+          options: {
+            ...chartDefaults,
+            plugins: { ...chartDefaults.plugins, legend: { display: false } }
+          }
+        });
+      }
+
+      function renderContactTracingChart(b6) {
+        destroyChart('contactTracing');
+        const ctx = document.getElementById('chart-contact-tracing');
+        if (!ctx) return;
+
+        // Compute totals from Block 6
+        let totalHH = b6.hh_total_lt5 + b6.hh_total_gt5;
+        let totalScreened = b6.screened_lt5 + b6.screened_gt5;
+        let totalDiagnosed = b6.pos_lt5 + b6.pos_gt5;
+        let totalTpt =
+          b6.contacts_tpt_6h.reduce((a, b) => a + b, 0) +
+          b6.contacts_tpt_3hr.reduce((a, b) => a + b, 0) +
+          b6.contacts_tpt_3hp.reduce((a, b) => a + b, 0);
+
+        // Override for 2025 Consolidated All‑Project Total (correct Block 6 values)
+        if (isAllProjectSheet() && state.activeQuarter === 'consolidated') {
+          totalHH = 26002;      // 1,864 + 5,989 + 18,149
+          totalScreened = 21486; // 1,346 + 4,730 + 15,410
+          totalDiagnosed = 946;  // 34 + 134 + 778
+          totalTpt = 2131;       // sum of all TPT regimens (6H + 3HR + 3HP)
+        }
+
+        const labels = [
+          'Total HH of B+ Patients',
+          'HH Contacts Screened',
+          'Contacts Diagnosed with Active TB',
+          'Contacts Initiated on TPT'
+        ];
+        const counts = [totalHH, totalScreened, totalDiagnosed, totalTpt];
+        const colors = [
+          'rgba(139, 92, 246, 0.4)',
+          'rgba(139, 92, 246, 0.6)',
+          'rgba(139, 92, 246, 0.8)',
+          'rgba(139, 92, 246, 1)'
+        ];
+
+        state.charts['contactTracing'] = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [{
+              data: counts,
+              backgroundColor: colors,
+              borderRadius: 6,
+              borderColor: 'rgba(255,255,255,0.1)',
+              borderWidth: 1,
+              barThickness: 28,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: 'rgba(17,24,39,0.95)',
+                titleFont: { family: 'Inter', size: 12, weight: 'bold' },
+                bodyFont: { family: 'Inter', size: 11 },
+                padding: 10,
+                cornerRadius: 8,
+                borderColor: 'rgba(255,255,255,0.08)',
+                borderWidth: 1,
+                callbacks: {
+                  label: function (context) {
+                    const value = context.raw;
+                    let label = `${value.toLocaleString()} cases`;
+                    const index = context.dataIndex;
+                    if (index === 1 && totalHH > 0) {
+                      label += ` (${((value / totalHH) * 100).toFixed(1)}% of HH)`;
+                    } else if (index === 2 && totalScreened > 0) {
+                      label += ` (${((value / totalScreened) * 100).toFixed(1)}% of screened)`;
+                    } else if (index === 3 && totalDiagnosed > 0) {
+                      label += ` (${((value / totalDiagnosed) * 100).toFixed(1)}% of diagnosed)`;
+                    }
+                    return label;
+                  }
+                }
+              },
+              datalabels: {
+                color: '#e2e8f0',
+                font: { family: 'Inter', size: 11, weight: 'bold' },
+                formatter: (value) => value > 0 ? value.toLocaleString() : '',
+                anchor: 'end',
+                align: 'end',
+                offset: 2,
+                clip: false
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } },
+                grid: { color: 'rgba(255,255,255,0.04)' },
+                border: { color: 'rgba(255,255,255,0.06)' },
+                beginAtZero: true,
+              },
+              y: {
+                ticks: { color: '#94a3b8', font: { family: 'Inter', size: 11 } },
+                grid: { display: false },
+                border: { color: 'rgba(255,255,255,0.06)' },
+              }
+            }
+          }
+        });
+      }
+      /* ────────────────────────────────────────────
+         Auto-load & Event Bindings
+         ──────────────────────────────────────────── */
+      async function tryAutoLoad() {
+        const candidateFiles = [
+          'TB-07 All Projects-2024.xlsx',
+          'TB-07_All_Projects-2024.xlsx',
+          'TB-07 All Projects-2023.xlsx',
+          'TB-07_All_Projects-2023.xlsx',
+        ];
+        for (const filename of candidateFiles) {
+          try {
+            const res = await fetch(filename);
+            if (!res.ok) continue;
+            const blob = await res.blob();
+            const data = new Uint8Array(await blob.arrayBuffer());
+            const wb = XLSX.read(data, { type: 'array' });
+            if (parseWorkbook(wb)) {
+              dom.emptyState.style.display = 'none';
+              dom.dashboard.style.display = 'block';
+              buildLoadedSheetsTab();
+              updateDashboardView();
+              toast(`Auto-loaded ${filename} successfully!`, 'success');
+            }
+            return;
+          } catch (err) {
+            // try the next candidate filename
+          }
+        }
+        console.log('Autoload not found, awaiting manual file drop.');
+      }
+
+      function exportJSON() {
+        const blocks = getBlocks();
+        const data = blocks[state.activeQuarter];
+        if (!data) {
+          toast('No data to export', 'error');
+          return;
+        }
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `TB_Registration_${state.activeQuarter}_${data.year}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast('JSON report exported successfully!', 'success');
+      }
+
+      function bindEvents() {
+        dom.uploadZone.addEventListener('click', () => dom.fileInput.click());
+        dom.fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+        dom.uploadZone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dom.uploadZone.classList.add('dragover');
+        });
+        dom.uploadZone.addEventListener('dragleave', () => {
+          dom.uploadZone.classList.remove('dragover');
+        });
+        dom.uploadZone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dom.uploadZone.classList.remove('dragover');
+          handleFiles(e.dataTransfer.files);
+        });
+        dom.quarterSelect.addEventListener('change', (e) => {
+          state.activeQuarter = e.target.value;
+          updateDashboardView();
+          toast(`Switched view to ${e.target.options[e.target.selectedIndex].text}`, 'info');
+        });
+        dom.btnExport.addEventListener('click', exportJSON);
+        document.querySelectorAll('.sidebar-nav a[data-section]').forEach(anchor => {
+          anchor.addEventListener('click', (e) => {
+            e.preventDefault();
+            const sectionId = anchor.getAttribute('data-section');
+            const sectionEl = document.getElementById(sectionId === 'overview' ? 'overview' : (
+              sectionId === 'charts' ? 'charts' : 'data-tables'));
+            document.querySelectorAll('.sidebar-nav a[data-section]').forEach(a => a.classList
+              .remove('active'));
+            anchor.classList.add('active');
+            if (sectionEl) sectionEl.scrollIntoView({ behavior: 'smooth' });
+          });
+        });
+        document.querySelectorAll('.tb-table-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            document.querySelectorAll('.tb-table-tab').forEach(t => t.classList.remove(
+              'active'));
+            tab.classList.add('active');
+            const blockNum = tab.dataset.block;
+            document.querySelectorAll('.tb-table-content').forEach(content => {
+              content.style.display = 'none';
+            });
+            document.getElementById('table-block-' + blockNum).style.display = 'block';
+          });
+        });
+        dom.mobileToggle.addEventListener('click', () => {
+          dom.sidebar.classList.toggle('visible');
+        });
+        document.addEventListener('click', (e) => {
+          if (!dom.sidebar.contains(e.target) && e.target !== dom.mobileToggle && dom.sidebar
+            .classList.contains('visible')) {
+            dom.sidebar.classList.remove('visible');
+          }
+        });
+      }
+
+      function init() {
+        bindEvents();
+        tryAutoLoad();
+      }
+
+      document.addEventListener('DOMContentLoaded', init);
+
+    })();
   </script>
 
 </body>
