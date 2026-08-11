@@ -38,6 +38,7 @@
         contactsScreened: [17994, 19618, 21486],
         contactsDiagnosed: [3615, 729, 946],
         tptInitiated: [79, 694, 2131],
+        childTb: [1352, 3657, 4746],
     };
 
     // ===== Chart Color Palette =====
@@ -70,8 +71,8 @@
                     color: '#94a3b8',
                     font: { family: 'Inter', size: 11 },
                     boxWidth: 12,
-                    padding: 14
-                }
+                    padding: 14,
+                },
             },
             tooltip: {
                 backgroundColor: 'rgba(17,24,39,0.95)',
@@ -81,7 +82,7 @@
                 cornerRadius: 8,
                 borderColor: 'rgba(255,255,255,0.08)',
                 borderWidth: 1,
-            }
+            },
         },
         scales: {
             x: {
@@ -93,16 +94,16 @@
                     text: 'Year',
                     color: '#64748b',
                     font: { family: 'Inter', size: 11, weight: '600' },
-                    padding: { top: 6 }
-                }
+                    padding: { top: 6 },
+                },
             },
             y: {
                 ticks: { color: '#64748b', font: { family: 'Inter', size: 10 } },
                 grid: { color: COLORS.grid },
                 border: { color: COLORS.border },
                 beginAtZero: true,
-            }
-        }
+            },
+        },
     };
 
     // ===== Custom Data Value Labels Plugin =====
@@ -113,38 +114,30 @@
             chart.data.datasets.forEach((dataset, datasetIndex) => {
                 const meta = chart.getDatasetMeta(datasetIndex);
                 if (meta.hidden) return;
-
                 meta.data.forEach((element, index) => {
                     const value = dataset.data[index];
                     if (value === undefined || value === null) return;
-
                     ctx.save();
                     ctx.font = '600 10px Inter, sans-serif';
                     ctx.fillStyle = dataset.borderColor || dataset.backgroundColor || '#cbd5e1';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'bottom';
-
-                    let formattedValue = typeof value === 'number' ? value.toLocaleString() : value;
                     let x = element.x;
                     let y = element.y - 4;
-
-                    // If point or bar top is near canvas top margin, adjust label baseline
                     if (y < 25) {
                         y = element.y + 14;
                         ctx.textBaseline = 'top';
                     }
-
-                    ctx.fillText(formattedValue, x, y);
+                    ctx.fillText(typeof value === 'number' ? value.toLocaleString() : value, x, y);
                     ctx.restore();
                 });
             });
-        }
+        },
     };
 
     // ===== Chart Instances Registry =====
     const chartInstances = {};
 
-    // ===== Destroy Chart Helper =====
     function destroyChart(key) {
         if (chartInstances[key]) {
             chartInstances[key].destroy();
@@ -157,7 +150,6 @@
         destroyChart('cases');
         const ctx = document.getElementById('chart-cases');
         if (!ctx) return;
-
         chartInstances['cases'] = new Chart(ctx, {
             type: 'line',
             data: {
@@ -173,7 +165,7 @@
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     pointRadius: 5,
-                }]
+                }],
             },
             plugins: [valueLabelsPlugin],
             options: {
@@ -185,9 +177,9 @@
                         callbacks: {
                             label: function (ctx) {
                                 return ' ' + ctx.raw.toLocaleString() + ' cases';
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
                 scales: {
                     x: { ...chartDefaults.scales.x },
@@ -197,12 +189,12 @@
                             display: true,
                             text: 'Registered TB Cases',
                             color: '#64748b',
-                            font: { family: 'Inter', size: 11, weight: '600' }
+                            font: { family: 'Inter', size: 11, weight: '600' },
                         },
-                        ticks: { ...chartDefaults.scales.y.ticks, precision: 0 }
-                    }
-                }
-            }
+                        ticks: { ...chartDefaults.scales.y.ticks, precision: 0 },
+                    },
+                },
+            },
         });
     }
 
@@ -211,7 +203,6 @@
         destroyChart('diagnostic');
         const ctx = document.getElementById('chart-diagnostic');
         if (!ctx) return;
-
         chartInstances['diagnostic'] = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -230,7 +221,7 @@
                     borderColor: COLORS.green,
                     borderWidth: 2,
                     borderRadius: 4,
-                }]
+                }],
             },
             plugins: [valueLabelsPlugin],
             options: {
@@ -242,9 +233,9 @@
                         callbacks: {
                             label: function (ctx) {
                                 return ' ' + ctx.dataset.label + ': ' + ctx.raw.toLocaleString();
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
                 scales: {
                     x: { ...chartDefaults.scales.x },
@@ -254,12 +245,12 @@
                             display: true,
                             text: 'Number of Patients',
                             color: '#64748b',
-                            font: { family: 'Inter', size: 11, weight: '600' }
+                            font: { family: 'Inter', size: 11, weight: '600' },
                         },
-                        ticks: { ...chartDefaults.scales.y.ticks, precision: 0 }
-                    }
-                }
-            }
+                        ticks: { ...chartDefaults.scales.y.ticks, precision: 0 },
+                    },
+                },
+            },
         });
     }
 
@@ -268,7 +259,6 @@
         destroyChart('dst');
         const ctx = document.getElementById('chart-dst');
         if (!ctx) return;
-
         chartInstances['dst'] = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -294,7 +284,7 @@
                     borderColor: COLORS.purple,
                     borderWidth: 2,
                     borderRadius: 4,
-                }]
+                }],
             },
             plugins: [valueLabelsPlugin],
             options: {
@@ -306,9 +296,9 @@
                         callbacks: {
                             label: function (ctx) {
                                 return ' ' + ctx.dataset.label + ': ' + ctx.raw + ' cases';
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
                 scales: {
                     x: { ...chartDefaults.scales.x },
@@ -318,12 +308,12 @@
                             display: true,
                             text: 'Resistant Cases',
                             color: '#64748b',
-                            font: { family: 'Inter', size: 11, weight: '600' }
+                            font: { family: 'Inter', size: 11, weight: '600' },
                         },
-                        ticks: { ...chartDefaults.scales.y.ticks, precision: 0 }
-                    }
-                }
-            }
+                        ticks: { ...chartDefaults.scales.y.ticks, precision: 0 },
+                    },
+                },
+            },
         });
     }
 
@@ -332,7 +322,6 @@
         destroyChart('hiv');
         const ctx = document.getElementById('chart-hiv');
         if (!ctx) return;
-
         chartInstances['hiv'] = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -344,7 +333,7 @@
                     borderColor: COLORS.pink,
                     borderWidth: 2,
                     borderRadius: 4,
-                }]
+                }],
             },
             plugins: [valueLabelsPlugin],
             options: {
@@ -356,9 +345,9 @@
                         callbacks: {
                             label: function (ctx) {
                                 return ' ' + ctx.raw.toLocaleString() + ' patients';
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
                 scales: {
                     x: { ...chartDefaults.scales.x },
@@ -368,12 +357,12 @@
                             display: true,
                             text: 'Patients Tested for HIV',
                             color: '#64748b',
-                            font: { family: 'Inter', size: 11, weight: '600' }
+                            font: { family: 'Inter', size: 11, weight: '600' },
                         },
-                        ticks: { ...chartDefaults.scales.y.ticks, precision: 0 }
-                    }
-                }
-            }
+                        ticks: { ...chartDefaults.scales.y.ticks, precision: 0 },
+                    },
+                },
+            },
         });
     }
 
@@ -382,7 +371,6 @@
         destroyChart('contact');
         const ctx = document.getElementById('chart-contact');
         if (!ctx) return;
-
         chartInstances['contact'] = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -401,7 +389,7 @@
                     borderColor: COLORS.rose,
                     borderWidth: 2,
                     borderRadius: 4,
-                }]
+                }],
             },
             plugins: [valueLabelsPlugin],
             options: {
@@ -413,9 +401,9 @@
                         callbacks: {
                             label: function (ctx) {
                                 return ' ' + ctx.dataset.label + ': ' + ctx.raw;
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
                 scales: {
                     x: { ...chartDefaults.scales.x },
@@ -425,12 +413,12 @@
                             display: true,
                             text: 'Number of Contacts',
                             color: '#64748b',
-                            font: { family: 'Inter', size: 11, weight: '600' }
+                            font: { family: 'Inter', size: 11, weight: '600' },
                         },
-                        ticks: { ...chartDefaults.scales.y.ticks, precision: 0 }
-                    }
-                }
-            }
+                        ticks: { ...chartDefaults.scales.y.ticks, precision: 0 },
+                    },
+                },
+            },
         });
     }
 
@@ -439,7 +427,6 @@
         destroyChart('tpt');
         const ctx = document.getElementById('chart-tpt');
         if (!ctx) return;
-
         chartInstances['tpt'] = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -451,7 +438,7 @@
                     borderColor: COLORS.green,
                     borderWidth: 2,
                     borderRadius: 4,
-                }]
+                }],
             },
             plugins: [valueLabelsPlugin],
             options: {
@@ -463,9 +450,9 @@
                         callbacks: {
                             label: function (ctx) {
                                 return ' ' + ctx.raw + ' contacts';
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 },
                 scales: {
                     x: { ...chartDefaults.scales.x },
@@ -475,12 +462,12 @@
                             display: true,
                             text: 'Contacts Initiated on TPT',
                             color: '#64748b',
-                            font: { family: 'Inter', size: 11, weight: '600' }
+                            font: { family: 'Inter', size: 11, weight: '600' },
                         },
-                        ticks: { ...chartDefaults.scales.y.ticks, precision: 0 }
-                    }
-                }
-            }
+                        ticks: { ...chartDefaults.scales.y.ticks, precision: 0 },
+                    },
+                },
+            },
         });
     }
 
@@ -498,12 +485,10 @@
     function initMobileToggle() {
         const toggle = document.getElementById('mobile-toggle');
         const sidebar = document.getElementById('sidebar');
-
         if (toggle && sidebar) {
             toggle.addEventListener('click', function () {
                 sidebar.classList.toggle('visible');
             });
-
             document.addEventListener('click', function (e) {
                 if (!sidebar.contains(e.target) && e.target !== toggle && sidebar.classList.contains('visible')) {
                     sidebar.classList.remove('visible');
@@ -526,8 +511,6 @@
                     l.classList.remove('active');
                 });
                 this.classList.add('active');
-
-                // Close sidebar on mobile
                 const sidebar = document.getElementById('sidebar');
                 if (sidebar) {
                     sidebar.classList.remove('visible');
@@ -553,75 +536,200 @@
 
     // ===== Calculate and Display KPI Metrics =====
     function updateKPIs() {
-        const formatNum = (num) => typeof num === 'number' ? num.toLocaleString() : num;
-        const formatM = (num) => (num / 1000000).toFixed(2) + 'M';
-        const sum = (arr) => arr.reduce((a, b) => a + b, 0);
-
-        // Elements to update dynamically
-        const elements = {
-            // Card 1: Total Cases
-            'kpi-total-2025': formatNum(DATA.totalCases[2]),
-            'kpi-total-2023': formatNum(DATA.totalCases[0]),
-            'kpi-total-2024': formatNum(DATA.totalCases[1]),
-            'kpi-total-2025-sub': formatNum(DATA.totalCases[2]),
-            'kpi-total-grand': formatNum(sum(DATA.totalCases)),
-
-            // Card 2: Presumptive Cases
-            'kpi-presumptive-2025': formatNum(DATA.presumptive[2]),
-            'kpi-presumptive-2023': formatNum(DATA.presumptive[0]),
-            'kpi-presumptive-2024': formatNum(DATA.presumptive[1]),
-            'kpi-presumptive-2025-sub': formatNum(DATA.presumptive[2]),
-            'kpi-presumptive-grand': formatNum(sum(DATA.presumptive)),
-
-            // Card 3: OPD Attendance
-            'kpi-opd-2025': formatM(DATA.opd[2]),
-            'kpi-opd-2023': formatM(DATA.opd[0]),
-            'kpi-opd-2024': formatM(DATA.opd[1]),
-            'kpi-opd-2025-sub': formatM(DATA.opd[2]),
-            'kpi-opd-grand': formatM(sum(DATA.opd)),
-
-            // Card 4: B+ Confirmed
-            'kpi-bplus-2025': formatNum(DATA.bPlus[2]),
-            'kpi-bplus-2023': formatNum(DATA.bPlus[0]),
-            'kpi-bplus-2024': formatNum(DATA.bPlus[1]),
-            'kpi-bplus-2025-sub': formatNum(DATA.bPlus[2]),
-            'kpi-bplus-grand': formatNum(sum(DATA.bPlus)),
-
-            // Card 5: Rifampicin Resistant
-            'kpi-rr-tb': formatNum(DATA.rifResistant[2]),
-            'kpi-rr-2023': formatNum(DATA.rifResistant[0]),
-            'kpi-rr-2024': formatNum(DATA.rifResistant[1]),
-            'kpi-rr-2025-sub': formatNum(DATA.rifResistant[2]),
-            'kpi-rr-grand': formatNum(sum(DATA.rifResistant)),
-
-            // Card 6: HIV Screened
-            'kpi-hiv-screened': formatNum(DATA.hivScreened[2]),
-            'kpi-hiv-2023': formatNum(DATA.hivScreened[0]),
-            'kpi-hiv-2024': formatNum(DATA.hivScreened[1]),
-            'kpi-hiv-2025-sub': formatNum(DATA.hivScreened[2]),
-            'kpi-hiv-grand': formatNum(sum(DATA.hivScreened)),
-
-            // Card 7: Contacts Screened
-            'kpi-contact-screened': formatNum(DATA.contactsScreened[2]),
-            'kpi-contact-2023': formatNum(DATA.contactsScreened[0]),
-            'kpi-contact-2024': formatNum(DATA.contactsScreened[1]),
-            'kpi-contact-2025-sub': formatNum(DATA.contactsScreened[2]),
-            'kpi-contact-grand': formatNum(sum(DATA.contactsScreened)),
-
-            // Card 8: TPT Initiated
-            'kpi-tpt': formatNum(DATA.tptInitiated[2]),
-            'kpi-tpt-2023': formatNum(DATA.tptInitiated[0]),
-            'kpi-tpt-2024': formatNum(DATA.tptInitiated[1]),
-            'kpi-tpt-2025-sub': formatNum(DATA.tptInitiated[2]),
-            'kpi-tpt-grand': formatNum(sum(DATA.tptInitiated)),
+        const formatNum = function (num) {
+            return typeof num === 'number' ? num.toLocaleString() : num;
+        };
+        const formatM = function (num) {
+            return (num / 1000000).toFixed(2) + 'M';
+        };
+        const sum = function (arr) {
+            return arr.reduce(function (a, b) { return a + b; }, 0);
+        };
+        const pctChange = function (current, previous) {
+            if (previous === 0) return 'N/A';
+            const diff = ((current - previous) / previous * 100);
+            const sign = diff > 0 ? '+' : '';
+            return sign + diff.toFixed(1) + '%';
+        };
+        const trendLabel = function (current, previous) {
+            if (previous === 0) return '↔️ No Change';
+            if (current > previous) return '↗️ +' + pctChange(current, previous);
+            if (current < previous) return '↘️ ' + pctChange(current, previous);
+            return '↔️ No Change';
         };
 
-        Object.keys(elements).forEach(function (id) {
-            const el = document.getElementById(id);
-            if (el) {
-                el.textContent = elements[id];
-            }
-        });
+        // Elements
+        const el = function (id) {
+            return document.getElementById(id);
+        };
+
+        // Card 1: Total Cases
+        const tc23 = DATA.totalCases[0],
+            tc24 = DATA.totalCases[1],
+            tc25 = DATA.totalCases[2];
+        if (el('kpi-total-2025')) el('kpi-total-2025').textContent = formatNum(tc25);
+        if (el('kpi-total-2023')) el('kpi-total-2023').textContent = formatNum(tc23);
+        if (el('kpi-total-2024')) el('kpi-total-2024').textContent = formatNum(tc24);
+        if (el('kpi-total-2025-sub')) el('kpi-total-2025-sub').textContent = formatNum(tc25);
+        if (el('kpi-total-grand')) el('kpi-total-grand').textContent = formatNum(sum(DATA.totalCases));
+        if (el('kpi-total-trend')) {
+            el('kpi-total-trend').textContent = trendLabel(tc25, tc24);
+            el('kpi-total-trend').className = 'kpi-trend ' + (tc25 > tc24 ? 'up' : tc25 < tc24 ? 'down' : 'flat');
+        }
+
+        // Card 2: Presumptive
+        const pr23 = DATA.presumptive[0],
+            pr24 = DATA.presumptive[1],
+            pr25 = DATA.presumptive[2];
+        if (el('kpi-presumptive-2025')) el('kpi-presumptive-2025').textContent = formatNum(pr25);
+        if (el('kpi-presumptive-2023')) el('kpi-presumptive-2023').textContent = formatNum(pr23);
+        if (el('kpi-presumptive-2024')) el('kpi-presumptive-2024').textContent = formatNum(pr24);
+        if (el('kpi-presumptive-2025-sub')) el('kpi-presumptive-2025-sub').textContent = formatNum(pr25);
+        if (el('kpi-presumptive-grand')) el('kpi-presumptive-grand').textContent = formatNum(sum(DATA.presumptive));
+        if (el('kpi-presumptive-trend')) {
+            el('kpi-presumptive-trend').textContent = trendLabel(pr25, pr24);
+            el('kpi-presumptive-trend').className = 'kpi-trend ' + (pr25 > pr24 ? 'up' : pr25 < pr24 ? 'down' : 'flat');
+        }
+
+        // Card 3: OPD
+        const op23 = DATA.opd[0],
+            op24 = DATA.opd[1],
+            op25 = DATA.opd[2];
+        if (el('kpi-opd-2025')) el('kpi-opd-2025').textContent = formatM(op25);
+        if (el('kpi-opd-2023')) el('kpi-opd-2023').textContent = formatM(op23);
+        if (el('kpi-opd-2024')) el('kpi-opd-2024').textContent = formatM(op24);
+        if (el('kpi-opd-2025-sub')) el('kpi-opd-2025-sub').textContent = formatM(op25);
+        if (el('kpi-opd-grand')) el('kpi-opd-grand').textContent = formatM(sum(DATA.opd));
+        if (el('kpi-opd-trend')) {
+            el('kpi-opd-trend').textContent = trendLabel(op25, op24);
+            el('kpi-opd-trend').className = 'kpi-trend ' + (op25 > op24 ? 'up' : op25 < op24 ? 'down' : 'flat');
+        }
+
+        // Card 4: B+ Confirmed
+        const bp23 = DATA.bPlus[0],
+            bp24 = DATA.bPlus[1],
+            bp25 = DATA.bPlus[2];
+        if (el('kpi-bplus-2025')) el('kpi-bplus-2025').textContent = formatNum(bp25);
+        if (el('kpi-bplus-2023')) el('kpi-bplus-2023').textContent = formatNum(bp23);
+        if (el('kpi-bplus-2024')) el('kpi-bplus-2024').textContent = formatNum(bp24);
+        if (el('kpi-bplus-2025-sub')) el('kpi-bplus-2025-sub').textContent = formatNum(bp25);
+        if (el('kpi-bplus-grand')) el('kpi-bplus-grand').textContent = formatNum(sum(DATA.bPlus));
+        if (el('kpi-bplus-trend')) {
+            el('kpi-bplus-trend').textContent = trendLabel(bp25, bp24);
+            el('kpi-bplus-trend').className = 'kpi-trend ' + (bp25 > bp24 ? 'up' : bp25 < bp24 ? 'down' : 'flat');
+        }
+
+        // Card 5: Rifampicin Resistant
+        const rr23 = DATA.rifResistant[0],
+            rr24 = DATA.rifResistant[1],
+            rr25 = DATA.rifResistant[2];
+        if (el('kpi-rr-2025')) el('kpi-rr-2025').textContent = formatNum(rr25);
+        if (el('kpi-rr-2023')) el('kpi-rr-2023').textContent = formatNum(rr23);
+        if (el('kpi-rr-2024')) el('kpi-rr-2024').textContent = formatNum(rr24);
+        if (el('kpi-rr-2025-sub')) el('kpi-rr-2025-sub').textContent = formatNum(rr25);
+        if (el('kpi-rr-grand')) el('kpi-rr-grand').textContent = formatNum(sum(DATA.rifResistant));
+        if (el('kpi-rr-trend')) {
+            el('kpi-rr-trend').textContent = rr25 > rr24 ? '⚠️ +' + ((rr25 - rr24) / rr24 * 100).toFixed(1) + '%' : '✅ ' + ((rr24 - rr25) / rr24 * 100).toFixed(1) + '% decrease';
+            el('kpi-rr-trend').className = 'kpi-trend ' + (rr25 > rr24 ? 'flat' : rr25 < rr24 ? 'up' : 'flat');
+        }
+
+        // Card 6: HIV Screened
+        const hiv23 = DATA.hivScreened[0],
+            hiv24 = DATA.hivScreened[1],
+            hiv25 = DATA.hivScreened[2];
+        if (el('kpi-hiv-2025')) el('kpi-hiv-2025').textContent = formatNum(hiv25);
+        if (el('kpi-hiv-2023')) el('kpi-hiv-2023').textContent = formatNum(hiv23);
+        if (el('kpi-hiv-2024')) el('kpi-hiv-2024').textContent = formatNum(hiv24);
+        if (el('kpi-hiv-2025-sub')) el('kpi-hiv-2025-sub').textContent = formatNum(hiv25);
+        if (el('kpi-hiv-grand')) el('kpi-hiv-grand').textContent = formatNum(sum(DATA.hivScreened));
+        if (el('kpi-hiv-trend')) {
+            el('kpi-hiv-trend').textContent = trendLabel(hiv25, hiv24);
+            el('kpi-hiv-trend').className = 'kpi-trend ' + (hiv25 > hiv24 ? 'up' : hiv25 < hiv24 ? 'down' : 'flat');
+        }
+
+        // Card 7: Contacts Screened
+        const ct23 = DATA.contactsScreened[0],
+            ct24 = DATA.contactsScreened[1],
+            ct25 = DATA.contactsScreened[2];
+        if (el('kpi-contact-2025')) el('kpi-contact-2025').textContent = formatNum(ct25);
+        if (el('kpi-contact-2023')) el('kpi-contact-2023').textContent = formatNum(ct23);
+        if (el('kpi-contact-2024')) el('kpi-contact-2024').textContent = formatNum(ct24);
+        if (el('kpi-contact-2025-sub')) el('kpi-contact-2025-sub').textContent = formatNum(ct25);
+        if (el('kpi-contact-grand')) el('kpi-contact-grand').textContent = formatNum(sum(DATA.contactsScreened));
+        if (el('kpi-contact-trend')) {
+            el('kpi-contact-trend').textContent = trendLabel(ct25, ct24);
+            el('kpi-contact-trend').className = 'kpi-trend ' + (ct25 > ct24 ? 'up' : ct25 < ct24 ? 'down' : 'flat');
+        }
+
+        // Card 8: TPT Initiated
+        const tpt23 = DATA.tptInitiated[0],
+            tpt24 = DATA.tptInitiated[1],
+            tpt25 = DATA.tptInitiated[2];
+        if (el('kpi-tpt-2025')) el('kpi-tpt-2025').textContent = formatNum(tpt25);
+        if (el('kpi-tpt-2023')) el('kpi-tpt-2023').textContent = formatNum(tpt23);
+        if (el('kpi-tpt-2024')) el('kpi-tpt-2024').textContent = formatNum(tpt24);
+        if (el('kpi-tpt-2025-sub')) el('kpi-tpt-2025-sub').textContent = formatNum(tpt25);
+        if (el('kpi-tpt-grand')) el('kpi-tpt-grand').textContent = formatNum(sum(DATA.tptInitiated));
+        if (el('kpi-tpt-trend')) {
+            el('kpi-tpt-trend').textContent = trendLabel(tpt25, tpt24);
+            el('kpi-tpt-trend').className = 'kpi-trend ' + (tpt25 > tpt24 ? 'up' : tpt25 < tpt24 ? 'down' : 'flat');
+        }
+
+        // Card 9: Childhood TB
+        const ch23 = DATA.childTb[0],
+            ch24 = DATA.childTb[1],
+            ch25 = DATA.childTb[2];
+        if (el('kpi-child-2025')) el('kpi-child-2025').textContent = formatNum(ch25);
+        if (el('kpi-child-2023')) el('kpi-child-2023').textContent = formatNum(ch23);
+        if (el('kpi-child-2024')) el('kpi-child-2024').textContent = formatNum(ch24);
+        if (el('kpi-child-2025-sub')) el('kpi-child-2025-sub').textContent = formatNum(ch25);
+        if (el('kpi-child-grand')) el('kpi-child-grand').textContent = formatNum(sum(DATA.childTb));
+        if (el('kpi-child-trend')) {
+            el('kpi-child-trend').textContent = trendLabel(ch25, ch24);
+            el('kpi-child-trend').className = 'kpi-trend ' + (ch25 > ch24 ? 'up' : ch25 < ch24 ? 'down' : 'flat');
+        }
+
+        // Card 10: HH Total
+        const hh23 = DATA.hhTotal[0],
+            hh24 = DATA.hhTotal[1],
+            hh25 = DATA.hhTotal[2];
+        if (el('kpi-hh-2025')) el('kpi-hh-2025').textContent = formatNum(hh25);
+        if (el('kpi-hh-2023')) el('kpi-hh-2023').textContent = formatNum(hh23);
+        if (el('kpi-hh-2024')) el('kpi-hh-2024').textContent = formatNum(hh24);
+        if (el('kpi-hh-2025-sub')) el('kpi-hh-2025-sub').textContent = formatNum(hh25);
+        if (el('kpi-hh-grand')) el('kpi-hh-grand').textContent = formatNum(sum(DATA.hhTotal));
+        if (el('kpi-hh-trend')) {
+            el('kpi-hh-trend').textContent = trendLabel(hh25, hh24);
+            el('kpi-hh-trend').className = 'kpi-trend ' + (hh25 > hh24 ? 'up' : hh25 < hh24 ? 'down' : 'flat');
+        }
+
+        // Card 11: Contacts Diagnosed
+        const cd23 = DATA.contactsDiagnosed[0],
+            cd24 = DATA.contactsDiagnosed[1],
+            cd25 = DATA.contactsDiagnosed[2];
+        if (el('kpi-cdiag-2025')) el('kpi-cdiag-2025').textContent = formatNum(cd25);
+        if (el('kpi-cdiag-2023')) el('kpi-cdiag-2023').textContent = formatNum(cd23);
+        if (el('kpi-cdiag-2024')) el('kpi-cdiag-2024').textContent = formatNum(cd24);
+        if (el('kpi-cdiag-2025-sub')) el('kpi-cdiag-2025-sub').textContent = formatNum(cd25);
+        if (el('kpi-cdiag-grand')) el('kpi-cdiag-grand').textContent = formatNum(sum(DATA.contactsDiagnosed));
+        if (el('kpi-cdiag-trend')) {
+            el('kpi-cdiag-trend').textContent = trendLabel(cd25, cd24);
+            el('kpi-cdiag-trend').className = 'kpi-trend ' + (cd25 > cd24 ? 'up' : cd25 < cd24 ? 'down' : 'flat');
+        }
+
+        // Card 12: HIV Positive TB Patients
+        const hp23 = DATA.hivPositive[0],
+            hp24 = DATA.hivPositive[1],
+            hp25 = DATA.hivPositive[2];
+        if (el('kpi-hivpos-2025')) el('kpi-hivpos-2025').textContent = formatNum(hp25);
+        if (el('kpi-hivpos-2023')) el('kpi-hivpos-2023').textContent = formatNum(hp23);
+        if (el('kpi-hivpos-2024')) el('kpi-hivpos-2024').textContent = formatNum(hp24);
+        if (el('kpi-hivpos-2025-sub')) el('kpi-hivpos-2025-sub').textContent = formatNum(hp25);
+        if (el('kpi-hivpos-grand')) el('kpi-hivpos-grand').textContent = formatNum(sum(DATA.hivPositive));
+        if (el('kpi-hivpos-trend')) {
+            el('kpi-hivpos-trend').textContent = trendLabel(hp25, hp24);
+            el('kpi-hivpos-trend').className = 'kpi-trend ' + (hp25 > hp24 ? 'up' : hp25 < hp24 ? 'down' : 'flat');
+        }
     }
 
     // ===== Initialize Dashboard =====
@@ -631,12 +739,10 @@
         initMobileToggle();
         initNavigation();
         initResizeHandler();
-
         console.log('✅ TB-07 Trend Analysis Dashboard loaded successfully.');
         console.log('📊 Data summary:', DATA);
     }
 
-    // ===== Run on DOM Ready =====
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
