@@ -152,6 +152,12 @@
 
   function parseCell(val) {
     if (val === undefined || val === null || val === '') return 0;
+    if (typeof val === 'number') return isNaN(val) ? 0 : val;
+    if (typeof val === 'string') {
+      const str = val.trim();
+      if (str === '' || isNaN(str) || isNaN(Number(str))) return 0;
+      return Number(str);
+    }
     const num = parseFloat(val);
     return isNaN(num) ? 0 : num;
   }
@@ -179,8 +185,8 @@
      ──────────────────────────────────────────── */
 
   // Returns every non-blank numeric value in a row (or a slice of one),
-  // in column order. Text cells are ignored, so this stays correct even
-  // when extra blank columns are inserted between the real data columns.
+  // in column order. Text cells (e.g. '6H', '3HR', '3HP') are ignored,
+  // so this stays correct even when extra blank columns are inserted.
   function numericValues(row, fromCol, toCol) {
     const out = [];
     if (!row) return out;
@@ -189,8 +195,14 @@
     for (let c = start; c < end && c < row.length; c++) {
       const v = row[c];
       if (v !== undefined && v !== null && v !== '') {
-        const n = parseFloat(v);
-        if (!isNaN(n)) out.push(n);
+        if (typeof v === 'number' && !isNaN(v)) {
+          out.push(v);
+        } else if (typeof v === 'string') {
+          const str = v.trim();
+          if (str !== '' && !isNaN(str) && !isNaN(Number(str))) {
+            out.push(Number(str));
+          }
+        }
       }
     }
     return out;
@@ -397,12 +409,16 @@
     const getNumAtIdx = (row, numIndex, fallbackCol) => {
       if (!row || !row.length) return 0;
       let nums = [];
-      for (let c = 0; c < row.length; c++) {
+      for (let c = 12; c < row.length; c++) {
         const val = row[c];
         if (val !== undefined && val !== null && val !== '') {
-          const parsed = parseFloat(val);
-          if (!isNaN(parsed)) {
-            nums.push(parsed);
+          if (typeof val === 'number' && !isNaN(val)) {
+            nums.push(val);
+          } else if (typeof val === 'string') {
+            const str = val.trim();
+            if (str !== '' && !isNaN(str) && !isNaN(Number(str))) {
+              nums.push(Number(str));
+            }
           }
         }
       }
@@ -460,27 +476,28 @@
     };
 
     // Block 6 (columns from b6StartCol onward, on the same rows as Block 5)
+    // Sub-columns per metric: 0-4, 5-14, 15+ (3 columns each)
     const b6DataStart = b5DataStart; // same rows as Block 5's data rows
     const b6Col = b6StartCol >= 0 ? b6StartCol : 0;
     const ct_val_row = rows[startIdx + b6DataStart] || [];       // "6H" row — also carries HH/screened/diagnosed totals
     const ct_reg_3hr = rows[startIdx + b6DataStart + 1] || [];   // "3HR" row
     const ct_reg_3hp = rows[startIdx + b6DataStart + 2] || [];   // "3HP" row
 
-    const mainVals = numericValues(ct_val_row, b6Col);   // [hhLt5, hhGt5, scrLt5, scrGt5, posLt5, posGt5, tpt0_4, tpt5_14, tpt15, imm0_4, imm5_14, imm15]
-    const hrVals = numericValues(ct_reg_3hr, b6Col);      // [tpt0_4, tpt5_14, tpt15, imm0_4, imm5_14, imm15]
-    const hpVals = numericValues(ct_reg_3hp, b6Col);      // [tpt0_4, tpt5_14, tpt15, imm0_4, imm5_14, imm15]
+    const mainVals = numericValues(ct_val_row, b6Col);   // [hh_0_4, hh_5_14, hh_15, scr_0_4, scr_5_14, scr_15, diag_0_4, diag_5_14, diag_15, tpt6h_0_4, tpt6h_5_14, tpt6h_15, imm6h_0_4, imm6h_5_14, imm6h_15]
+    const hrVals = numericValues(ct_reg_3hr, b6Col);      // [tpt3hr_0_4, tpt3hr_5_14, tpt3hr_15, imm3hr_0_4, imm3hr_5_14, imm3hr_15]
+    const hpVals = numericValues(ct_reg_3hp, b6Col);      // [tpt3hp_0_4, tpt3hp_5_14, tpt3hp_15, imm3hp_0_4, imm3hp_5_14, imm3hp_15]
 
     const block6 = {
       hh_total_lt5: nv(mainVals, 0),
-      hh_total_gt5: nv(mainVals, 1),
-      screened_lt5: nv(mainVals, 2),
-      screened_gt5: nv(mainVals, 3),
-      pos_lt5: nv(mainVals, 4),
-      pos_gt5: nv(mainVals, 5),
-      contacts_tpt_6h: [nv(mainVals, 6), nv(mainVals, 7), nv(mainVals, 8)],
+      hh_total_gt5: nv(mainVals, 1) + nv(mainVals, 2),
+      screened_lt5: nv(mainVals, 3),
+      screened_gt5: nv(mainVals, 4) + nv(mainVals, 5),
+      pos_lt5: nv(mainVals, 6),
+      pos_gt5: nv(mainVals, 7) + nv(mainVals, 8),
+      contacts_tpt_6h: [nv(mainVals, 9), nv(mainVals, 10), nv(mainVals, 11)],
       contacts_tpt_3hr: [nv(hrVals, 0), nv(hrVals, 1), nv(hrVals, 2)],
       contacts_tpt_3hp: [nv(hpVals, 0), nv(hpVals, 1), nv(hpVals, 2)],
-      immuno_tpt_6h: [nv(mainVals, 9), nv(mainVals, 10), nv(mainVals, 11)],
+      immuno_tpt_6h: [nv(mainVals, 12), nv(mainVals, 13), nv(mainVals, 14)],
       immuno_tpt_3hr: [nv(hrVals, 3), nv(hrVals, 4), nv(hrVals, 5)],
       immuno_tpt_3hp: [nv(hpVals, 3), nv(hpVals, 4), nv(hpVals, 5)],
     };
