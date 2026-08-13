@@ -1537,6 +1537,12 @@
 
       function parseCell(val) {
         if (val === undefined || val === null || val === '') return 0;
+        if (typeof val === 'number') return isNaN(val) ? 0 : val;
+        if (typeof val === 'string') {
+          const str = val.trim();
+          if (str === '' || isNaN(str) || isNaN(Number(str))) return 0;
+          return Number(str);
+        }
         const num = parseFloat(val);
         return isNaN(num) ? 0 : num;
       }
@@ -1564,8 +1570,14 @@
         for (let c = start; c < end && c < row.length; c++) {
           const v = row[c];
           if (v !== undefined && v !== null && v !== '') {
-            const n = parseFloat(v);
-            if (!isNaN(n)) out.push(n);
+            if (typeof v === 'number' && !isNaN(v)) {
+              out.push(v);
+            } else if (typeof v === 'string') {
+              const str = v.trim();
+              if (str !== '' && !isNaN(str) && !isNaN(Number(str))) {
+                out.push(Number(str));
+              }
+            }
           }
         }
         return out;
@@ -1757,12 +1769,16 @@
         const getNumAtIdx = (row, numIndex, fallbackCol) => {
           if (!row || !row.length) return 0;
           let nums = [];
-          for (let c = 0; c < row.length; c++) {
+          for (let c = 12; c < row.length; c++) {
             const val = row[c];
             if (val !== undefined && val !== null && val !== '') {
-              const parsed = parseFloat(val);
-              if (!isNaN(parsed)) {
-                nums.push(parsed);
+              if (typeof val === 'number' && !isNaN(val)) {
+                nums.push(val);
+              } else if (typeof val === 'string') {
+                const str = val.trim();
+                if (str !== '' && !isNaN(str) && !isNaN(Number(str))) {
+                  nums.push(Number(str));
+                }
               }
             }
           }
@@ -1837,15 +1853,15 @@
 
         const block6 = {
           hh_total_lt5: nv(mainVals, 0),
-          hh_total_gt5: nv(mainVals, 1),
-          screened_lt5: nv(mainVals, 2),
-          screened_gt5: nv(mainVals, 3),
-          pos_lt5: nv(mainVals, 4),
-          pos_gt5: nv(mainVals, 5),
-          contacts_tpt_6h: [nv(mainVals, 6), nv(mainVals, 7), nv(mainVals, 8)],
+          hh_total_gt5: nv(mainVals, 1) + nv(mainVals, 2),
+          screened_lt5: nv(mainVals, 3),
+          screened_gt5: nv(mainVals, 4) + nv(mainVals, 5),
+          pos_lt5: nv(mainVals, 6),
+          pos_gt5: nv(mainVals, 7) + nv(mainVals, 8),
+          contacts_tpt_6h: [nv(mainVals, 9), nv(mainVals, 10), nv(mainVals, 11)],
           contacts_tpt_3hr: [nv(hrVals, 0), nv(hrVals, 1), nv(hrVals, 2)],
           contacts_tpt_3hp: [nv(hpVals, 0), nv(hpVals, 1), nv(hpVals, 2)],
-          immuno_tpt_6h: [nv(mainVals, 9), nv(mainVals, 10), nv(mainVals, 11)],
+          immuno_tpt_6h: [nv(mainVals, 12), nv(mainVals, 13), nv(mainVals, 14)],
           immuno_tpt_3hr: [nv(hrVals, 3), nv(hrVals, 4), nv(hrVals, 5)],
           immuno_tpt_3hp: [nv(hpVals, 3), nv(hpVals, 4), nv(hpVals, 5)],
         };
@@ -2216,54 +2232,31 @@
         }
 
         // ==========================================
-        // ★ CARD 7: Total No. of HH of B+PTB (FIXED)
+        // ★ Card 7: Total No. of HH of B+PTB ★
         // ==========================================
-        let hhTotal, sHh = 0,
-          nHh = 0;
-        if (isAllProjectSheet()) {
-          sHh = s.block6.hh_total_lt5 + s.block6.hh_total_gt5;
-          nHh = n.block6.hh_total_lt5 + n.block6.hh_total_gt5;
-          hhTotal = sHh + nHh;
-        } else {
-          hhTotal = data.block6.hh_total_lt5 + data.block6.hh_total_gt5;
-        }
-
-        // Override for consolidated All Project Total with the provided numbers
-        if (isAllProjectSheet() && state.activeQuarter === 'consolidated') {
-          hhTotal = 25522;
-          // keep south/north breakdowns as computed (they may not match, but we override total only)
-        }
-
+        const hhTotal = data.block6.hh_total_lt5 + data.block6.hh_total_gt5;
         dom.kpiHhTotal.textContent = hhTotal.toLocaleString();
         if (showBreakdown) {
+          const sHh = s.block6.hh_total_lt5 + s.block6.hh_total_gt5;
           dom.kpiHhSouth.textContent = sHh.toLocaleString();
+          const nHh = n.block6.hh_total_lt5 + n.block6.hh_total_gt5;
           dom.kpiHhNorth.textContent = nHh.toLocaleString();
           dom.kpiHhSub.textContent = (nHh + sHh).toLocaleString();
         }
 
         // ==========================================
-        // ★ CARD 8: HH Contacts Screened (FIXED)
+        // ★ Card 8: HH Contacts Screened ★
         // ==========================================
-        let contactsScreened, sScreen = 0,
-          nScreen = 0;
-        if (isAllProjectSheet()) {
-          sScreen = s.block6.screened_lt5 + s.block6.screened_gt5;
-          nScreen = n.block6.screened_lt5 + n.block6.screened_gt5;
-          contactsScreened = sScreen + nScreen;
-        } else {
-          contactsScreened = data.block6.screened_lt5 + data.block6.screened_gt5;
-        }
-
-        // Override for consolidated All Project Total with the provided numbers
-        if (isAllProjectSheet() && state.activeQuarter === 'consolidated') {
-          contactsScreened = 19618;
-        }
-
+        const contactsScreened = getContact(data.block6);
         dom.kpiContactScreened.textContent =
           `${contactsScreened.toLocaleString()} (${calcRate(contactsScreened, hhTotal)})`;
         if (showBreakdown) {
+          const sHh = s.block6.hh_total_lt5 + s.block6.hh_total_gt5;
+          const sScreen = getContact(s.block6);
           dom.kpiContactSouth.textContent =
             `${sScreen.toLocaleString()} (${calcRate(sScreen, sHh)})`;
+          const nHh = n.block6.hh_total_lt5 + n.block6.hh_total_gt5;
+          const nScreen = getContact(n.block6);
           dom.kpiContactNorth.textContent =
             `${nScreen.toLocaleString()} (${calcRate(nScreen, nHh)})`;
           const tScreen = nScreen + sScreen;
@@ -2275,13 +2268,7 @@
         // ==========================================
         // Card 9: HH Contacts Diagnosed with Active TB
         // ==========================================
-        let contactsDiagnosed = getContactDiagnosed(data.block6);
-
-        // Override for consolidated All Project Total
-        if (isAllProjectSheet() && state.activeQuarter === 'consolidated') {
-          contactsDiagnosed = 729;
-        }
-
+        const contactsDiagnosed = getContactDiagnosed(data.block6);
         dom.kpiContactDiagnosed.textContent =
           `${contactsDiagnosed.toLocaleString()} (${calcRate(contactsDiagnosed, contactsScreened)})`;
         if (showBreakdown) {
@@ -2300,16 +2287,9 @@
         }
 
         // ==========================================
-        // ==========================================
         // Card 10: Childhood TB (<15 Years)
         // ==========================================
-        let childTotal = getMaleChild(data.block2) + getFemaleChild(data.block2);
-
-        // Override for consolidated All Project Total
-        if (isAllProjectSheet() && state.activeQuarter === 'consolidated') {
-          childTotal = 3657; // Correct value from Block 2
-        }
-
+        const childTotal = getMaleChild(data.block2) + getFemaleChild(data.block2);
         dom.kpiChildTb.textContent =
           `${childTotal.toLocaleString()} (${calcRate(childTotal, totalReg)})`;
         if (showBreakdown) {
@@ -2330,13 +2310,7 @@
         // ==========================================
         // Card 11: Contacts Put on TPT
         // ==========================================
-        let tptTotal = getTpt(data.block6);
-
-        // Override for consolidated All Project Total
-        if (isAllProjectSheet() && state.activeQuarter === 'consolidated') {
-          tptTotal = 694;
-        }
-
+        const tptTotal = getTpt(data.block6);
         dom.kpiTptInitiated.textContent =
           `${tptTotal.toLocaleString()} (${calcRate(tptTotal, contactsDiagnosed)})`;
         if (showBreakdown) {
