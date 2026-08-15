@@ -530,8 +530,102 @@
                         chart.resize();
                     }
                 });
+                renderSparklines();
             }, 300);
         });
+    }
+
+    // ===== Sparkline Trend Generator =====
+    function drawSparkline(canvasId, data, color) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.scale(dpr, dpr);
+
+        const width = rect.width;
+        const height = rect.height;
+        const padding = 6;
+
+        if (!data || data.length < 2) return;
+
+        const min = Math.min(...data);
+        const max = Math.max(...data);
+        const range = max - min === 0 ? 1 : max - min;
+
+        const points = data.map(function (val, idx) {
+            const x = padding + (idx / (data.length - 1)) * (width - 2 * padding);
+            const y = height - padding - ((val - min) / range) * (height - 2 * padding);
+            return { x: x, y: y, val: val };
+        });
+
+        ctx.clearRect(0, 0, width, height);
+
+        // Fill area below trendline
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 0; i < points.length - 1; i++) {
+            const xc = (points[i].x + points[i + 1].x) / 2;
+            const yc = (points[i].y + points[i + 1].y) / 2;
+            ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+        }
+        ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+        ctx.lineTo(points[points.length - 1].x, height);
+        ctx.lineTo(points[0].x, height);
+        ctx.closePath();
+
+        const fillGradient = ctx.createLinearGradient(0, 0, 0, height);
+        fillGradient.addColorStop(0, color + '40');
+        fillGradient.addColorStop(1, color + '00');
+        ctx.fillStyle = fillGradient;
+        ctx.fill();
+
+        // Stroke line
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 0; i < points.length - 1; i++) {
+            const xc = (points[i].x + points[i + 1].x) / 2;
+            const yc = (points[i].y + points[i + 1].y) / 2;
+            ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+        }
+        ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 4;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // Draw data points
+        points.forEach(function (pt) {
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.fill();
+            ctx.stroke();
+        });
+    }
+
+    function renderSparklines() {
+        drawSparkline('sparkline-opd', DATA.opd, '#06b6d4');
+        drawSparkline('sparkline-presumptive', DATA.presumptive, '#3b82f6');
+        drawSparkline('sparkline-rr', DATA.rifResistant, '#f43f5e');
+        drawSparkline('sparkline-hivpos', DATA.hivPositive, '#ec4899');
+        drawSparkline('sparkline-total', DATA.totalCases, '#06b6d4');
+        drawSparkline('sparkline-bplus', DATA.bPlus, '#10b981');
+        drawSparkline('sparkline-hh', DATA.hhTotal, '#8b5cf6');
+        drawSparkline('sparkline-contact', DATA.contactsScreened, '#f59e0b');
+        drawSparkline('sparkline-cdiag', DATA.contactsDiagnosed, '#f43f5e');
+        drawSparkline('sparkline-child', DATA.childTb, '#f59e0b');
+        drawSparkline('sparkline-tpt', DATA.tptInitiated, '#10b981');
+        drawSparkline('sparkline-hiv', DATA.hivScreened, '#8b5cf6');
     }
 
     // ===== Calculate and Display KPI Metrics =====
@@ -735,6 +829,7 @@
     // ===== Initialize Dashboard =====
     function init() {
         updateKPIs();
+        renderSparklines();
         initCharts();
         initMobileToggle();
         initNavigation();
