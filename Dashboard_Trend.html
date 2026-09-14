@@ -768,11 +768,11 @@
 
             <!-- ====== KPI Grid ====== -->
             <div class="kpi-grid" id="kpi-grid">
-                <!-- 1: OPD Attendance -->
+                <!-- 1: Total New OPD Consultations -->
                 <div class="kpi-card">
                     <div class="kpi-icon">🏥</div>
                     <div class="kpi-value" id="kpi-opd-2025">—</div>
-                    <div class="kpi-label">OPD Attendance (2025)</div>
+                    <div class="kpi-label">Total New OPD Consultations (2025)</div>
                     <span class="kpi-trend up" id="kpi-opd-trend">—</span>
                     <div class="kpi-sparkline-wrap"><canvas id="sparkline-opd"></canvas></div>
                     <div class="kpi-breakdown">
@@ -787,11 +787,11 @@
                     </div>
                 </div>
 
-                <!-- 2: Presumptive Cases -->
+                <!-- 2: Presumptive TB Cases Identified -->
                 <div class="kpi-card">
-                    <div class="kpi-icon">🔬</div>
+                    <div class="kpi-icon">🔎</div>
                     <div class="kpi-value" id="kpi-presumptive-2025">—</div>
-                    <div class="kpi-label">Presumptive Cases (2025)</div>
+                    <div class="kpi-label">Presumptive TB Cases Identified (2025)</div>
                     <span class="kpi-trend up" id="kpi-presumptive-trend">—</span>
                     <div class="kpi-sparkline-wrap"><canvas id="sparkline-presumptive"></canvas></div>
                     <div class="kpi-breakdown">
@@ -806,49 +806,49 @@
                     </div>
                 </div>
 
-                <!-- 3: Rifampicin Resistant -->
+                <!-- 3: AFB Positive Cases -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">🔬</div>
+                    <div class="kpi-value" id="kpi-afb-2025">—</div>
+                    <div class="kpi-label">AFB Positive Cases (2025)</div>
+                    <span class="kpi-trend down" id="kpi-afb-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-afb"></canvas></div>
+                    <div class="kpi-breakdown">
+                        <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
+                                class="kpi-breakdown-val" id="kpi-afb-2023">—</span></div>
+                        <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
+                                class="kpi-breakdown-val" id="kpi-afb-2024">—</span></div>
+                        <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
+                                class="kpi-breakdown-val" id="kpi-afb-2025-sub">—</span></div>
+                        <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
+                                class="kpi-breakdown-val" id="kpi-afb-grand">—</span></div>
+                    </div>
+                </div>
+
+                <!-- 4: GeneXpert Positive Cases -->
                 <div class="kpi-card">
                     <div class="kpi-icon">🧬</div>
-                    <div class="kpi-value" id="kpi-rr-2025">—</div>
-                    <div class="kpi-label">Rifampicin Resistant (2025)</div>
-                    <span class="kpi-trend flat" id="kpi-rr-trend">—</span>
-                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-rr"></canvas></div>
+                    <div class="kpi-value" id="kpi-xpert-2025">—</div>
+                    <div class="kpi-label">GeneXpert Positive Cases (2025)</div>
+                    <span class="kpi-trend up" id="kpi-xpert-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-xpert"></canvas></div>
                     <div class="kpi-breakdown">
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
-                                class="kpi-breakdown-val" id="kpi-rr-2023">—</span></div>
+                                class="kpi-breakdown-val" id="kpi-xpert-2023">—</span></div>
                         <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
-                                class="kpi-breakdown-val" id="kpi-rr-2024">—</span></div>
+                                class="kpi-breakdown-val" id="kpi-xpert-2024">—</span></div>
                         <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
-                                class="kpi-breakdown-val" id="kpi-rr-2025-sub">—</span></div>
+                                class="kpi-breakdown-val" id="kpi-xpert-2025-sub">—</span></div>
                         <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                                class="kpi-breakdown-val" id="kpi-rr-grand">—</span></div>
+                                class="kpi-breakdown-val" id="kpi-xpert-grand">—</span></div>
                     </div>
                 </div>
 
-                <!-- 4: HIV Positive TB Patients -->
-                <div class="kpi-card">
-                    <div class="kpi-icon">🩸</div>
-                    <div class="kpi-value" id="kpi-hivpos-2025">—</div>
-                    <div class="kpi-label">HIV+ TB Patients (2025)</div>
-                    <span class="kpi-trend up" id="kpi-hivpos-trend">—</span>
-                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-hivpos"></canvas></div>
-                    <div class="kpi-breakdown">
-                        <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'23</span><span
-                                class="kpi-breakdown-val" id="kpi-hivpos-2023">—</span></div>
-                        <div class="kpi-breakdown-item"><span class="kpi-breakdown-year">'24</span><span
-                                class="kpi-breakdown-val" id="kpi-hivpos-2024">—</span></div>
-                        <div class="kpi-breakdown-item current"><span class="kpi-breakdown-year">'25</span><span
-                                class="kpi-breakdown-val" id="kpi-hivpos-2025-sub">—</span></div>
-                        <div class="kpi-breakdown-item total"><span class="kpi-breakdown-year">Total</span><span
-                                class="kpi-breakdown-val" id="kpi-hivpos-grand">—</span></div>
-                    </div>
-                </div>
-
-                <!-- 5: Total Cases -->
+                <!-- 5: All TB Cases Registered -->
                 <div class="kpi-card">
                     <div class="kpi-icon">👥</div>
                     <div class="kpi-value" id="kpi-total-2025">—</div>
-                    <div class="kpi-label">Total Cases (2025)</div>
+                    <div class="kpi-label">All TB Cases Registered (2025)</div>
                     <span class="kpi-trend up" id="kpi-total-trend">—</span>
                     <div class="kpi-sparkline-wrap"><canvas id="sparkline-total"></canvas></div>
                     <div class="kpi-breakdown">
@@ -863,11 +863,11 @@
                     </div>
                 </div>
 
-                <!-- 6: B+ Confirmed -->
+                <!-- 6: B+ Confirmed Cases -->
                 <div class="kpi-card">
-                    <div class="kpi-icon">🧪</div>
+                    <div class="kpi-icon">✅</div>
                     <div class="kpi-value" id="kpi-bplus-2025">—</div>
-                    <div class="kpi-label">B+ Confirmed (2025)</div>
+                    <div class="kpi-label">B+ Confirmed Cases (2025)</div>
                     <span class="kpi-trend up" id="kpi-bplus-trend">—</span>
                     <div class="kpi-sparkline-wrap"><canvas id="sparkline-bplus"></canvas></div>
                     <div class="kpi-breakdown">
@@ -882,11 +882,11 @@
                     </div>
                 </div>
 
-                <!-- 7: Total HH of B+PTB -->
+                <!-- 7: Total No. of HH of B+PTB -->
                 <div class="kpi-card">
                     <div class="kpi-icon">🏠</div>
                     <div class="kpi-value" id="kpi-hh-2025">—</div>
-                    <div class="kpi-label">Total HH of B+PTB (2025)</div>
+                    <div class="kpi-label">Total No. of HH of B+PTB (2025)</div>
                     <span class="kpi-trend up" id="kpi-hh-trend">—</span>
                     <div class="kpi-sparkline-wrap"><canvas id="sparkline-hh"></canvas></div>
                     <div class="kpi-breakdown">
@@ -901,11 +901,11 @@
                     </div>
                 </div>
 
-                <!-- 8: Contacts Screened -->
+                <!-- 8: HH Contacts Screened -->
                 <div class="kpi-card">
                     <div class="kpi-icon">👨‍👩‍👧‍👦</div>
                     <div class="kpi-value" id="kpi-contact-2025">—</div>
-                    <div class="kpi-label">Contacts Screened (2025)</div>
+                    <div class="kpi-label">HH Contacts Screened (2025)</div>
                     <span class="kpi-trend up" id="kpi-contact-trend">—</span>
                     <div class="kpi-sparkline-wrap"><canvas id="sparkline-contact"></canvas></div>
                     <div class="kpi-breakdown">
@@ -920,11 +920,11 @@
                     </div>
                 </div>
 
-                <!-- 9: HH Contacts Diagnosed -->
+                <!-- 9: HH Contacts Diagnosed with Active TB -->
                 <div class="kpi-card">
                     <div class="kpi-icon">🩺</div>
                     <div class="kpi-value" id="kpi-cdiag-2025">—</div>
-                    <div class="kpi-label">HH Contacts Diagnosed (2025)</div>
+                    <div class="kpi-label">HH Contacts Diagnosed with Active TB (2025)</div>
                     <span class="kpi-trend down" id="kpi-cdiag-trend">—</span>
                     <div class="kpi-sparkline-wrap"><canvas id="sparkline-cdiag"></canvas></div>
                     <div class="kpi-breakdown">
@@ -939,11 +939,11 @@
                     </div>
                 </div>
 
-                <!-- 10: Childhood TB -->
+                <!-- 10: Childhood TB (<15 Years) -->
                 <div class="kpi-card">
                     <div class="kpi-icon">👶</div>
                     <div class="kpi-value" id="kpi-child-2025">—</div>
-                    <div class="kpi-label">Childhood TB (&lt;15 yrs) (2025)</div>
+                    <div class="kpi-label">Childhood TB Cases (&lt;15 Years) (2025)</div>
                     <span class="kpi-trend up" id="kpi-child-trend">—</span>
                     <div class="kpi-sparkline-wrap"><canvas id="sparkline-child"></canvas></div>
                     <div class="kpi-breakdown">
@@ -958,11 +958,11 @@
                     </div>
                 </div>
 
-                <!-- 11: TPT Initiated -->
+                <!-- 11: Contacts Put on TPT -->
                 <div class="kpi-card">
                     <div class="kpi-icon">🛡️</div>
                     <div class="kpi-value" id="kpi-tpt-2025">—</div>
-                    <div class="kpi-label">TPT Initiated (2025)</div>
+                    <div class="kpi-label">Contacts Put on TPT (2025)</div>
                     <span class="kpi-trend up" id="kpi-tpt-trend">—</span>
                     <div class="kpi-sparkline-wrap"><canvas id="sparkline-tpt"></canvas></div>
                     <div class="kpi-breakdown">
@@ -977,11 +977,11 @@
                     </div>
                 </div>
 
-                <!-- 12: HIV Screened -->
+                <!-- 12: HIV Screening -->
                 <div class="kpi-card">
-                    <div class="kpi-icon">🎗️</div>
+                    <div class="kpi-icon">🩺</div>
                     <div class="kpi-value" id="kpi-hiv-2025">—</div>
-                    <div class="kpi-label">HIV Screened (2025)</div>
+                    <div class="kpi-label">HIV Screening (2025)</div>
                     <span class="kpi-trend up" id="kpi-hiv-trend">—</span>
                     <div class="kpi-sparkline-wrap"><canvas id="sparkline-hiv"></canvas></div>
                     <div class="kpi-breakdown">
