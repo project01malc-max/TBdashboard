@@ -17,6 +17,10 @@
 
         // Block 3: Diagnostic Cascade
         presumptive: [54725, 57679, 65788],
+        afbTested: [37871, 23321, 17962],
+        afbPositive: [549, 3271, 1208],
+        xpertTested: [19678, 30427, 34817],
+        xpertPositive: [266, 622, 2869],
         bPlus: [4910, 4436, 5317],
         opd: [2045733, 2201101, 2913637],
 
@@ -616,8 +620,8 @@
     function renderSparklines() {
         drawSparkline('sparkline-opd', DATA.opd, '#06b6d4');
         drawSparkline('sparkline-presumptive', DATA.presumptive, '#3b82f6');
-        drawSparkline('sparkline-rr', DATA.rifResistant, '#f43f5e');
-        drawSparkline('sparkline-hivpos', DATA.hivPositive, '#ec4899');
+        drawSparkline('sparkline-afb', DATA.afbPositive, '#10b981');
+        drawSparkline('sparkline-xpert', DATA.xpertPositive, '#8b5cf6');
         drawSparkline('sparkline-total', DATA.totalCases, '#06b6d4');
         drawSparkline('sparkline-bplus', DATA.bPlus, '#10b981');
         drawSparkline('sparkline-hh', DATA.hhTotal, '#8b5cf6');
@@ -625,7 +629,7 @@
         drawSparkline('sparkline-cdiag', DATA.contactsDiagnosed, '#f43f5e');
         drawSparkline('sparkline-child', DATA.childTb, '#f59e0b');
         drawSparkline('sparkline-tpt', DATA.tptInitiated, '#10b981');
-        drawSparkline('sparkline-hiv', DATA.hivScreened, '#8b5cf6');
+        drawSparkline('sparkline-hiv', DATA.hivScreened, '#ec4899');
     }
 
     // ===== Calculate and Display KPI Metrics =====
@@ -657,35 +661,7 @@
             return document.getElementById(id);
         };
 
-        // Card 1: Total Cases
-        const tc23 = DATA.totalCases[0],
-            tc24 = DATA.totalCases[1],
-            tc25 = DATA.totalCases[2];
-        if (el('kpi-total-2025')) el('kpi-total-2025').textContent = formatNum(tc25);
-        if (el('kpi-total-2023')) el('kpi-total-2023').textContent = formatNum(tc23);
-        if (el('kpi-total-2024')) el('kpi-total-2024').textContent = formatNum(tc24);
-        if (el('kpi-total-2025-sub')) el('kpi-total-2025-sub').textContent = formatNum(tc25);
-        if (el('kpi-total-grand')) el('kpi-total-grand').textContent = formatNum(sum(DATA.totalCases));
-        if (el('kpi-total-trend')) {
-            el('kpi-total-trend').textContent = trendLabel(tc25, tc24);
-            el('kpi-total-trend').className = 'kpi-trend ' + (tc25 > tc24 ? 'up' : tc25 < tc24 ? 'down' : 'flat');
-        }
-
-        // Card 2: Presumptive
-        const pr23 = DATA.presumptive[0],
-            pr24 = DATA.presumptive[1],
-            pr25 = DATA.presumptive[2];
-        if (el('kpi-presumptive-2025')) el('kpi-presumptive-2025').textContent = formatNum(pr25);
-        if (el('kpi-presumptive-2023')) el('kpi-presumptive-2023').textContent = formatNum(pr23);
-        if (el('kpi-presumptive-2024')) el('kpi-presumptive-2024').textContent = formatNum(pr24);
-        if (el('kpi-presumptive-2025-sub')) el('kpi-presumptive-2025-sub').textContent = formatNum(pr25);
-        if (el('kpi-presumptive-grand')) el('kpi-presumptive-grand').textContent = formatNum(sum(DATA.presumptive));
-        if (el('kpi-presumptive-trend')) {
-            el('kpi-presumptive-trend').textContent = trendLabel(pr25, pr24);
-            el('kpi-presumptive-trend').className = 'kpi-trend ' + (pr25 > pr24 ? 'up' : pr25 < pr24 ? 'down' : 'flat');
-        }
-
-        // Card 3: OPD
+        // Card 1: Total New OPD Consultations
         const op23 = DATA.opd[0],
             op24 = DATA.opd[1],
             op25 = DATA.opd[2];
@@ -699,7 +675,63 @@
             el('kpi-opd-trend').className = 'kpi-trend ' + (op25 > op24 ? 'up' : op25 < op24 ? 'down' : 'flat');
         }
 
-        // Card 4: B+ Confirmed
+        // Card 2: Presumptive TB Cases Identified
+        const pr23 = DATA.presumptive[0],
+            pr24 = DATA.presumptive[1],
+            pr25 = DATA.presumptive[2];
+        if (el('kpi-presumptive-2025')) el('kpi-presumptive-2025').textContent = formatNum(pr25);
+        if (el('kpi-presumptive-2023')) el('kpi-presumptive-2023').textContent = formatNum(pr23);
+        if (el('kpi-presumptive-2024')) el('kpi-presumptive-2024').textContent = formatNum(pr24);
+        if (el('kpi-presumptive-2025-sub')) el('kpi-presumptive-2025-sub').textContent = formatNum(pr25);
+        if (el('kpi-presumptive-grand')) el('kpi-presumptive-grand').textContent = formatNum(sum(DATA.presumptive));
+        if (el('kpi-presumptive-trend')) {
+            el('kpi-presumptive-trend').textContent = trendLabel(pr25, pr24);
+            el('kpi-presumptive-trend').className = 'kpi-trend ' + (pr25 > pr24 ? 'up' : pr25 < pr24 ? 'down' : 'flat');
+        }
+
+        // Card 3: AFB Positive Cases
+        const afb23 = DATA.afbPositive[0],
+            afb24 = DATA.afbPositive[1],
+            afb25 = DATA.afbPositive[2];
+        if (el('kpi-afb-2025')) el('kpi-afb-2025').textContent = formatNum(afb25);
+        if (el('kpi-afb-2023')) el('kpi-afb-2023').textContent = formatNum(afb23);
+        if (el('kpi-afb-2024')) el('kpi-afb-2024').textContent = formatNum(afb24);
+        if (el('kpi-afb-2025-sub')) el('kpi-afb-2025-sub').textContent = formatNum(afb25);
+        if (el('kpi-afb-grand')) el('kpi-afb-grand').textContent = formatNum(sum(DATA.afbPositive));
+        if (el('kpi-afb-trend')) {
+            el('kpi-afb-trend').textContent = trendLabel(afb25, afb24);
+            el('kpi-afb-trend').className = 'kpi-trend ' + (afb25 > afb24 ? 'up' : afb25 < afb24 ? 'down' : 'flat');
+        }
+
+        // Card 4: GeneXpert Positive Cases
+        const xp23 = DATA.xpertPositive[0],
+            xp24 = DATA.xpertPositive[1],
+            xp25 = DATA.xpertPositive[2];
+        if (el('kpi-xpert-2025')) el('kpi-xpert-2025').textContent = formatNum(xp25);
+        if (el('kpi-xpert-2023')) el('kpi-xpert-2023').textContent = formatNum(xp23);
+        if (el('kpi-xpert-2024')) el('kpi-xpert-2024').textContent = formatNum(xp24);
+        if (el('kpi-xpert-2025-sub')) el('kpi-xpert-2025-sub').textContent = formatNum(xp25);
+        if (el('kpi-xpert-grand')) el('kpi-xpert-grand').textContent = formatNum(sum(DATA.xpertPositive));
+        if (el('kpi-xpert-trend')) {
+            el('kpi-xpert-trend').textContent = trendLabel(xp25, xp24);
+            el('kpi-xpert-trend').className = 'kpi-trend ' + (xp25 > xp24 ? 'up' : xp25 < xp24 ? 'down' : 'flat');
+        }
+
+        // Card 5: All TB Cases Registered
+        const tc23 = DATA.totalCases[0],
+            tc24 = DATA.totalCases[1],
+            tc25 = DATA.totalCases[2];
+        if (el('kpi-total-2025')) el('kpi-total-2025').textContent = formatNum(tc25);
+        if (el('kpi-total-2023')) el('kpi-total-2023').textContent = formatNum(tc23);
+        if (el('kpi-total-2024')) el('kpi-total-2024').textContent = formatNum(tc24);
+        if (el('kpi-total-2025-sub')) el('kpi-total-2025-sub').textContent = formatNum(tc25);
+        if (el('kpi-total-grand')) el('kpi-total-grand').textContent = formatNum(sum(DATA.totalCases));
+        if (el('kpi-total-trend')) {
+            el('kpi-total-trend').textContent = trendLabel(tc25, tc24);
+            el('kpi-total-trend').className = 'kpi-trend ' + (tc25 > tc24 ? 'up' : tc25 < tc24 ? 'down' : 'flat');
+        }
+
+        // Card 6: B+ Confirmed Cases
         const bp23 = DATA.bPlus[0],
             bp24 = DATA.bPlus[1],
             bp25 = DATA.bPlus[2];
@@ -713,77 +745,7 @@
             el('kpi-bplus-trend').className = 'kpi-trend ' + (bp25 > bp24 ? 'up' : bp25 < bp24 ? 'down' : 'flat');
         }
 
-        // Card 5: Rifampicin Resistant
-        const rr23 = DATA.rifResistant[0],
-            rr24 = DATA.rifResistant[1],
-            rr25 = DATA.rifResistant[2];
-        if (el('kpi-rr-2025')) el('kpi-rr-2025').textContent = formatNum(rr25);
-        if (el('kpi-rr-2023')) el('kpi-rr-2023').textContent = formatNum(rr23);
-        if (el('kpi-rr-2024')) el('kpi-rr-2024').textContent = formatNum(rr24);
-        if (el('kpi-rr-2025-sub')) el('kpi-rr-2025-sub').textContent = formatNum(rr25);
-        if (el('kpi-rr-grand')) el('kpi-rr-grand').textContent = formatNum(sum(DATA.rifResistant));
-        if (el('kpi-rr-trend')) {
-            el('kpi-rr-trend').textContent = rr25 > rr24 ? '⚠️ +' + ((rr25 - rr24) / rr24 * 100).toFixed(1) + '%' : '✅ ' + ((rr24 - rr25) / rr24 * 100).toFixed(1) + '% decrease';
-            el('kpi-rr-trend').className = 'kpi-trend ' + (rr25 > rr24 ? 'flat' : rr25 < rr24 ? 'up' : 'flat');
-        }
-
-        // Card 6: HIV Screened
-        const hiv23 = DATA.hivScreened[0],
-            hiv24 = DATA.hivScreened[1],
-            hiv25 = DATA.hivScreened[2];
-        if (el('kpi-hiv-2025')) el('kpi-hiv-2025').textContent = formatNum(hiv25);
-        if (el('kpi-hiv-2023')) el('kpi-hiv-2023').textContent = formatNum(hiv23);
-        if (el('kpi-hiv-2024')) el('kpi-hiv-2024').textContent = formatNum(hiv24);
-        if (el('kpi-hiv-2025-sub')) el('kpi-hiv-2025-sub').textContent = formatNum(hiv25);
-        if (el('kpi-hiv-grand')) el('kpi-hiv-grand').textContent = formatNum(sum(DATA.hivScreened));
-        if (el('kpi-hiv-trend')) {
-            el('kpi-hiv-trend').textContent = trendLabel(hiv25, hiv24);
-            el('kpi-hiv-trend').className = 'kpi-trend ' + (hiv25 > hiv24 ? 'up' : hiv25 < hiv24 ? 'down' : 'flat');
-        }
-
-        // Card 7: Contacts Screened
-        const ct23 = DATA.contactsScreened[0],
-            ct24 = DATA.contactsScreened[1],
-            ct25 = DATA.contactsScreened[2];
-        if (el('kpi-contact-2025')) el('kpi-contact-2025').textContent = formatNum(ct25);
-        if (el('kpi-contact-2023')) el('kpi-contact-2023').textContent = formatNum(ct23);
-        if (el('kpi-contact-2024')) el('kpi-contact-2024').textContent = formatNum(ct24);
-        if (el('kpi-contact-2025-sub')) el('kpi-contact-2025-sub').textContent = formatNum(ct25);
-        if (el('kpi-contact-grand')) el('kpi-contact-grand').textContent = formatNum(sum(DATA.contactsScreened));
-        if (el('kpi-contact-trend')) {
-            el('kpi-contact-trend').textContent = trendLabel(ct25, ct24);
-            el('kpi-contact-trend').className = 'kpi-trend ' + (ct25 > ct24 ? 'up' : ct25 < ct24 ? 'down' : 'flat');
-        }
-
-        // Card 8: TPT Initiated
-        const tpt23 = DATA.tptInitiated[0],
-            tpt24 = DATA.tptInitiated[1],
-            tpt25 = DATA.tptInitiated[2];
-        if (el('kpi-tpt-2025')) el('kpi-tpt-2025').textContent = formatNum(tpt25);
-        if (el('kpi-tpt-2023')) el('kpi-tpt-2023').textContent = formatNum(tpt23);
-        if (el('kpi-tpt-2024')) el('kpi-tpt-2024').textContent = formatNum(tpt24);
-        if (el('kpi-tpt-2025-sub')) el('kpi-tpt-2025-sub').textContent = formatNum(tpt25);
-        if (el('kpi-tpt-grand')) el('kpi-tpt-grand').textContent = formatNum(sum(DATA.tptInitiated));
-        if (el('kpi-tpt-trend')) {
-            el('kpi-tpt-trend').textContent = trendLabel(tpt25, tpt24);
-            el('kpi-tpt-trend').className = 'kpi-trend ' + (tpt25 > tpt24 ? 'up' : tpt25 < tpt24 ? 'down' : 'flat');
-        }
-
-        // Card 9: Childhood TB
-        const ch23 = DATA.childTb[0],
-            ch24 = DATA.childTb[1],
-            ch25 = DATA.childTb[2];
-        if (el('kpi-child-2025')) el('kpi-child-2025').textContent = formatNum(ch25);
-        if (el('kpi-child-2023')) el('kpi-child-2023').textContent = formatNum(ch23);
-        if (el('kpi-child-2024')) el('kpi-child-2024').textContent = formatNum(ch24);
-        if (el('kpi-child-2025-sub')) el('kpi-child-2025-sub').textContent = formatNum(ch25);
-        if (el('kpi-child-grand')) el('kpi-child-grand').textContent = formatNum(sum(DATA.childTb));
-        if (el('kpi-child-trend')) {
-            el('kpi-child-trend').textContent = trendLabel(ch25, ch24);
-            el('kpi-child-trend').className = 'kpi-trend ' + (ch25 > ch24 ? 'up' : ch25 < ch24 ? 'down' : 'flat');
-        }
-
-        // Card 10: HH Total
+        // Card 7: Total No. of HH of B+PTB
         const hh23 = DATA.hhTotal[0],
             hh24 = DATA.hhTotal[1],
             hh25 = DATA.hhTotal[2];
@@ -797,7 +759,21 @@
             el('kpi-hh-trend').className = 'kpi-trend ' + (hh25 > hh24 ? 'up' : hh25 < hh24 ? 'down' : 'flat');
         }
 
-        // Card 11: Contacts Diagnosed
+        // Card 8: HH Contacts Screened
+        const ct23 = DATA.contactsScreened[0],
+            ct24 = DATA.contactsScreened[1],
+            ct25 = DATA.contactsScreened[2];
+        if (el('kpi-contact-2025')) el('kpi-contact-2025').textContent = formatNum(ct25);
+        if (el('kpi-contact-2023')) el('kpi-contact-2023').textContent = formatNum(ct23);
+        if (el('kpi-contact-2024')) el('kpi-contact-2024').textContent = formatNum(ct24);
+        if (el('kpi-contact-2025-sub')) el('kpi-contact-2025-sub').textContent = formatNum(ct25);
+        if (el('kpi-contact-grand')) el('kpi-contact-grand').textContent = formatNum(sum(DATA.contactsScreened));
+        if (el('kpi-contact-trend')) {
+            el('kpi-contact-trend').textContent = trendLabel(ct25, ct24);
+            el('kpi-contact-trend').className = 'kpi-trend ' + (ct25 > ct24 ? 'up' : ct25 < ct24 ? 'down' : 'flat');
+        }
+
+        // Card 9: HH Contacts Diagnosed with Active TB
         const cd23 = DATA.contactsDiagnosed[0],
             cd24 = DATA.contactsDiagnosed[1],
             cd25 = DATA.contactsDiagnosed[2];
@@ -811,18 +787,46 @@
             el('kpi-cdiag-trend').className = 'kpi-trend ' + (cd25 > cd24 ? 'up' : cd25 < cd24 ? 'down' : 'flat');
         }
 
-        // Card 12: HIV Positive TB Patients
-        const hp23 = DATA.hivPositive[0],
-            hp24 = DATA.hivPositive[1],
-            hp25 = DATA.hivPositive[2];
-        if (el('kpi-hivpos-2025')) el('kpi-hivpos-2025').textContent = formatNum(hp25);
-        if (el('kpi-hivpos-2023')) el('kpi-hivpos-2023').textContent = formatNum(hp23);
-        if (el('kpi-hivpos-2024')) el('kpi-hivpos-2024').textContent = formatNum(hp24);
-        if (el('kpi-hivpos-2025-sub')) el('kpi-hivpos-2025-sub').textContent = formatNum(hp25);
-        if (el('kpi-hivpos-grand')) el('kpi-hivpos-grand').textContent = formatNum(sum(DATA.hivPositive));
-        if (el('kpi-hivpos-trend')) {
-            el('kpi-hivpos-trend').textContent = trendLabel(hp25, hp24);
-            el('kpi-hivpos-trend').className = 'kpi-trend ' + (hp25 > hp24 ? 'up' : hp25 < hp24 ? 'down' : 'flat');
+        // Card 10: Childhood TB Cases (<15 Years)
+        const ch23 = DATA.childTb[0],
+            ch24 = DATA.childTb[1],
+            ch25 = DATA.childTb[2];
+        if (el('kpi-child-2025')) el('kpi-child-2025').textContent = formatNum(ch25);
+        if (el('kpi-child-2023')) el('kpi-child-2023').textContent = formatNum(ch23);
+        if (el('kpi-child-2024')) el('kpi-child-2024').textContent = formatNum(ch24);
+        if (el('kpi-child-2025-sub')) el('kpi-child-2025-sub').textContent = formatNum(ch25);
+        if (el('kpi-child-grand')) el('kpi-child-grand').textContent = formatNum(sum(DATA.childTb));
+        if (el('kpi-child-trend')) {
+            el('kpi-child-trend').textContent = trendLabel(ch25, ch24);
+            el('kpi-child-trend').className = 'kpi-trend ' + (ch25 > ch24 ? 'up' : ch25 < ch24 ? 'down' : 'flat');
+        }
+
+        // Card 11: Contacts Put on TPT
+        const tpt23 = DATA.tptInitiated[0],
+            tpt24 = DATA.tptInitiated[1],
+            tpt25 = DATA.tptInitiated[2];
+        if (el('kpi-tpt-2025')) el('kpi-tpt-2025').textContent = formatNum(tpt25);
+        if (el('kpi-tpt-2023')) el('kpi-tpt-2023').textContent = formatNum(tpt23);
+        if (el('kpi-tpt-2024')) el('kpi-tpt-2024').textContent = formatNum(tpt24);
+        if (el('kpi-tpt-2025-sub')) el('kpi-tpt-2025-sub').textContent = formatNum(tpt25);
+        if (el('kpi-tpt-grand')) el('kpi-tpt-grand').textContent = formatNum(sum(DATA.tptInitiated));
+        if (el('kpi-tpt-trend')) {
+            el('kpi-tpt-trend').textContent = trendLabel(tpt25, tpt24);
+            el('kpi-tpt-trend').className = 'kpi-trend ' + (tpt25 > tpt24 ? 'up' : tpt25 < tpt24 ? 'down' : 'flat');
+        }
+
+        // Card 12: HIV Screening
+        const hiv23 = DATA.hivScreened[0],
+            hiv24 = DATA.hivScreened[1],
+            hiv25 = DATA.hivScreened[2];
+        if (el('kpi-hiv-2025')) el('kpi-hiv-2025').textContent = formatNum(hiv25);
+        if (el('kpi-hiv-2023')) el('kpi-hiv-2023').textContent = formatNum(hiv23);
+        if (el('kpi-hiv-2024')) el('kpi-hiv-2024').textContent = formatNum(hiv24);
+        if (el('kpi-hiv-2025-sub')) el('kpi-hiv-2025-sub').textContent = formatNum(hiv25);
+        if (el('kpi-hiv-grand')) el('kpi-hiv-grand').textContent = formatNum(sum(DATA.hivScreened));
+        if (el('kpi-hiv-trend')) {
+            el('kpi-hiv-trend').textContent = trendLabel(hiv25, hiv24);
+            el('kpi-hiv-trend').className = 'kpi-trend ' + (hiv25 > hiv24 ? 'up' : hiv25 < hiv24 ? 'down' : 'flat');
         }
     }
 
