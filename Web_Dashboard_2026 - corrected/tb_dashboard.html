@@ -1625,7 +1625,7 @@
         const periodCell = (headerRow.find(c => (c || '').toString().toLowerCase().includes('quarter')));
         const period = periodCell || 'Quarter';
         const yearCell = headerRow.find(c => (c || '').toString().toLowerCase().includes('of year'));
-        const year = (yearCell || '2024').toString().replace(/of year/i, '').trim();
+        const year = (yearCell || '2026').toString().replace(/of year/i, '').trim();
 
         // Block 1
         const b1LabelOffset = findRowOffset(rows, startIdx, 'Block 1:', 12);
