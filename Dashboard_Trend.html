@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TB-07 Trend Analysis Dashboard (2023–2026)</title>
+    <style>
+        /* ===== CSS Variables & Reset ===== */
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-glass: rgba(255, 255, 255, 0.04);
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: rgba(255, 255, 255, 0.06);
+            --accent-1: #06b6d4;
+            --accent-2: #0891b2;
+            --accent-3: #ec4899;
+            --accent-4: #f59e0b;
+            --accent-5: #10b981;
+            --accent-6: #f43f5e;
+            --gradient-primary: linear-gradient(135deg, #06b6d4, #0891b2);
+            --gradient-warm: linear-gradient(135deg, #ec4899, #f59e0b);
+            --gradient-fresh: linear-gradient(135deg, #10b981, #06b6d4);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 4px 20px rgba(6, 182, 212, 0.15);
+            --space-xs: 6px;
+            --space-sm: 10px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --transition-fast: 0.2s ease;
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-1);
+            border-radius: 10px;
+        }
+
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== Sidebar ===== */
+        .sidebar {
+            width: 280px;
+            min-height: 100vh;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: var(--space-lg) var(--space-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-lg);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            flex-shrink: 0;
+            transition: transform 0.3s ease;
+            z-index: 50;
+        }
+
+        @media (max-width: 820px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                transform: translateX(-100%);
+                width: 290px;
+                height: 100vh;
+                padding-top: 60px;
+            }
+
+            .sidebar.visible {
+                transform: translateX(0);
+            }
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-brand .brand-logo {
+            max-height: 48px;
+            max-width: 120px;
+            height: auto;
+            width: auto;
+            object-fit: contain;
+            border-radius: var(--radius-sm);
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand h1 {
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .sidebar-brand .brand-sub {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            -webkit-text-fill-color: var(--text-muted);
+        }
+
+        .sidebar-section-title {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+        }
+
+        .nav-link.active {
+            background: var(--bg-glass);
+            color: var(--accent-1);
+        }
+
+        .sidebar-project-link {
+            display: flex;
+            align-items: center;
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            gap: var(--space-sm);
+        }
+
+        .sidebar-project-link:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+        }
+
+        /* ===== Mobile Toggle ===== */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 100;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+        }
+
+        @media (max-width: 820px) {
+            .mobile-toggle {
+                display: block;
+            }
+        }
+
+        /* ===== Main Content ===== */
+        .main-content {
+            flex: 1;
+            padding: var(--space-lg) var(--space-xl);
+            min-width: 0;
+            max-width: 100%;
+        }
+
+        @media (max-width: 640px) {
+            .main-content {
+                padding: var(--space-md);
+            }
+        }
+
+        /* ===== Top Bar ===== */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .top-bar-left h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .top-bar-left p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .top-bar-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .status-badge.success {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--accent-5);
+        }
+
+        .status-badge.warning {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--accent-4);
+        }
+
+        .status-badge.info {
+            background: rgba(6, 182, 212, 0.12);
+            color: var(--accent-1);
+        }
+
+        /* ===== Custom Multi-Select Dropdown with Checkboxes ===== */
+        .custom-multiselect {
+            position: relative;
+            display: inline-block;
+            user-select: none;
+            z-index: 100;
+        }
+
+        .multiselect-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 7px 14px;
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: all var(--transition-fast);
+        }
+
+        .multiselect-btn:hover,
+        .multiselect-btn.open {
+            border-color: var(--accent-1);
+            background: rgba(6, 182, 212, 0.08);
+            box-shadow: 0 0 16px rgba(6, 182, 212, 0.2);
+        }
+
+        .multiselect-btn .btn-icon {
+            font-size: 1rem;
+        }
+
+        .multiselect-btn .btn-text {
+            color: var(--accent-1);
+            font-weight: 700;
+        }
+
+        .multiselect-btn .btn-arrow {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        .multiselect-btn.open .btn-arrow {
+            transform: rotate(180deg);
+        }
+
+        .multiselect-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            min-width: 260px;
+            background: #111827;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: var(--radius-md);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.7), 0 0 20px rgba(6, 182, 212, 0.15);
+            padding: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 2px;
+            z-index: 1000;
+            backdrop-filter: blur(14px);
+            animation: dropdownFade 0.18s ease-out;
+        }
+
+        @keyframes dropdownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .multiselect-dropdown.visible {
+            display: flex;
+        }
+
+        .multiselect-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .btn-reset {
+            background: transparent;
+            border: none;
+            color: var(--accent-1);
+            font-size: 0.72rem;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: background var(--transition-fast);
+        }
+
+        .btn-reset:hover {
+            background: rgba(6, 182, 212, 0.15);
+            color: #fff;
+        }
+
+        .multiselect-divider {
+            height: 1px;
+            background: var(--border-color);
+            margin: 4px 0;
+        }
+
+        .multiselect-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background var(--transition-fast);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .multiselect-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-primary);
+        }
+
+        .multiselect-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 17px;
+            height: 17px;
+            border: 1.5px solid var(--text-muted);
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .multiselect-item input[type="checkbox"]:checked {
+            background: var(--accent-1);
+            border-color: var(--accent-1);
+        }
+
+        .multiselect-item input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0a0e17;
+            font-size: 11px;
+            font-weight: 900;
+        }
+
+        .multiselect-item.select-all {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .kpi-breakdown-item.dimmed {
+            opacity: 0.28;
+            filter: grayscale(80%);
+        }
+
+        /* ===== KPI Grid ===== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: var(--space-md);
+            margin-bottom: var(--space-xl);
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--space-md) var(--space-sm);
+            text-align: center;
+            transition: border-color 0.3s;
+            position: relative;
+            overflow: hidden;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+        }
+
+        .kpi-card:nth-child(1)::before {
+            background: var(--gradient-primary);
+        }
+
+        .kpi-card:nth-child(2)::before {
+            background: var(--gradient-warm);
+        }
+
+        .kpi-card:nth-child(3)::before {
+            background: var(--gradient-fresh);
+        }
+
+        .kpi-card:nth-child(4)::before {
+            background: linear-gradient(135deg, var(--accent-4), var(--accent-6));
+        }
+
+        .kpi-card:nth-child(5)::before {
+            background: linear-gradient(135deg, var(--accent-2), var(--accent-3));
+        }
+
+        .kpi-card:nth-child(6)::before {
+            background: linear-gradient(135deg, var(--accent-5), var(--accent-4));
+        }
+
+        .kpi-card:nth-child(7)::before {
+            background: linear-gradient(135deg, var(--accent-3), var(--accent-2));
+        }
+
+        .kpi-card:nth-child(8)::before {
+            background: linear-gradient(135deg, var(--accent-6), var(--accent-4));
+        }
+
+        .kpi-card:nth-child(9)::before {
+            background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+        }
+
+        .kpi-card:nth-child(10)::before {
+            background: linear-gradient(135deg, #f59e0b, #ec4899);
+        }
+
+        .kpi-card:nth-child(11)::before {
+            background: linear-gradient(135deg, #10b981, #8b5cf6);
+        }
+
+        .kpi-card:nth-child(12)::before {
+            background: linear-gradient(135deg, #06b6d4, #f43f5e);
+        }
+
+        .kpi-card:hover {
+            border-color: rgba(6, 182, 212, 0.2);
+        }
+
+        .kpi-icon {
+            font-size: 1.4rem;
+            margin-bottom: 2px;
+        }
+
+        .kpi-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+        }
+
+        .kpi-value.trend-up {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .kpi-value.trend-down {
+            background: linear-gradient(135deg, #f43f5e, #fb7185);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .kpi-value.trend-flat {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .kpi-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-top: 2px;
+        }
+
+        .kpi-trend {
+            font-size: 0.6rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        .kpi-trend.up {
+            color: var(--accent-5);
+            background: rgba(16, 185, 129, 0.12);
+        }
+
+        .kpi-trend.down {
+            color: var(--accent-6);
+            background: rgba(244, 63, 94, 0.12);
+        }
+
+        .kpi-trend.flat {
+            color: var(--accent-4);
+            background: rgba(245, 158, 11, 0.12);
+        }
+
+        .kpi-sparkline-wrap {
+            width: 100%;
+            height: 38px;
+            margin: 6px 0 2px 0;
+            position: relative;
+        }
+
+        .kpi-sparkline-wrap canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+        }
+
+        .kpi-breakdown {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 8px;
+            padding: 4px 2px;
+            background: rgba(0, 0, 0, 0.2);
+            border-top: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+
+        .kpi-breakdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+
+        .kpi-breakdown-year {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .kpi-breakdown-val {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .kpi-breakdown-item.current .kpi-breakdown-val {
+            color: var(--accent-1);
+            font-weight: 700;
+        }
+
+        .kpi-breakdown-item.total .kpi-breakdown-val {
+            color: #f59e0b;
+            font-weight: 700;
+        }
+
+        .kpi-category-breakdown {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px 6px;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.6rem;
+        }
+
+        .cat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 1px 0;
+        }
+
+        .cat-label {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .cat-value {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* ===== Charts Grid ===== */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-lg);
+            margin-bottom: var(--space-xl);
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+            transition: border-color 0.3s;
+        }
+
+        .chart-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .chart-card:hover {
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+
+        .chart-header {
+            margin-bottom: var(--space-md);
+        }
+
+        .chart-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .chart-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .chart-canvas-wrap {
+            position: relative;
+            height: 260px;
+            width: 100%;
+        }
+
+        .chart-canvas-wrap canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* ===== Insights Grid ===== */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-lg);
+            margin-bottom: var(--space-xl);
+        }
+
+        @media (max-width: 768px) {
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .insight-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+        }
+
+        .insight-card.gap {
+            border-left: 4px solid var(--accent-6);
+        }
+
+        .insight-card.improvement {
+            border-left: 4px solid var(--accent-5);
+        }
+
+        .insight-card h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: var(--space-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .insight-card ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .insight-card ul li {
+            padding: var(--space-xs) 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+            gap: var(--space-sm);
+        }
+
+        .insight-card ul li:last-child {
+            border-bottom: none;
+        }
+
+        .insight-card ul li .icon {
+            font-size: 1rem;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .insight-card ul li .highlight {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* ===== Summary ===== */
+        .summary-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--space-lg);
+            margin-top: var(--space-xl);
+        }
+
+        .summary-section h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: var(--space-md);
+            color: var(--accent-1);
+        }
+
+        .summary-section p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .top-bar-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-category-breakdown {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <button class="mobile-toggle" id="mobile-toggle" aria-label="Toggle sidebar">☰</button>
+
+    <div class="app-layout">
+
+        <!-- ====== Sidebar ====== -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <img src="malc logo.png" alt="MALC Logo" class="brand-logo" />
+                <div>
+                    <h1>MALC-KARACHI</h1>
+                    <div class="brand-sub">2023 • 2024 • 2025 • 2026</div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-section-title">Navigation</div>
+                <nav class="sidebar-nav">
+                    <a class="nav-link active" href="#overview" data-section="overview">📊 &nbsp;Overview</a>
+                    <a class="nav-link" href="#charts" data-section="charts">📈 &nbsp;Trend Charts</a>
+                    <a class="nav-link" href="#insights" data-section="insights">🔍 &nbsp;Gaps &amp; Improvements</a>
+                    <a class="nav-link" href="#summary" data-section="summary">📋 &nbsp;Executive Summary</a>
+                </nav>
+            </div>
+
+            <div class="sidebar-section" style="margin-top:24px;">
+                <div class="sidebar-section-title">Yearly Dashboards</div>
+                <nav class="sidebar-nav">
+                    <a class="sidebar-project-link" href="Web_Dashboard_2023 - corrected/tb_dashboard.html"
+                        target="_blank">📁&nbsp;2023 Dashboard</a>
+                    <a class="sidebar-project-link" href="Web_Dashboard_2024 - corrected/tb_dashboard.html"
+                        target="_blank">📁&nbsp;2024 Dashboard</a>
+                    <a class="sidebar-project-link" href="Web_Dashboard_2025 - corrected/tb_dashboard.html"
+                        target="_blank">📁&nbsp;2025 Dashboard</a>
+                    <a class="sidebar-project-link" href="Web_Dashboard_2026 - corrected/tb_dashboard.html"
+                        target="_blank">📁&nbsp;2026 Dashboard</a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- ====== Main Content ====== -->
+        <main class="main-content" id="main-content">
+
+            <!-- Top Bar -->
+            <div class="top-bar" id="overview">
+                <div class="top-bar-left">
+                    <h2>🦠 TB-07 Trend Analysis Dashboard</h2>
+                    <p id="trend-subtitle">Consolidated data from All Projects Total sheets (2023–2026)</p>
+                </div>
+                <div class="top-bar-actions">
+                    <div class="custom-multiselect" id="year-multiselect">
+                        <button type="button" class="multiselect-btn" id="year-dropdown-btn" aria-haspopup="true"
+                            aria-expanded="false">
+                            <span class="btn-icon">📅</span>
+                            <span class="btn-text" id="year-dropdown-text">All Years (2023–2026)</span>
+                            <span class="btn-arrow">▼</span>
+                        </button>
+                        <div class="multiselect-dropdown" id="year-dropdown-menu">
+                            <div class="multiselect-header">
+                                <span>Filter By Year</span>
+                                <button type="button" class="btn-reset" id="btn-reset-years"
+                                    title="Reset to All Years">Reset All</button>
+                            </div>
+                            <label class="multiselect-item select-all">
+                                <input type="checkbox" id="chk-all" checked />
+                                <span class="item-label">All Years (2023–2026)</span>
+                            </label>
+                            <div class="multiselect-divider"></div>
+                            <label class="multiselect-item">
+                                <input type="checkbox" class="year-chk" value="2026" checked />
+                                <span class="item-label">2026 (Jan–Jun Semi-Annual)</span>
+                            </label>
+                            <label class="multiselect-item">
+                                <input type="checkbox" class="year-chk" value="2025" checked />
+                                <span class="item-label">2025</span>
+                            </label>
+                            <label class="multiselect-item">
+                                <input type="checkbox" class="year-chk" value="2024" checked />
+                                <span class="item-label">2024</span>
+                            </label>
+                            <label class="multiselect-item">
+                                <input type="checkbox" class="year-chk" value="2023" checked />
+                                <span class="item-label">2023</span>
+                            </label>
+                        </div>
+                    </div>
+                    <span class="status-badge success" id="badge-status">Data Loaded</span>
+                    <span class="status-badge warning" id="badge-span">4 Years</span>
+                    <span class="status-badge info" id="badge-year">2023–2026 (Jan–Jun Semi-Annual)</span>
+                </div>
+            </div>
+
+            <!-- ====== KPI Grid ====== -->
+            <div class="kpi-grid" id="kpi-grid">
+                <!-- 1: OPD Attendance -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">🏥</div>
+                    <div class="kpi-value" id="kpi-opd-2026">—</div>
+                    <div class="kpi-label" id="label-opd">OPD Attendance (2026 Jan–Jun)</div>
+                    <span class="kpi-trend up" id="kpi-opd-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-opd"></canvas></div>
+                    <div class="kpi-breakdown" id="breakdown-opd">
+                        <div class="kpi-breakdown-item" data-year="2023"><span
+                                class="kpi-breakdown-year">'23</span><span class="kpi-breakdown-val"
+                                id="kpi-opd-2023">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2024"><span
+                                class="kpi-breakdown-year">'24</span><span class="kpi-breakdown-val"
+                                id="kpi-opd-2024">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2025"><span
+                                class="kpi-breakdown-year">'25</span><span class="kpi-breakdown-val"
+                                id="kpi-opd-2025">—</span></div>
+                        <div class="kpi-breakdown-item current" data-year="2026"><span
+                                class="kpi-breakdown-year">'26</span><span class="kpi-breakdown-val"
+                                id="kpi-opd-2026-sub">—</span></div>
+                        <div class="kpi-breakdown-item total" data-year="total"><span
+                                class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val"
+                                id="kpi-opd-grand">—</span></div>
+                    </div>
+                </div>
+
+                <!-- 2: Presumptive Cases -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">🔬</div>
+                    <div class="kpi-value" id="kpi-presumptive-2026">—</div>
+                    <div class="kpi-label" id="label-presumptive">Presumptive Cases (2026 Jan–Jun)</div>
+                    <span class="kpi-trend up" id="kpi-presumptive-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-presumptive"></canvas></div>
+                    <div class="kpi-breakdown" id="breakdown-presumptive">
+                        <div class="kpi-breakdown-item" data-year="2023"><span
+                                class="kpi-breakdown-year">'23</span><span class="kpi-breakdown-val"
+                                id="kpi-presumptive-2023">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2024"><span
+                                class="kpi-breakdown-year">'24</span><span class="kpi-breakdown-val"
+                                id="kpi-presumptive-2024">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2025"><span
+                                class="kpi-breakdown-year">'25</span><span class="kpi-breakdown-val"
+                                id="kpi-presumptive-2025">—</span></div>
+                        <div class="kpi-breakdown-item current" data-year="2026"><span
+                                class="kpi-breakdown-year">'26</span><span class="kpi-breakdown-val"
+                                id="kpi-presumptive-2026-sub">—</span></div>
+                        <div class="kpi-breakdown-item total" data-year="total"><span
+                                class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val"
+                                id="kpi-presumptive-grand">—</span></div>
+                    </div>
+                </div>
+
+                <!-- 3: Rifampicin Resistant -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">🧬</div>
+                    <div class="kpi-value" id="kpi-rr-2026">—</div>
+                    <div class="kpi-label" id="label-rr">Rifampicin Resistant (2026 Jan–Jun)</div>
+                    <span class="kpi-trend flat" id="kpi-rr-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-rr"></canvas></div>
+                    <div class="kpi-breakdown" id="breakdown-rr">
+                        <div class="kpi-breakdown-item" data-year="2023"><span
+                                class="kpi-breakdown-year">'23</span><span class="kpi-breakdown-val"
+                                id="kpi-rr-2023">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2024"><span
+                                class="kpi-breakdown-year">'24</span><span class="kpi-breakdown-val"
+                                id="kpi-rr-2024">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2025"><span
+                                class="kpi-breakdown-year">'25</span><span class="kpi-breakdown-val"
+                                id="kpi-rr-2025">—</span></div>
+                        <div class="kpi-breakdown-item current" data-year="2026"><span
+                                class="kpi-breakdown-year">'26</span><span class="kpi-breakdown-val"
+                                id="kpi-rr-2026-sub">—</span></div>
+                        <div class="kpi-breakdown-item total" data-year="total"><span
+                                class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val"
+                                id="kpi-rr-grand">—</span></div>
+                    </div>
+                </div>
+
+                <!-- 4: HIV Positive TB Patients -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">🩸</div>
+                    <div class="kpi-value" id="kpi-hivpos-2026">—</div>
+                    <div class="kpi-label" id="label-hivpos">HIV+ TB Patients (2026 Jan–Jun)</div>
+                    <span class="kpi-trend up" id="kpi-hivpos-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-hivpos"></canvas></div>
+                    <div class="kpi-breakdown" id="breakdown-hivpos">
+                        <div class="kpi-breakdown-item" data-year="2023"><span
+                                class="kpi-breakdown-year">'23</span><span class="kpi-breakdown-val"
+                                id="kpi-hivpos-2023">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2024"><span
+                                class="kpi-breakdown-year">'24</span><span class="kpi-breakdown-val"
+                                id="kpi-hivpos-2024">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2025"><span
+                                class="kpi-breakdown-year">'25</span><span class="kpi-breakdown-val"
+                                id="kpi-hivpos-2025">—</span></div>
+                        <div class="kpi-breakdown-item current" data-year="2026"><span
+                                class="kpi-breakdown-year">'26</span><span class="kpi-breakdown-val"
+                                id="kpi-hivpos-2026-sub">—</span></div>
+                        <div class="kpi-breakdown-item total" data-year="total"><span
+                                class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val"
+                                id="kpi-hivpos-grand">—</span></div>
+                    </div>
+                </div>
+
+                <!-- 5: Total Cases -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-value" id="kpi-total-2026">—</div>
+                    <div class="kpi-label" id="label-total">Total Cases (2026 Jan–Jun)</div>
+                    <span class="kpi-trend up" id="kpi-total-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-total"></canvas></div>
+                    <div class="kpi-breakdown" id="breakdown-total">
+                        <div class="kpi-breakdown-item" data-year="2023"><span
+                                class="kpi-breakdown-year">'23</span><span class="kpi-breakdown-val"
+                                id="kpi-total-2023">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2024"><span
+                                class="kpi-breakdown-year">'24</span><span class="kpi-breakdown-val"
+                                id="kpi-total-2024">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2025"><span
+                                class="kpi-breakdown-year">'25</span><span class="kpi-breakdown-val"
+                                id="kpi-total-2025">—</span></div>
+                        <div class="kpi-breakdown-item current" data-year="2026"><span
+                                class="kpi-breakdown-year">'26</span><span class="kpi-breakdown-val"
+                                id="kpi-total-2026-sub">—</span></div>
+                        <div class="kpi-breakdown-item total" data-year="total"><span
+                                class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val"
+                                id="kpi-total-grand">—</span></div>
+                    </div>
+                </div>
+
+                <!-- 6: B+ Confirmed -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">🧪</div>
+                    <div class="kpi-value" id="kpi-bplus-2026">—</div>
+                    <div class="kpi-label" id="label-bplus">B+ Confirmed (2026 Jan–Jun)</div>
+                    <span class="kpi-trend up" id="kpi-bplus-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-bplus"></canvas></div>
+                    <div class="kpi-breakdown" id="breakdown-bplus">
+                        <div class="kpi-breakdown-item" data-year="2023"><span
+                                class="kpi-breakdown-year">'23</span><span class="kpi-breakdown-val"
+                                id="kpi-bplus-2023">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2024"><span
+                                class="kpi-breakdown-year">'24</span><span class="kpi-breakdown-val"
+                                id="kpi-bplus-2024">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2025"><span
+                                class="kpi-breakdown-year">'25</span><span class="kpi-breakdown-val"
+                                id="kpi-bplus-2025">—</span></div>
+                        <div class="kpi-breakdown-item current" data-year="2026"><span
+                                class="kpi-breakdown-year">'26</span><span class="kpi-breakdown-val"
+                                id="kpi-bplus-2026-sub">—</span></div>
+                        <div class="kpi-breakdown-item total" data-year="total"><span
+                                class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val"
+                                id="kpi-bplus-grand">—</span></div>
+                    </div>
+                </div>
+
+                <!-- 7: Total HH of B+PTB -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">🏠</div>
+                    <div class="kpi-value" id="kpi-hh-2026">—</div>
+                    <div class="kpi-label" id="label-hh">Total HH of B+PTB (2026 Jan–Jun)</div>
+                    <span class="kpi-trend up" id="kpi-hh-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-hh"></canvas></div>
+                    <div class="kpi-breakdown" id="breakdown-hh">
+                        <div class="kpi-breakdown-item" data-year="2023"><span
+                                class="kpi-breakdown-year">'23</span><span class="kpi-breakdown-val"
+                                id="kpi-hh-2023">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2024"><span
+                                class="kpi-breakdown-year">'24</span><span class="kpi-breakdown-val"
+                                id="kpi-hh-2024">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2025"><span
+                                class="kpi-breakdown-year">'25</span><span class="kpi-breakdown-val"
+                                id="kpi-hh-2025">—</span></div>
+                        <div class="kpi-breakdown-item current" data-year="2026"><span
+                                class="kpi-breakdown-year">'26</span><span class="kpi-breakdown-val"
+                                id="kpi-hh-2026-sub">—</span></div>
+                        <div class="kpi-breakdown-item total" data-year="total"><span
+                                class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val"
+                                id="kpi-hh-grand">—</span></div>
+                    </div>
+                </div>
+
+                <!-- 8: Contacts Screened -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">👨‍👩‍👧‍👦</div>
+                    <div class="kpi-value" id="kpi-contact-2026">—</div>
+                    <div class="kpi-label" id="label-contact">Contacts Screened (2026 Jan–Jun)</div>
+                    <span class="kpi-trend up" id="kpi-contact-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-contact"></canvas></div>
+                    <div class="kpi-breakdown" id="breakdown-contact">
+                        <div class="kpi-breakdown-item" data-year="2023"><span
+                                class="kpi-breakdown-year">'23</span><span class="kpi-breakdown-val"
+                                id="kpi-contact-2023">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2024"><span
+                                class="kpi-breakdown-year">'24</span><span class="kpi-breakdown-val"
+                                id="kpi-contact-2024">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2025"><span
+                                class="kpi-breakdown-year">'25</span><span class="kpi-breakdown-val"
+                                id="kpi-contact-2025">—</span></div>
+                        <div class="kpi-breakdown-item current" data-year="2026"><span
+                                class="kpi-breakdown-year">'26</span><span class="kpi-breakdown-val"
+                                id="kpi-contact-2026-sub">—</span></div>
+                        <div class="kpi-breakdown-item total" data-year="total"><span
+                                class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val"
+                                id="kpi-contact-grand">—</span></div>
+                    </div>
+                </div>
+
+                <!-- 9: HH Contacts Diagnosed -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">🩺</div>
+                    <div class="kpi-value" id="kpi-cdiag-2026">—</div>
+                    <div class="kpi-label" id="label-cdiag">HH Contacts Diagnosed (2026 Jan–Jun)</div>
+                    <span class="kpi-trend down" id="kpi-cdiag-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-cdiag"></canvas></div>
+                    <div class="kpi-breakdown" id="breakdown-cdiag">
+                        <div class="kpi-breakdown-item" data-year="2023"><span
+                                class="kpi-breakdown-year">'23</span><span class="kpi-breakdown-val"
+                                id="kpi-cdiag-2023">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2024"><span
+                                class="kpi-breakdown-year">'24</span><span class="kpi-breakdown-val"
+                                id="kpi-cdiag-2024">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2025"><span
+                                class="kpi-breakdown-year">'25</span><span class="kpi-breakdown-val"
+                                id="kpi-cdiag-2025">—</span></div>
+                        <div class="kpi-breakdown-item current" data-year="2026"><span
+                                class="kpi-breakdown-year">'26</span><span class="kpi-breakdown-val"
+                                id="kpi-cdiag-2026-sub">—</span></div>
+                        <div class="kpi-breakdown-item total" data-year="total"><span
+                                class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val"
+                                id="kpi-cdiag-grand">—</span></div>
+                    </div>
+                </div>
+
+                <!-- 10: Childhood TB -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">👶</div>
+                    <div class="kpi-value" id="kpi-child-2026">—</div>
+                    <div class="kpi-label" id="label-child">Childhood TB (&lt;15 yrs) (2026 Jan–Jun)</div>
+                    <span class="kpi-trend up" id="kpi-child-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-child"></canvas></div>
+                    <div class="kpi-breakdown" id="breakdown-child">
+                        <div class="kpi-breakdown-item" data-year="2023"><span
+                                class="kpi-breakdown-year">'23</span><span class="kpi-breakdown-val"
+                                id="kpi-child-2023">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2024"><span
+                                class="kpi-breakdown-year">'24</span><span class="kpi-breakdown-val"
+                                id="kpi-child-2024">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2025"><span
+                                class="kpi-breakdown-year">'25</span><span class="kpi-breakdown-val"
+                                id="kpi-child-2025">—</span></div>
+                        <div class="kpi-breakdown-item current" data-year="2026"><span
+                                class="kpi-breakdown-year">'26</span><span class="kpi-breakdown-val"
+                                id="kpi-child-2026-sub">—</span></div>
+                        <div class="kpi-breakdown-item total" data-year="total"><span
+                                class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val"
+                                id="kpi-child-grand">—</span></div>
+                    </div>
+                </div>
+
+                <!-- 11: TPT Initiated -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">🛡️</div>
+                    <div class="kpi-value" id="kpi-tpt-2026">—</div>
+                    <div class="kpi-label" id="label-tpt">TPT Initiated (2026 Jan–Jun)</div>
+                    <span class="kpi-trend up" id="kpi-tpt-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-tpt"></canvas></div>
+                    <div class="kpi-breakdown" id="breakdown-tpt">
+                        <div class="kpi-breakdown-item" data-year="2023"><span
+                                class="kpi-breakdown-year">'23</span><span class="kpi-breakdown-val"
+                                id="kpi-tpt-2023">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2024"><span
+                                class="kpi-breakdown-year">'24</span><span class="kpi-breakdown-val"
+                                id="kpi-tpt-2024">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2025"><span
+                                class="kpi-breakdown-year">'25</span><span class="kpi-breakdown-val"
+                                id="kpi-tpt-2025">—</span></div>
+                        <div class="kpi-breakdown-item current" data-year="2026"><span
+                                class="kpi-breakdown-year">'26</span><span class="kpi-breakdown-val"
+                                id="kpi-tpt-2026-sub">—</span></div>
+                        <div class="kpi-breakdown-item total" data-year="total"><span
+                                class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val"
+                                id="kpi-tpt-grand">—</span></div>
+                    </div>
+                </div>
+
+                <!-- 12: HIV Screened -->
+                <div class="kpi-card">
+                    <div class="kpi-icon">🎗️</div>
+                    <div class="kpi-value" id="kpi-hiv-2026">—</div>
+                    <div class="kpi-label" id="label-hiv">HIV Screened (2026 Jan–Jun)</div>
+                    <span class="kpi-trend up" id="kpi-hiv-trend">—</span>
+                    <div class="kpi-sparkline-wrap"><canvas id="sparkline-hiv"></canvas></div>
+                    <div class="kpi-breakdown" id="breakdown-hiv">
+                        <div class="kpi-breakdown-item" data-year="2023"><span
+                                class="kpi-breakdown-year">'23</span><span class="kpi-breakdown-val"
+                                id="kpi-hiv-2023">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2024"><span
+                                class="kpi-breakdown-year">'24</span><span class="kpi-breakdown-val"
+                                id="kpi-hiv-2024">—</span></div>
+                        <div class="kpi-breakdown-item" data-year="2025"><span
+                                class="kpi-breakdown-year">'25</span><span class="kpi-breakdown-val"
+                                id="kpi-hiv-2025">—</span></div>
+                        <div class="kpi-breakdown-item current" data-year="2026"><span
+                                class="kpi-breakdown-year">'26</span><span class="kpi-breakdown-val"
+                                id="kpi-hiv-2026-sub">—</span></div>
+                        <div class="kpi-breakdown-item total" data-year="total"><span
+                                class="kpi-breakdown-year">Total</span><span class="kpi-breakdown-val"
+                                id="kpi-hiv-grand">—</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ====== Charts Section ====== -->
+            <div class="charts-grid" id="charts">
+
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <div class="chart-title">📊 Yearly TB Case Notification Trend</div>
+                        <div class="chart-subtitle">Total cases registered across all projects (2023–2026)</div>
+                    </div>
+                    <div class="chart-canvas-wrap" style="height:280px;">
+                        <canvas id="chart-cases"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">🔬 Diagnostic Cascade Performance</div>
+                        <div class="chart-subtitle">Presumptive vs B+ Confirmed cases</div>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="chart-diagnostic"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">🧬 Drug Resistance Trend (DST)</div>
+                        <div class="chart-subtitle">Rifampicin, Isoniazid &amp; Fluoroquinolone resistance</div>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="chart-dst"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">🎗️ HIV Screening among TB Patients</div>
+                        <div class="chart-subtitle">TB patients tested for HIV (2023–2026)</div>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="chart-hiv"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">👨‍👩‍👧‍👦 Household Contact Tracing</div>
+                        <div class="chart-subtitle">Contacts screened and diagnosed with TB</div>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="chart-contact"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">🛡️ TPT Initiation Trend</div>
+                        <div class="chart-subtitle">Household contacts put on preventive therapy</div>
+                    </div>
+                    <div class="chart-canvas-wrap">
+                        <canvas id="chart-tpt"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ====== Gaps & Improvements ====== -->
+            <div class="insights-grid" id="insights">
+
+                <div class="insight-card gap">
+                    <h3>🚨 Major Gaps Identified</h3>
+                    <ul>
+                        <li>
+                            <span class="icon">⚠️</span>
+                            <div><span class="highlight">HIV/TB Treatment Linkage</span><br />In 2026 (Jan–Jun), 3
+                                TB patients tested positive for HIV with 2 initiated on ART (66.7% linkage). While
+                                improved from 2025 (6.1%), 100% immediate linkage must be maintained.</div>
+                        </li>
+                        <li>
+                            <span class="icon">🧬</span>
+                            <div><span class="highlight">Universal DST Coverage</span><br />In 2026 H1, 1,790
+                                patients underwent DST out of 6,466 registered cases (27.7% coverage), indicating a
+                                continued need to scale rapid molecular drug susceptibility testing.</div>
+                        </li>
+                        <li>
+                            <span class="icon">📉</span>
+                            <div><span class="highlight">Contact Tracing &amp; Yield Optimization</span><br />In 2026
+                                H1, 7,977
+                                contacts were screened yielding 353 diagnosed cases (4.4% yield), mirroring 2025 yield
+                                (4.4%) but down from 20.1% in 2023.</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="insight-card improvement">
+                    <h3>✅ Improvements Observed</h3>
+                    <ul>
+                        <li>
+                            <span class="icon">📈</span>
+                            <div><span class="highlight">Strong Notification Pace in 2026</span><br />Total case
+                                notifications reached 6,466 in H1 2026 (on pace for ~12.9k annual), bringing cumulative
+                                program registrations across 2023–2026 to <strong>47,460 TB cases</strong>.</div>
+                        </li>
+                        <li>
+                            <span class="icon">🚀</span>
+                            <div><span class="highlight">Sustained High TPT Initiation</span><br />Preventive therapy
+                                initiation reached 605 contacts in H1 2026 (primarily 3HP: 458 and 6H: 97), continuing
+                                the major TPT programmatic scale-up.</div>
+                        </li>
+                        <li>
+                            <span class="icon">🎗️</span>
+                            <div><span class="highlight">High-Volume HIV Screening Maintained</span><br />In just 6
+                                months of
+                                2026, 2,186 TB patients were tested for HIV, matching the entire 12-month total of 2025!
+                            </div>
+                        </li>
+                        <li>
+                            <span class="icon">🔬</span>
+                            <div><span class="highlight">Massive Diagnostic Reach</span><br />OPD consultations reached
+                                1.32 million and presumptive TB identification reached 28,282 in H1 2026 alone, with
+                                cumulative OPD surpassing 6.47 million.</div>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- ====== Executive Summary ====== -->
+            <div class="summary-section" id="summary">
+                <h3>📋 Executive Summary</h3>
+                <p>
+                    The TB-07 trend analysis demonstrates <strong>robust programmatic expansion across
+                        2023–2026</strong>
+                    across all core performance indicators. Cumulative case notifications across the 4-year period
+                    reached
+                    <strong>47,460 registered TB patients</strong> (12,841 in 2023, 13,340 in 2024, 14,813 in 2025, and
+                    6,466 in Jan–Jun 2026).
+                    Total outpatient consultations over the period exceeded <strong>6.47 million</strong>, with over
+                    <strong>206,000 presumptive TB suspects identified</strong>.
+                </p>
+                <br />
+                <p>
+                    Key programmatic achievements include an extraordinary expansion in <strong>TB Preventive Therapy
+                        (TPT)</strong>
+                    (from 79 in 2023 to 2,131 in 2025 and 605 in H1 2026), coupled with a <strong>dramatic surge in HIV
+                        testing</strong> among TB patients
+                    (over 5,600 patients screened). Key operational priorities for the second half of 2026 include:
+                    <strong>(1)</strong> Achieving 100% ART initiation for all HIV-positive TB patients,
+                    <strong>(2)</strong> Expanding universal rapid DST coverage beyond 30%, and
+                    <strong>(3)</strong> Expanding high-yield household contact investigation and symptom screening.
+                </p>
+                <br />
+                <p style="color: var(--text-muted); font-size: 0.8rem;">
+                    <strong>Data Source:</strong> All Projects Total sheets (2023, 2024, 2025, 2026) from TB-07
+                    quarterly reports.<br />
+                    <strong>Note:</strong> 2023, 2024, and 2025 represent complete 4-quarter totals; 2026 reflects
+                    semi-annual data (Quarters 1 &amp; 2, Jan–Jun 2026).
+                </p>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js">
+    </script>
+    <!-- Dashboard JavaScript -->
+    <script src="trend_dashboard.js">
+    </script>
+
+</body>
+
+</html>
