@@ -911,7 +911,7 @@
       <div id="empty-state" class="empty-state">
         <div class="empty-icon">🦠</div>
         <h3>TB-07 Cases Registration Dashboard</h3>
-        <p>Upload the <strong>TB-07 All Projects-2024.xlsx</strong> Excel file from the sidebar to analyze quarterly
+        <p>Upload the <strong>TB-07 All Projects-2025.xlsx</strong> Excel file from the sidebar to analyze quarterly
           registration, demographics, diagnostics, drug sensitivity, and contact tracing metrics.</p>
         <br />
         <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">
@@ -926,7 +926,7 @@
         <div class="top-bar" id="overview">
           <div class="top-bar-left">
             <h2 id="facility-title">TB Care Facility (BMU)</h2>
-            <p id="data-summary">District: — | Year: 2024</p>
+            <p id="data-summary">District: — | Year: 2025</p>
           </div>
           <div class="top-bar-actions">
             <div class="quarter-selector-group">
@@ -1391,6 +1391,7 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js">
   </script>
+  <script src="data.js"></script>
   <script>
     /* ============================================
        TB-07 Case Registration Dashboard Logic
@@ -2038,7 +2039,7 @@
             const data = new Uint8Array(e.target.result);
             const wb = XLSX.read(data, { type: 'array' });
             if (parseWorkbook(wb)) {
-              state.activeSheet = 'MPR';
+              state.activeSheet = (state.allProjectBlocks && Object.keys(state.allProjectBlocks).length > 0) ? 'ALL_PROJECT' : 'MPR';
               dom.emptyState.style.display = 'none';
               dom.dashboard.style.display = 'block';
               buildLoadedSheetsTab();
@@ -2062,27 +2063,24 @@
         dom.sheetTabs.innerHTML = '';
         dom.sheetSection.style.display = 'block';
         const sheets = [
+          { id: 'allproj', key: 'ALL_PROJECT', label: 'All Project Total', icon: '🌐', data: state.allProjectBlocks },
           { id: 'mpr', key: 'MPR', label: 'MPR Report', icon: '🦠', data: state.blocks },
           { id: 'karachi', key: 'KARACHI', label: 'Karachi Report', icon: '🏙️', data: state.karachiBlocks },
           { id: 'sindh', key: 'SINDH', label: 'Sindh Report', icon: '🏜️', data: state.sindhBlocks },
           { id: 'gb', key: 'GILGIT -BALTISTAN', label: 'Gilgit-Baltistan', icon: '🏔️', data: state.gbBlocks },
           { id: 'ak', key: 'AZAD - KASHMIR', label: 'Azad Kashmir', icon: '🌲', data: state.akBlocks },
           { id: 'kpk', key: 'KPK', label: 'KPK Report', icon: '⛰️', data: state.kpkBlocks },
-          {
-            id: 'allproj', key: 'ALL_PROJECT', label: 'All Project Total', icon: '🌐', data: state
-              .allProjectBlocks
-          },
         ];
-        sheets.forEach((sheet, index) => {
+        sheets.forEach((sheet) => {
           const btn = document.createElement('button');
           btn.id = `sheet-btn-${sheet.id}`;
-          btn.className = `sheet-tab${index === 0 ? ' active' : ''}`;
+          btn.className = `sheet-tab${sheet.key === state.activeSheet ? ' active' : ''}`;
           const available = Object.keys(sheet.data).length > 0;
           btn.innerHTML = `
-                        <span class="tab-icon">${sheet.icon}</span>
-                        <span>${sheet.label}</span>
-                        <span class="tab-count">${available ? '5 Blocks' : 'N/A'}</span>
-                      `;
+            <span class="tab-icon">${sheet.icon}</span>
+            <span>${sheet.label}</span>
+            <span class="tab-count">${available ? '5 Blocks' : 'N/A'}</span>
+          `;
           if (!available) {
             btn.disabled = true;
             btn.title = `${sheet.key} sheet not found`;
@@ -3520,6 +3518,7 @@
             const data = new Uint8Array(await blob.arrayBuffer());
             const wb = XLSX.read(data, { type: 'array' });
             if (parseWorkbook(wb)) {
+              state.activeSheet = (state.allProjectBlocks && Object.keys(state.allProjectBlocks).length > 0) ? 'ALL_PROJECT' : 'MPR';
               dom.emptyState.style.display = 'none';
               dom.dashboard.style.display = 'block';
               buildLoadedSheetsTab();
@@ -3532,6 +3531,29 @@
           }
         }
         console.log('Autoload not found, awaiting manual file drop.');
+      }
+
+      function loadEmbeddedData() {
+        const d = window.TB_EMBEDDED_DATA;
+        if (!d) return false;
+        state.blocks = d.blocks || {};
+        state.karachiBlocks = d.karachiBlocks || {};
+        state.sindhBlocks = d.sindhBlocks || {};
+        state.gbBlocks = d.gbBlocks || {};
+        state.akBlocks = d.akBlocks || {};
+        state.kpkBlocks = d.kpkBlocks || {};
+        state.allProjectBlocks = d.allProjectBlocks || {};
+
+        state.activeSheet = (state.allProjectBlocks && Object.keys(state.allProjectBlocks).length > 0) ? 'ALL_PROJECT' : 'MPR';
+        state.activeQuarter = 'consolidated';
+
+        dom.emptyState.style.display = 'none';
+        dom.dashboard.style.display = 'block';
+
+        buildLoadedSheetsTab();
+        updateDashboardView();
+        toast('TB-07 All Projects 2025 dashboard loaded successfully!', 'success');
+        return true;
       }
 
       function exportJSON() {
@@ -3609,7 +3631,11 @@
 
       function init() {
         bindEvents();
-        tryAutoLoad();
+        if (window.TB_EMBEDDED_DATA) {
+          loadEmbeddedData();
+        } else {
+          tryAutoLoad();
+        }
       }
 
       document.addEventListener('DOMContentLoaded', init);

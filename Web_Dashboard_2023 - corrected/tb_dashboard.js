@@ -459,7 +459,7 @@
         const data = new Uint8Array(e.target.result);
         const wb = XLSX.read(data, { type: 'array' });
         if (parseWorkbook(wb)) {
-          state.activeSheet = 'MPR';
+          state.activeSheet = (state.allProjectBlocks && Object.keys(state.allProjectBlocks).length > 0) ? 'ALL_PROJECT' : 'MPR';
           dom.emptyState.style.display = 'none';
           dom.dashboard.style.display = 'block';
           buildLoadedSheetsTab();
@@ -483,18 +483,18 @@
     dom.sheetTabs.innerHTML = '';
     dom.sheetSection.style.display = 'block';
     const sheets = [
+      { id: 'allproj', key: 'ALL_PROJECT', label: 'All Project Total', icon: '🌐', data: state.allProjectBlocks },
       { id: 'mpr', key: 'MPR', label: 'MPR Report', icon: '🦠', data: state.blocks },
       { id: 'karachi', key: 'KARACHI', label: 'Karachi Report', icon: '🏙️', data: state.karachiBlocks },
       { id: 'sindh', key: 'SINDH', label: 'Sindh Report', icon: '🏜️', data: state.sindhBlocks },
       { id: 'gb', key: 'GILGIT -BALTISTAN', label: 'Gilgit-Baltistan', icon: '🏔️', data: state.gbBlocks },
       { id: 'ak', key: 'AZAD - KASHMIR', label: 'Azad Kashmir', icon: '🌲', data: state.akBlocks },
       { id: 'kpk', key: 'KPK', label: 'KPK Report', icon: '⛰️', data: state.kpkBlocks },
-      { id: 'allproj', key: 'ALL_PROJECT', label: 'All Project Total', icon: '🌐', data: state.allProjectBlocks },
     ];
-    sheets.forEach((sheet, index) => {
+    sheets.forEach((sheet) => {
       const btn = document.createElement('button');
       btn.id = `sheet-btn-${sheet.id}`;
-      btn.className = `sheet-tab${index === 0 ? ' active' : ''}`;
+      btn.className = `sheet-tab${sheet.key === state.activeSheet ? ' active' : ''}`;
       const available = Object.keys(sheet.data).length > 0;
       btn.innerHTML = `
         <span class="tab-icon">${sheet.icon}</span>
@@ -764,8 +764,8 @@
     }
 
     // Card 12 – HIV Screening (shows No. of TB patients tested for HIV & HIV patients tested for TB, no %)
-    const hivTested = data.block4.tested_hiv;      // No. of TB patients tested for HIV (646)
-    const hivTestedTb = data.block4.hiv_tested_tb;  // HIV patients tested for TB (5)
+    const hivTested = (data.block4 && data.block4.tested_hiv) || 0;      // No. of TB patients tested for HIV (646)
+    const hivTestedTb = (data.block4 && data.block4.hiv_tested_tb) || 0;  // HIV patients tested for TB (5)
     dom.kpiHivScreening.innerHTML = `
   <div style="font-size:1rem; line-height:1.5;">
     <div>${hivTested.toLocaleString()}</div>
@@ -776,12 +776,12 @@
 `;
 
     if (showBreakdown) {
-      const sTested = s.block4.tested_hiv;
-      const sTestedTb = s.block4.hiv_tested_tb;
-      const nTested = n.block4.tested_hiv;
-      const nTestedTb = n.block4.hiv_tested_tb;
-      const tTested = (isAllProjectSheet() && data.block4.tested_hiv) ? data.block4.tested_hiv : (sTested + nTested);
-      const tTestedTb = (isAllProjectSheet() && data.block4.hiv_tested_tb) ? data.block4.hiv_tested_tb : (sTestedTb + nTestedTb);
+      const sTested = (s.block4 && s.block4.tested_hiv) || 0;
+      const sTestedTb = (s.block4 && s.block4.hiv_tested_tb) || 0;
+      const nTested = (n.block4 && n.block4.tested_hiv) || 0;
+      const nTestedTb = (n.block4 && n.block4.hiv_tested_tb) || 0;
+      const tTested = (isAllProjectSheet() && data.block4 && data.block4.tested_hiv) ? data.block4.tested_hiv : (sTested + nTested);
+      const tTestedTb = (isAllProjectSheet() && data.block4 && data.block4.hiv_tested_tb) ? data.block4.hiv_tested_tb : (sTestedTb + nTestedTb);
 
       dom.kpiHivSouth.innerHTML = `
         <div>${sTested.toLocaleString()}</div>
@@ -925,17 +925,18 @@
         <td style="text-align:right">${b3.tested_gene_xpert.toLocaleString()}</td>
       </tr>
     `;
+    const b4Safe = b4 || {};
     dom.tbodyBlock4.innerHTML = `
-      <tr><td>Registered TB Patients tested for HIV</td><td style="text-align:right;font-weight:600">${b4.tested_hiv.toLocaleString()}</td></tr>
-      <tr><td>TB Patients tested positive for HIV</td><td style="text-align:right;font-weight:600;color:var(--accent-6)">${b4.pos_hiv.toLocaleString()}</td></tr>
-      <tr><td>HIV Positive TB Patients put on ART</td><td style="text-align:right">${b4.art.toLocaleString()}</td></tr>
-      <tr><td>HIV patients screened/tested for TB</td><td style="text-align:right">${b4.hiv_tested_tb.toLocaleString()}</td></tr>
-      <tr><td>HIV patients tested positive for active TB</td><td style="text-align:right">${b4.hiv_pos_tb.toLocaleString()}</td></tr>
-      <tr><td>TB Positive HIV patients put on TB Tx</td><td style="text-align:right">${b4.tb_tx.toLocaleString()}</td></tr>
+      <tr><td>Registered TB Patients tested for HIV</td><td style="text-align:right;font-weight:600">${((b4Safe.tested_hiv) || 0).toLocaleString()}</td></tr>
+      <tr><td>TB Patients tested positive for HIV</td><td style="text-align:right;font-weight:600;color:var(--accent-6)">${((b4Safe.pos_hiv) || 0).toLocaleString()}</td></tr>
+      <tr><td>HIV Positive TB Patients put on ART</td><td style="text-align:right">${((b4Safe.art) || 0).toLocaleString()}</td></tr>
+      <tr><td>HIV patients screened/tested for TB</td><td style="text-align:right">${((b4Safe.hiv_tested_tb) || 0).toLocaleString()}</td></tr>
+      <tr><td>HIV patients tested positive for active TB</td><td style="text-align:right">${((b4Safe.hiv_pos_tb) || 0).toLocaleString()}</td></tr>
+      <tr><td>TB Positive HIV patients put on TB Tx</td><td style="text-align:right">${((b4Safe.tb_tx) || 0).toLocaleString()}</td></tr>
       <tr style="font-weight:700;border-top:1px solid var(--border-color);background:rgba(255,255,255,0.02)"><td colspan="2">HIV Positive TB Negative patients initiated on TPT</td></tr>
-      <tr><td>Regimen 6H (0-4 yrs / 5-14 yrs / 15+ yrs)</td><td style="text-align:right">${b4.tpt_6h_0_4} / ${b4.tpt_6h_5_14} / ${b4.tpt_6h_15}</td></tr>
-      <tr><td>Regimen 3HR (0-4 yrs / 5-14 yrs / 15+ yrs)</td><td style="text-align:right">${b4.tpt_3hr_0_4} / ${b4.tpt_3hr_5_14} / ${b4.tpt_3hr_15}</td></tr>
-      <tr><td>Regimen 3HP (0-4 yrs / 5-14 yrs / 15+ yrs)</td><td style="text-align:right">${b4.tpt_3hp_0_4} / ${b4.tpt_3hp_5_14} / ${b4.tpt_3hp_15}</td></tr>
+      <tr><td>Regimen 6H (0-4 yrs / 5-14 yrs / 15+ yrs)</td><td style="text-align:right">${b4Safe.tpt_6h_0_4 || 0} / ${b4Safe.tpt_6h_5_14 || 0} / ${b4Safe.tpt_6h_15 || 0}</td></tr>
+      <tr><td>Regimen 3HR (0-4 yrs / 5-14 yrs / 15+ yrs)</td><td style="text-align:right">${b4Safe.tpt_3hr_0_4 || 0} / ${b4Safe.tpt_3hr_5_14 || 0} / ${b4Safe.tpt_3hr_15 || 0}</td></tr>
+      <tr><td>Regimen 3HP (0-4 yrs / 5-14 yrs / 15+ yrs)</td><td style="text-align:right">${b4Safe.tpt_3hp_0_4 || 0} / ${b4Safe.tpt_3hp_5_14 || 0} / ${b4Safe.tpt_3hp_15 || 0}</td></tr>
     `;
   }
 
@@ -1536,8 +1537,9 @@
     destroyChart('hiv');
     const ctx = document.getElementById('chart-tb-hiv');
     if (!ctx) return;
+    const b4Safe = b4 || {};
     const labels = ['Screened for HIV', 'Tested Positive', 'Placed on ART'];
-    const counts = [b4.tested_hiv, b4.pos_hiv, b4.art];
+    const counts = [b4Safe.tested_hiv || 0, b4Safe.pos_hiv || 0, b4Safe.art || 0];
     state.charts['hiv'] = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -1605,6 +1607,7 @@
           const data = new Uint8Array(e.target.result);
           const wb = XLSX.read(data, { type: 'array' });
           if (parseWorkbook(wb)) {
+            state.activeSheet = (state.allProjectBlocks && Object.keys(state.allProjectBlocks).length > 0) ? 'ALL_PROJECT' : 'MPR';
             dom.emptyState.style.display = 'none';
             dom.dashboard.style.display = 'block';
             buildLoadedSheetsTab();
@@ -1619,6 +1622,29 @@
     } catch (err) {
       console.log('Autoload not found, awaiting manual file drop.');
     }
+  }
+
+  function loadEmbeddedData() {
+    const d = window.TB_EMBEDDED_DATA;
+    if (!d) return false;
+    state.blocks = d.blocks || {};
+    state.karachiBlocks = d.karachiBlocks || {};
+    state.sindhBlocks = d.sindhBlocks || {};
+    state.gbBlocks = d.gbBlocks || {};
+    state.akBlocks = d.akBlocks || {};
+    state.kpkBlocks = d.kpkBlocks || {};
+    state.allProjectBlocks = d.allProjectBlocks || {};
+
+    state.activeSheet = (state.allProjectBlocks && Object.keys(state.allProjectBlocks).length > 0) ? 'ALL_PROJECT' : 'MPR';
+    state.activeQuarter = 'consolidated';
+
+    dom.emptyState.style.display = 'none';
+    dom.dashboard.style.display = 'block';
+
+    buildLoadedSheetsTab();
+    updateDashboardView();
+    toast('TB-07 All Projects 2023 dashboard loaded successfully!', 'success');
+    return true;
   }
 
   function exportJSON() {
@@ -1692,7 +1718,11 @@
 
   function init() {
     bindEvents();
-    tryAutoLoad();
+    if (window.TB_EMBEDDED_DATA) {
+      loadEmbeddedData();
+    } else {
+      tryAutoLoad();
+    }
   }
 
   document.addEventListener('DOMContentLoaded', init);

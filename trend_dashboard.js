@@ -21,6 +21,8 @@
         presumptive: [54725, 57679, 65788, 28282],
         bPlus: [4910, 4436, 5317, 1928],
         opd: [2045733, 2201101, 2913637, 1316743],
+        afbPositive: [549, 3271, 1208, 196],
+        xpertPositive: [266, 543, 1240, 707],
 
         // Block 4: HIV
         hivScreened: [646, 635, 2186, 2186],
@@ -608,8 +610,8 @@
     function renderSparklines() {
         drawSparkline('sparkline-opd', getFilteredData(DATA.opd), '#06b6d4');
         drawSparkline('sparkline-presumptive', getFilteredData(DATA.presumptive), '#3b82f6');
-        drawSparkline('sparkline-rr', getFilteredData(DATA.rifResistant), '#f43f5e');
-        drawSparkline('sparkline-hivpos', getFilteredData(DATA.hivPositive), '#ec4899');
+        drawSparkline('sparkline-afb', getFilteredData(DATA.afbPositive), '#10b981');
+        drawSparkline('sparkline-xpert', getFilteredData(DATA.xpertPositive), '#8b5cf6');
         drawSparkline('sparkline-total', getFilteredData(DATA.totalCases), '#06b6d4');
         drawSparkline('sparkline-bplus', getFilteredData(DATA.bPlus), '#10b981');
         drawSparkline('sparkline-hh', getFilteredData(DATA.hhTotal), '#8b5cf6');
@@ -759,18 +761,18 @@
         }
 
         // Card 1 to 12
-        setCard('opd', 'OPD Attendance', DATA.opd, false, true);
-        setCard('presumptive', 'Presumptive Cases', DATA.presumptive, false, false);
-        setCard('rr', 'Rifampicin Resistant', DATA.rifResistant, true, false);
-        setCard('hivpos', 'HIV+ TB Patients', DATA.hivPositive, false, false);
-        setCard('total', 'Total Cases', DATA.totalCases, false, false);
-        setCard('bplus', 'B+ Confirmed', DATA.bPlus, false, false);
-        setCard('hh', 'Total HH of B+PTB', DATA.hhTotal, false, false);
-        setCard('contact', 'Contacts Screened', DATA.contactsScreened, false, false);
-        setCard('cdiag', 'HH Contacts Diagnosed', DATA.contactsDiagnosed, false, false);
-        setCard('child', 'Childhood TB (&lt;15 yrs)', DATA.childTb, false, false);
-        setCard('tpt', 'TPT Initiated', DATA.tptInitiated, false, false);
-        setCard('hiv', 'HIV Screened', DATA.hivScreened, false, false);
+        setCard('opd', 'Total New OPD Consultations', DATA.opd, false, true);
+        setCard('presumptive', 'Presumptive TB Cases Identified', DATA.presumptive, false, false);
+        setCard('afb', 'AFB Positive Cases', DATA.afbPositive, false, false);
+        setCard('xpert', 'GeneXpert Positive Cases', DATA.xpertPositive, false, false);
+        setCard('total', 'All TB Cases Registered', DATA.totalCases, false, false);
+        setCard('bplus', 'B+ Confirmed Cases', DATA.bPlus, false, false);
+        setCard('hh', 'Total No. of HH of B+PTB', DATA.hhTotal, false, false);
+        setCard('contact', 'HH Contacts Screened', DATA.contactsScreened, false, false);
+        setCard('cdiag', 'HH Contacts Diagnosed with Active TB', DATA.contactsDiagnosed, false, false);
+        setCard('child', 'Childhood TB Cases (<15 Years)', DATA.childTb, false, false);
+        setCard('tpt', 'Contacts Put on TPT', DATA.tptInitiated, false, false);
+        setCard('hiv', 'HIV Screening', DATA.hivScreened, false, false);
 
         // Update breakdown styling: highlight selected years and dim unselected
         document.querySelectorAll('.kpi-breakdown-item').forEach(item => {
